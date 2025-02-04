@@ -1,0 +1,41 @@
+#  Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-error.log
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+#  Directorios generados en la compilación de Vue.js
+dist/
+build/
+
+#  Archivos de configuración de entornos locales
+.env
+.env.*.local
+
+#  Configuración de herramientas y editores de código
+.vscode/
+.idea/
+*.sublime-workspace
+
+#  Cache de Vue CLI
+.vuepress/dist/
+.vuepress/.temp/
+
+#  Logs y caché del sistema
+logs/
+*.log
+*.gz
+.cache/
+.DS_Store  # macOS
+Thumbs.db  # Windows
+
+#  Configuración del servicio de hosting (ejemplo: Vercel, Netlify)
+.vercel/
+.netlify/
+
+#  Configuración de TypeScript y Babel
+tsconfig.tsbuildinfo
+
