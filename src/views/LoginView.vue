@@ -2,30 +2,13 @@
 import { ref } from "vue"
 import router from "../router";
 
-const emits = defineEmits(["sesionIniciada"]);
-const form = ref({ usuario: '', password: '' });
-const error = ref('');
 
-async function iniciarSesion() {
-    try {
-        const response = await fetch('/usuarios.json');
-        const usuarios = await response.json();
-        const usuarioEncontrado = usuarios.find(
-            (u) => u.usuario === form.value.usuario && u.password === form.value.password
-        );
-        if (usuarioEncontrado) {
-            //TODO: HABRÍA QUE NOTIFICAR A APP.VUE CON UN EMIT PARA QUE SEPA QUE LA SESIÓN ESTÁ INICIADA
-            emits("sesionIniciada", { usuario: usuarioEncontrado.usuario,rol: usuarioEncontrado.rol });
-            error.value = '';
-            router.push({ name: "home" });
+let mostrarForm = true;
 
-        } else {
-            error.value = 'Usuario o contraseña incorrectos';
-        }
-    } catch (err) {
-        error.value = 'Error al cargar los datos';
-    }
+function cambiarForm() {
+  mostrarForm = !mostrarForm;
 }
+
 
 </script>
 
@@ -34,74 +17,69 @@ async function iniciarSesion() {
 
   <main class="mt-5">
     <!-- Formulario de Inicio de Sesión -->
-    <div id="formLogIn" class="row justify-content-center">
-      <div class="col-12 col-md-6 col-lg-4">
-        <form id="botonLogIn" class="border p-4 shadow-sm rounded bg-white">
-          <h2 class="text-center mb-4">Iniciar Sesión</h2>
-          <div class="mb-3">
-            <label for="emailLogIn" class="form-label">Email</label>
-            <input
-                type="text"
-                id="emailLogIn"
-                class="form-control"
-                placeholder="Ingresa tu email">
-          </div>
-          <div class="mb-3">
-            <label for="passwordLogIn" class="form-label">Contraseña</label>
-            <input
-                type="password"
-                id="passwordLogIn"
-                class="form-control"
-                placeholder="Ingresa tu contraseña">
-          </div>
-          <div class="mb-3">
-            <label class="form-text">
-              ¿No está registrado? <a href="#" id="registrarse" class="text-primary">Regístrese</a>
-            </label>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">Log In</button>
-        </form>
+    <div v-if="mostrarForm">
+      <div id="formLogIn" class="row justify-content-center">
+        <div class="col-12 col-md-6 col-lg-4">
+          <form id="botonLogIn" class="border p-4 shadow-sm rounded bg-white">
+            <h2 class="text-center mb-4">Iniciar Sesión</h2>
+            <div class="mb-3">
+              <label for="emailLogIn" class="form-label">Email</label>
+              <input type="text" id="emailLogIn" class="form-control" placeholder="Ingresa tu email">
+            </div>
+            <div class="mb-3">
+              <label for="passwordLogIn" class="form-label">Contraseña</label>
+              <input type="password" id="passwordLogIn" class="form-control" placeholder="Ingresa tu contraseña">
+            </div>
+            <div class="mb-3">
+              <label class="form-text">
+                ¿No está registrado? <a href="#" id="registrarse" class="text-primary" @click="cambiarForm()">Regístrese</a>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Log In</button>
+          </form>
+        </div>
       </div>
     </div>
 
 
     <!-- Formulario de Registro -->
 
-    <div id="formRegistrar" class="row justify-content-center mt-5 ">
-      <div class="col-12 col-md-6 col-lg-4">
+    <div v-if="!mostrarForm">
+      <div id="formRegistrar" class="row justify-content-center mt-5">
+        <div class="col-12 col-md-6 col-lg-4">
 
-    <form id="botonRegistrar" class="border p-4 shadow-sm rounded bg-white">
-      <h2 class="text-center mb-4">Registrarse</h2>
-      <div class="mb-3">
-        <label for="NombreRegistrar" class="form-label">Nombre</label>
-        <input type="text" id="NombreRegistrar" class="form-control" placeholder="Ingresa tu nombre">
+          <form id="botonRegistrar" class="border p-4 shadow-sm rounded bg-white">
+            <h2 class="text-center mb-4">Registrarse</h2>
+            <div class="mb-3">
+              <label for="NombreRegistrar" class="form-label">Nombre</label>
+              <input type="text" id="NombreRegistrar" class="form-control" placeholder="Ingresa tu nombre">
+            </div>
+            <div class="mb-3">
+              <label for="ApellidosRegistrar" class="form-label">Apellidos</label>
+              <input type="text" id="ApellidosRegistrar" class="form-control" placeholder="Ingresa tu apellido">
+            </div>
+            <div class="mb-3">
+              <label for="emailRegistrar" class="form-label">Email</label>
+              <input type="text" id="emailRegistrar" class="form-control" placeholder="Ingresa tu email">
+            </div>
+            <div class="mb-3">
+              <label for="contrasenaRegistrar" class="form-label">Contraseña</label>
+              <input type="password" id="contrasenaRegistrar" class="form-control" placeholder="Crea una contraseña">
+            </div>
+            <div class="mb-3">
+            </div>
+            <div class="mb-3">
+              <label class="form-text">
+                ¿Ya estás registrado? <a href="#" id="iniciarSesion" class="text-primary" @click="cambiarForm()">Iniciar Sesión</a>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-success w-100">Registrar</button>
+          </form>
+        </div>
       </div>
-      <div class="mb-3">
-        <label for="ApellidosRegistrar" class="form-label">Apellidos</label>
-        <input type="text" id="ApellidosRegistrar" class="form-control" placeholder="Ingresa tu apellido">
-      </div>
-      <div class="mb-3">
-        <label for="emailRegistrar" class="form-label">Email</label>
-        <input type="text" id="emailRegistrar" class="form-control" placeholder="Ingresa tu email">
-      </div>
-      <div class="mb-3">
-        <label for="contrasenaRegistrar" class="form-label">Contraseña</label>
-        <input type="password" id="contrasenaRegistrar" class="form-control" placeholder="Crea una contraseña">
-      </div>
-      <div class="mb-3">
-      </div>
-      <div class="mb-3">
-        <label class="form-text">
-          ¿Ya estás registrado? <a href="#" id="iniciarSesion" class="text-primary">Iniciar Sesión</a>
-        </label>
-      </div>
-      <button type="submit" class="btn btn-success w-100">Registrar</button>
-    </form>
-      </div>
+
     </div>
   </main>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

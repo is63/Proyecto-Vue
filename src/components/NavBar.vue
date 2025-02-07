@@ -8,7 +8,7 @@ const props = defineProps({
 </script>
 
 <template>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light d-none">
         <a class="navbar-brand" href="#">Menu</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -27,7 +27,7 @@ const props = defineProps({
                     <a class="nav-link" href="#">Examenes</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Resultados</a>
+                    <router-link class="nav-link" to="/gestionusuarios">Gestion</router-link>
                 </li>
                 <li class="nav-item">
                     <router-link class="nav-link" to="/">Home</router-link>

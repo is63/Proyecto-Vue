@@ -28,7 +28,7 @@ function actualizaDatosSesion(usuario) {
   <div class="layout">
 
     <Header :usuarioAutenticado="sesion" @sesionCerrada="actualizaDatosSesion" title="Toqueteando" />
-    <NavBar :datosSesion="sesion"  class="d-none"/>
+    <NavBar :datosSesion="sesion"  class=""/>
     <RouterView @sesionIniciada="actualizaDatosSesion"></RouterView>
 
     <!--<Content>
