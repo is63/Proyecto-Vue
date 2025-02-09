@@ -3,10 +3,10 @@ import { ref } from "vue"
 import router from "../router";
 
 
-let mostrarForm = true;
+let mostrarForm = ref(true);
 
 function cambiarForm() {
-  mostrarForm = !mostrarForm;
+  mostrarForm.value = !mostrarForm.value;
 }
 
 
