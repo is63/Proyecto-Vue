@@ -74,7 +74,6 @@ async function iniciarSesion() {
       </div>
     </div>
 
-
     <!-- Formulario de Registro -->
 
     <div v-if="!mostrarForm">

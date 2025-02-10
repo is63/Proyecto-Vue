@@ -24,8 +24,7 @@ function cerrarSesion() {
   <header class="bg-white text-dark  p-3">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <div class="row">
-        <div class="col-6"></div>
-        <div class="col-6">
+        <div class="col d-flex flex-row" >
           <div class="text-center">
             <img class="nav-item" src="../assets/logo.svg" width="100px">
             <ul class="navbar-nav ">
@@ -48,10 +47,10 @@ function cerrarSesion() {
                 <router-link class="nav-link" to="/login">Login</router-link>
               </li>
             </ul>
-          </div>
-          <div v-if="usuarioAutenticado" class="container text-end">
+            <div v-if="usuarioAutenticado" class="container text-end">
           <span>Bienvenido, {{ usuarioAutenticado.nombre }} ({{ usuarioAutenticado.rol }})</span>
           <button @click="cerrarSesion" class="btn btn-danger">Cerrar Sesión</button>
+          </div>
         </div>
         </div>
       </div>
