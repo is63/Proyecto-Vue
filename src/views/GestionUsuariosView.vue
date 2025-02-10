@@ -5,14 +5,20 @@ import { Modal } from 'bootstrap';
 // Referencia al modal de crear/editar usuario
 const modalRefCreate = ref(null);
 
-// Referencia al modal de confirmación de eliminacion
+// Referencia al modal de confirmación de eliminación
 const modalConfirmacionRef = ref(null);
+
+// Referencia al modal de mensajes de error
+const modalErrorRef = ref(null);
 
 // Instancia del modal de crear/editar usuario
 let modalInstanceCreate = null;
 
-// Instancia del modal de confirmación de eliminacion
+// Instancia del modal de confirmación de eliminación
 let modalConfirmacionInstance = null;
+
+// Instancia del modal de mensajes de error
+let modalErrorInstance = null;
 
 // Datos de los usuarios obtenidos de la API
 const datos = ref([]);
@@ -48,14 +54,18 @@ const API_URL = 'http://localhost/freetours/api.php/usuarios';
 const mensaje = ref('');
 const tipoMensaje = ref('');
 
-// Confirmacion de Eliminacion
+// Confirmación de Eliminación
 const eliminacionExitosa = ref(false);
 const mensajeEliminacion = ref('');
 
-// Controlar si la operacion (crear/editar) fue exitosa
+// Controlar si la operación (crear/editar) fue exitosa
 const operacionExitosa = ref(false);
 
-// Funcion para obtener los datos de la API
+// Estado para el modal de error
+const mensajeError = ref(''); // Mensaje de error a mostrar
+const mostrarModalError = ref(false); // Controlar la visibilidad del modal de error
+
+// Función para obtener los datos de la API
 async function fetchData() {
   try {
     // Hacemos una solicitud a la API
@@ -77,19 +87,22 @@ onMounted(() => {
   // Crear una instancia del modal de crear/editar usuario
   modalInstanceCreate = new Modal(modalRefCreate.value);
 
-  // Crear una instancia del modal de confirmación de eliminacion
+  // Crear una instancia del modal de confirmación de eliminación
   modalConfirmacionInstance = new Modal(modalConfirmacionRef.value);
+
+  // Crear una instancia del modal de mensajes de error
+  modalErrorInstance = new Modal(modalErrorRef.value);
 
   // Se obtienen los datos de la API al cargar el componente
   fetchData();
 });
 
-// Funcion para mostrar un mensaje y cerrar el modal automaticamente
+// Función para mostrar un mensaje y cerrar el modal automáticamente
 function mostrarMensajeModal(texto, tipo, cerrarModal = false) {
   mensaje.value = texto;
   tipoMensaje.value = tipo;
 
-  // Si el mensaje es de exito, se marca la operacion como exitosa
+  // Si el mensaje es de éxito, se marca la operación como exitosa
   if (tipo === 'success') {
     operacionExitosa.value = true;
   }
@@ -101,14 +114,20 @@ function mostrarMensajeModal(texto, tipo, cerrarModal = false) {
   }, 1500);
 }
 
-// Funcion para reiniciar el estado del modal al cerrarlo
+// Función para reiniciar el estado del modal al cerrarlo
 function reiniciarModal() {
   operacionExitosa.value = false;
   mensaje.value = '';
   tipoMensaje.value = '';
 }
 
-// Funcion para abrir el modal en modo edicion
+// Función para mostrar el modal de error
+function mostrarError(mensaje) {
+  mensajeError.value = mensaje; // Establecer el mensaje de error
+  modalErrorInstance.show(); // Mostrar el modal de error
+}
+
+// Función para abrir el modal en modo edición
 function abrirModalEditar(usuario) {
   usuarioSeleccionado.value = { ...usuario };
   modoEdicion.value = true;
@@ -116,7 +135,7 @@ function abrirModalEditar(usuario) {
   modalInstanceCreate.show();
 }
 
-// Funcion para abrir el modal en modo creacion
+// Función para abrir el modal en modo creación
 function abrirModalCrear() {
   usuarioNuevo.value = { nombre: '', email: '', contraseña: '' };
   modoEdicion.value = false;
@@ -124,31 +143,28 @@ function abrirModalCrear() {
   modalInstanceCreate.show();
 }
 
-// Funcion para crear un usuario nuevo
+// Función para validar los datos del usuario
+function validarUsuario(usuario) {
+  if (
+      usuario.nombre == "" ||
+      usuario.email.indexOf("@") == -1 ||
+      usuario.email == "" ||
+      usuario.contraseña == ""
+  ) {
+    return false; // Retorna false si la validación falla
+  }
+  return true; // Retorna true si la validación es exitosa
+}
+
+// Función para crear un usuario nuevo
 async function crearUsuario() {
-  // Validar que todos los campos esten completos
-  if (!usuarioNuevo.value.nombre || !usuarioNuevo.value.email || !usuarioNuevo.value.contraseña) {
-    mostrarMensajeModal('Todos los campos son obligatorios.', 'error');
+  // Validar que todos los campos estén completos
+  if (!validarUsuario(usuarioNuevo.value)) {
+    mostrarError('Todos los campos deben de ser válidos');
     return;
   }
 
-function validarUsuario(usuario){
-  if(
-    usuario.nombre  == "" ||
-    usuario.email.indexOf("@") == -1 ||
-    usuario.email == "" ||
-    usuario.contraseña == ""
-  ){
-    return false
-  }
-  return true
-}
-
   try {
-
-    //Se comprueba que los campos sean correctos
-     if (!validarUsuario(usuarioNuevo.value)) throw new Error('Error al validar el usuario')
-
     // Se hace una solicitud POST a la API para crear un nuevo usuario
     const response = await fetch(API_URL, {
       method: 'POST',
@@ -159,7 +175,7 @@ function validarUsuario(usuario){
     // Si la respuesta no es exitosa, se lanza un error
     if (!response.ok) throw new Error('Error al crear usuario');
 
-    // Se muestra un mensaje de exito y cerramos el modal
+    // Se muestra un mensaje de éxito y cerramos el modal
     mostrarMensajeModal('Usuario creado con éxito.', 'success', true);
 
     // Se recarga los datos de la tabla
@@ -170,7 +186,7 @@ function validarUsuario(usuario){
   }
 }
 
-// Funcion para actualizar el rol de un usuario
+// Función para actualizar el rol de un usuario
 async function actualizarRol() {
   try {
     // Hacemos una solicitud PUT a la API para actualizar el rol
@@ -183,15 +199,15 @@ async function actualizarRol() {
     // Se convierte la respuesta a JSON
     const result = await response.json();
 
-    // Si la API devuelve un estado de exito
+    // Si la API devuelve un estado de éxito
     if (result.status === 'success') {
-      // Se muestra un mensaje de exito y se cierra el modal
+      // Se muestra un mensaje de éxito y se cierra el modal
       mostrarMensajeModal('Rol actualizado con éxito.', 'success', true);
 
       // Recargamos los datos de la tabla
       fetchData();
     } else {
-      // Si la API devuelve un error, se lanza una excepcion con el mensaje
+      // Si la API devuelve un error, se lanza una excepción con el mensaje
       throw new Error(result.message || 'Error al actualizar el rol');
     }
   } catch (error) {
@@ -200,7 +216,7 @@ async function actualizarRol() {
   }
 }
 
-// Funcion para abrir el modal de confirmacion de eliminacion
+// Función para abrir el modal de confirmación de eliminación
 function abrirModalConfirmacion(id) {
   usuarioAEliminar.value = id;
   eliminacionExitosa.value = false;
@@ -208,7 +224,7 @@ function abrirModalConfirmacion(id) {
   modalConfirmacionInstance.show();
 }
 
-// Funcion para eliminar un usuario confirmado
+// Función para eliminar un usuario confirmado
 async function eliminarUsuario() {
   try {
     // Se hace una solicitud DELETE a la API para eliminar el usuario
@@ -220,7 +236,7 @@ async function eliminarUsuario() {
     // Si la API devuelve un estado de éxito
     if (result.status === 'success') {
       eliminacionExitosa.value = true; // Se indica que la eliminación fue exitosa
-      mensajeEliminacion.value = 'Usuario eliminado correctamente.'; // Se muestra un mensaje de exito
+      mensajeEliminacion.value = 'Usuario eliminado correctamente.'; // Se muestra un mensaje de éxito
 
       // Se recargan los datos de la tabla
       fetchData();
@@ -230,7 +246,7 @@ async function eliminarUsuario() {
         modalConfirmacionInstance.hide();
       }, 1500);
     } else {
-      // Si la API devuelve un error, se lanza una excepcion con el mensaje
+      // Si la API devuelve un error, se lanza una excepción con el mensaje
       throw new Error(result.message || 'No se pudo eliminar el usuario');
     }
   } catch (error) {
@@ -263,15 +279,15 @@ async function eliminarUsuario() {
           <td>{{ dato.email }}</td>
           <td>{{ dato.rol }}</td>
           <td class="text-center">
-            <!-- Boton de Editar -->
+            <!-- Botón de Editar -->
             <button class="btn btn-warning btn-sm me-2" @click="abrirModalEditar(dato)">Editar</button>
-            <!-- Boton de ELiminar -->
+            <!-- Botón de Eliminar -->
             <button class="btn btn-danger btn-sm" @click="abrirModalConfirmacion(dato.id)">Eliminar</button>
           </td>
         </tr>
         </tbody>
       </table>
-      <!-- Boton de Crear Usuario -->
+      <!-- Botón de Crear Usuario -->
       <button class="btn btn-primary mt-4" @click="abrirModalCrear">Crear usuario</button>
     </div>
   </main>
@@ -284,16 +300,16 @@ async function eliminarUsuario() {
           <h5 class="modal-title">
             {{ modoEdicion ? 'Editar Usuario' : 'Crear Usuario' }}
           </h5>
-          <!-- Boton para cerrar el modal -->
+          <!-- Botón para cerrar el modal -->
           <button type="button" class="btn-close" data-bs-dismiss="modal" @click="reiniciarModal"></button>
         </div>
         <div class="modal-body">
-          <!-- Mensaje de exito -->
+          <!-- Mensaje de éxito -->
           <div v-if="operacionExitosa" class="alert alert-success">
             {{ mensaje }}
           </div>
 
-          <!-- Formulario si la operacion no fue exitosa -->
+          <!-- Formulario si la operación no fue exitosa -->
           <form v-else>
             <div v-if="modoEdicion">
               <label for="rolUsuario" class="form-label">Rol del Usuario</label>
@@ -313,9 +329,9 @@ async function eliminarUsuario() {
           </form>
         </div>
         <div class="modal-footer d-flex justify-content-center">
-          <!-- Boton para cerrar el modal -->
+          <!-- Botón para cerrar el modal -->
           <button class="btn btn-secondary" data-bs-dismiss="modal" @click="reiniciarModal">Cerrar</button>
-          <!-- Boton para crear usuario o guardar cambios -->
+          <!-- Botón para crear usuario o guardar cambios -->
           <button v-if="!modoEdicion && !operacionExitosa" class="btn btn-primary" @click="crearUsuario">
             Crear usuario
           </button>
@@ -327,7 +343,7 @@ async function eliminarUsuario() {
     </div>
   </div>
 
-  <!-- Modal de Confirmacion de la Eliminacion -->
+  <!-- Modal de Confirmación de la Eliminación -->
   <div class="modal fade" ref="modalConfirmacionRef" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -335,24 +351,46 @@ async function eliminarUsuario() {
           <h5 class="modal-title">Confirmar eliminación</h5>
         </div>
         <div class="modal-body">
-          <!-- Mensaje de exito si la eliminacion fue exitosa -->
+          <!-- Mensaje de éxito si la eliminación fue exitosa -->
           <div v-if="eliminacionExitosa" class="alert alert-success">
             {{ mensajeEliminacion }}
           </div>
           <div v-else>
-            <!-- Pregunta de confirmacion si no hay mensaje de error -->
+            <!-- Pregunta de confirmación si no hay mensaje de error -->
             <p v-if="!mensajeEliminacion">¿Estás seguro de que deseas eliminar este usuario?</p>
-            <!-- Mensaje de error si la eliminacion ha fallado -->
+            <!-- Mensaje de error si la eliminación ha fallado -->
             <div v-else class="alert alert-danger">
               {{ mensajeEliminacion }}
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <!-- Boton para cerrar el modal -->
+          <!-- Botón para cerrar el modal -->
           <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-          <!-- Boton para confirmar la eliminaxcion -->
+          <!-- Botón para confirmar la eliminación -->
           <button v-if="!eliminacionExitosa" class="btn btn-danger" @click="eliminarUsuario">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Mensajes de Error -->
+  <div class="modal fade" ref="modalErrorRef" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Error</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Mensaje de error -->
+          <div class="alert alert-danger">
+            {{ mensajeError }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <!-- Botón para cerrar el modal -->
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
         </div>
       </div>
     </div>
