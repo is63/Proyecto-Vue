@@ -1,62 +1,38 @@
 <script setup>
-import Content from './components/Content.vue';
-import Card from './components/Card.vue';
 import Header from './components/Header.vue';
 import Footer from './components/Footer.vue';
 import NavBar from './components/NavBar.vue';
-import router from "@/router";
 import { ref } from "vue";
 
-//Habría que controlar cuando se inicia sesión y se cierra con un emit desde el hijo y tener un dato
-// de sesión reactivo para pasarlo a la barra de navegación como props
-
+// Estado reactivo para almacenar la información de la sesión
 const sesion = ref(JSON.parse(localStorage.getItem("sesion")));
 
+// Función para actualizar los datos de la sesión
 function actualizaDatosSesion(usuario) {
-  sesion.value = usuario;
+  sesion.value = usuario; // Actualiza el estado reactivo
   if (usuario) {
-    localStorage.setItem("sesion", JSON.stringify(usuario));
-  }
-  else {
-    localStorage.removeItem("sesion");
+    localStorage.setItem("sesion", JSON.stringify(usuario)); // Guarda en localStorage
+  } else {
+    localStorage.removeItem("sesion"); // Elimina del localStorage si no hay usuario
   }
 }
-
 </script>
 
 <template>
   <div class="layout">
-
+    <!-- Header: Recibe el usuario autenticado y maneja el evento de cierre de sesión -->
     <Header :usuarioAutenticado="sesion" @sesionCerrada="actualizaDatosSesion" title="Toqueteando" />
-    <NavBar :datosSesion="sesion"  class=""/>
+
+    <!-- NavBar: Recibe los datos de la sesión -->
+    <NavBar :datosSesion="sesion" />
+
+    <!-- RouterView: Maneja las rutas y emite el evento cuando se inicia sesión -->
     <RouterView @sesionIniciada="actualizaDatosSesion"></RouterView>
 
-    <!--<Content>
-      <template v-slot:sidebar>
-        <h2>Menú</h2>
-        <ul>
-          <li>Inicio</li>
-          <li>Acerca de</li>
-          <li>Contacto</li>
-        </ul>
-      </template>
-
-<template #main>
-        <h1>Bienvenido</h1>
-        <Card title="Tarjeta 1">
-          <p>Este es el contenido de la tarjeta 1.</p>
-        </Card>
-
-        <Card title="Tarjeta 2">
-          <p>Otro contenido diferente en la tarjeta 2.</p>
-        </Card>
-      </template>
-</Content> -->
-
+    <!-- Footer -->
     <Footer />
   </div>
 </template>
-
 
 <style scoped>
 .layout {

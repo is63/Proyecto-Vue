@@ -6,12 +6,12 @@ const emits = defineEmits(["sesionCerrada"]);
 
 const props = defineProps({
   title: String,
-  usuarioAutenticado: Object,
+  usuarioAutenticado: Object, // Recibe el usuario autenticado
 });
 
 function cerrarSesion() {
-  emits("sesionCerrada");
-  router.push({ name: "home" });
+  emits("sesionCerrada", null); // Emite el evento de cierre de sesión
+  router.push({ name: "home" }); // Redirige a la página de inicio
 }
 </script>
 
@@ -21,31 +21,39 @@ function cerrarSesion() {
       <div class="container-fluid">
         <!-- Logo a la izquierda -->
         <div class="navbar-brand">
-          <img src="../assets/logo.svg" width="70px" alt="Logo" />
+          <router-link to="/">
+            <img src="../assets/logo.svg" width="70px" alt="Logo" />
+          </router-link>
         </div>
 
         <!-- Botones de navegación en el centro -->
         <div class="mx-auto">
           <ul class="navbar-nav d-flex flex-row gap-3">
             <li class="nav-item">
-              <router-link class="nav-link" to="/">Home</router-link>
+              <router-link class="nav-link btn btn-lg" to="/">Home</router-link>
             </li>
             <li class="nav-item">
-              <router-link class="nav-link" to="/gestionusuarios">Gestión</router-link>
+              <router-link class="nav-link btn btn-lg" to="/gestionusuarios">Gestión</router-link>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Preguntas</a>
+              <a class="nav-link btn btn-lg" href="#">Preguntas</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Exámenes</a>
+              <a class="nav-link btn btn-lg" href="#">Exámenes</a>
             </li>
           </ul>
         </div>
 
-        <!-- Botón de "Cerrar sesión" a la derecha -->
-        <div v-if="usuarioAutenticado" class="d-flex align-items-center">
-          <span class="me-3">Bienvenido, {{ usuarioAutenticado.nombre }} ({{ usuarioAutenticado.rol }})</span>
-          <button @click="cerrarSesion" class="btn btn-danger">Cerrar Sesión</button>
+        <!-- Botón de "Iniciar sesión" o "Cerrar sesión" -->
+        <div class="d-flex align-items-center">
+          <!-- Mostrar "Cerrar sesión" si hay un usuario autenticado -->
+          <div v-if="usuarioAutenticado" class="d-flex align-items-center">
+            <span class="me-3">Bienvenido, {{ usuarioAutenticado.nombre }} ({{ usuarioAutenticado.rol }})</span>
+            <button @click="cerrarSesion" class="btn btn-danger">Cerrar Sesión</button>
+          </div>
+
+          <!-- Mostrar "Iniciar sesión" si no hay un usuario autenticado -->
+          <router-link v-else to="/login" class="btn btn-primary">Iniciar Sesión</router-link>
         </div>
       </div>
     </nav>

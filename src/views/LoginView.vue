@@ -1,8 +1,6 @@
 <script setup>
-import { ref } from "vue"
+import { ref } from "vue";
 import router from "../router";
-
-
 
 let mostrarForm = ref(true);
 
@@ -17,37 +15,42 @@ const form = ref({ nombre: '', password: '' });
 const error = ref('');
 
 async function iniciarSesion() {
-    try {
-        const response = await fetch(API_URL);
-        const usuarios = await response.json();
-        const usuarioEncontrado = usuarios.find(
-            (u) => u.nombre === form.value.nombre && u.contraseña === form.value.password
-        );
-        if (usuarioEncontrado) {
-            //TODO: HABRÍA QUE NOTIFICAR A APP.VUE CON UN EMIT PARA QUE SEPA QUE LA SESIÓN ESTÁ INICIADA
-            emits("sesionIniciada", 
-            { 
-              nombre: usuarioEncontrado.nombre,
-              rol: usuarioEncontrado.rol 
-            });
-
-            error.value = '';
-            router.push({ name: "home" });
-
-        } else {
-            error.value = 'Usuario o contraseña incorrectos';
-        }
-    } catch (err) {
-        error.value = 'Error al cargar los datos';
+  try {
+    const response = await fetch(API_URL);
+    if (!response.ok) {
+      throw new Error('Error al cargar los datos');
     }
+
+    const usuarios = await response.json();
+    console.log("Usuarios cargados:", usuarios); // Para depuración
+
+    // Buscar el usuario en la lista
+    const usuarioEncontrado = usuarios.find(
+        (u) => u.nombre === form.value.nombre && u.contraseña === form.value.password
+    );
+
+    if (usuarioEncontrado) {
+      console.log("Usuario encontrado:", usuarioEncontrado); // Para depuración
+
+      // Emitir el evento con los datos del usuario autenticado
+      emits("sesionIniciada", {
+        nombre: usuarioEncontrado.nombre,
+        rol: usuarioEncontrado.rol,
+      });
+
+      error.value = '';
+      router.push({ name: "home" }); // Redirigir a /home
+    } else {
+      error.value = 'Usuario o contraseña incorrectos';
+    }
+  } catch (err) {
+    console.error("Error en iniciarSesion:", err); // Para depuración
+    error.value = 'Error al cargar los datos';
+  }
 }
-
-
 </script>
 
-
 <template>
-
   <main class="mt-5">
     <!-- Formulario de Inicio de Sesión -->
     <div v-if="mostrarForm">
@@ -56,13 +59,14 @@ async function iniciarSesion() {
           <form id="botonLogIn" class="border p-4 shadow-sm rounded bg-white">
             <h2 class="text-center mb-4">Iniciar Sesión</h2>
             <div class="mb-3">
-              <label for="emailLogIn" class="form-label">Email</label>
-              <input v-model="form.nombre" type="text" id="emailLogIn" class="form-control" placeholder="Ingresa tu email">
+              <label for="emailLogIn" class="form-label">Nombre de usuario</label>
+              <input v-model="form.nombre" type="text" id="emailLogIn" class="form-control" placeholder="Ingresa tu nombre">
             </div>
             <div class="mb-3">
               <label for="passwordLogIn" class="form-label">Contraseña</label>
               <input v-model="form.password" type="password" id="passwordLogIn" class="form-control" placeholder="Ingresa tu contraseña">
             </div>
+            <div v-if="error" class="alert alert-danger">{{ error }}</div>
             <div class="mb-3">
               <label class="form-text">
                 ¿No está registrado? <a href="#" id="registrarse" class="text-primary" @click.prevent="cambiarForm()">Regístrese</a>
@@ -75,11 +79,9 @@ async function iniciarSesion() {
     </div>
 
     <!-- Formulario de Registro -->
-
     <div v-if="!mostrarForm">
       <div id="formRegistrar" class="row justify-content-center mt-5">
         <div class="col-12 col-md-6 col-lg-4">
-
           <form id="botonRegistrar" class="border p-4 shadow-sm rounded bg-white">
             <h2 class="text-center mb-4">Registrarse</h2>
             <div class="mb-3">
@@ -99,8 +101,6 @@ async function iniciarSesion() {
               <input type="password" id="contrasenaRegistrar" class="form-control" placeholder="Crea una contraseña">
             </div>
             <div class="mb-3">
-            </div>
-            <div class="mb-3">
               <label class="form-text">
                 ¿Ya estás registrado? <a href="#" id="iniciarSesion" class="text-primary" @click.prevent="cambiarForm()">Iniciar Sesión</a>
               </label>
@@ -109,7 +109,6 @@ async function iniciarSesion() {
           </form>
         </div>
       </div>
-
     </div>
   </main>
 </template>
