@@ -334,8 +334,8 @@ async function eliminarUsuario() {
           </div>
         </div>
         <div class="modal-footer">
-          <!-- Boton para cancelar la eliminacion -->
-          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <!-- Boton para cerrar el modal -->
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
           <!-- Boton para confirmar la eliminaxcion -->
           <button v-if="!eliminacionExitosa" class="btn btn-danger" @click="eliminarUsuario">Eliminar</button>
         </div>
