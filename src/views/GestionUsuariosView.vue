@@ -33,7 +33,6 @@ const usuarioNuevo = ref({
   nombre: '',
   email: '',
   contraseña: '',
-  rol: '',
 });
 
 // ID del usuario que se va a eliminar
@@ -119,7 +118,7 @@ function abrirModalEditar(usuario) {
 
 // Funcion para abrir el modal en modo creacion
 function abrirModalCrear() {
-  usuarioNuevo.value = { nombre: '', email: '', contraseña: '', rol: '' };
+  usuarioNuevo.value = { nombre: '', email: '', contraseña: '' };
   modoEdicion.value = false;
   reiniciarModal();
   modalInstanceCreate.show();
@@ -133,7 +132,23 @@ async function crearUsuario() {
     return;
   }
 
+function validarUsuario(usuario){
+  if(
+    usuario.nombre  == "" ||
+    usuario.email.indexOf("@") == -1 ||
+    usuario.email == "" ||
+    usuario.contraseña == ""
+  ){
+    return false
+  }
+  return true
+}
+
   try {
+
+    //Se comprueba que los campos sean correctos
+     if (!validarUsuario(usuarioNuevo.value)) throw new Error('Error al validar el usuario')
+
     // Se hace una solicitud POST a la API para crear un nuevo usuario
     const response = await fetch(API_URL, {
       method: 'POST',
