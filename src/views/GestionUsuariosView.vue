@@ -32,7 +32,7 @@ const usuarioSeleccionado = ref({
 const usuarioNuevo = ref({
   nombre: '',
   email: '',
-  contrasena: '',
+  contraseña: '',
   rol: '',
 });
 
@@ -86,7 +86,7 @@ onMounted(() => {
 });
 
 // Funcion para mostrar un mensaje y cerrar el modal automaticamente
-function mostrarMensaje(texto, tipo, cerrarModal = false) {
+function mostrarMensajeModal(texto, tipo, cerrarModal = false) {
   mensaje.value = texto;
   tipoMensaje.value = tipo;
 
@@ -119,7 +119,7 @@ function abrirModalEditar(usuario) {
 
 // Funcion para abrir el modal en modo creacion
 function abrirModalCrear() {
-  usuarioNuevo.value = { nombre: '', email: '', contrasena: '', rol: '' };
+  usuarioNuevo.value = { nombre: '', email: '', contraseña: '', rol: '' };
   modoEdicion.value = false;
   reiniciarModal();
   modalInstanceCreate.show();
@@ -128,8 +128,8 @@ function abrirModalCrear() {
 // Funcion para crear un usuario nuevo
 async function crearUsuario() {
   // Validar que todos los campos esten completos
-  if (!usuarioNuevo.value.nombre || !usuarioNuevo.value.email || !usuarioNuevo.value.contrasena) {
-    mostrarMensaje('Todos los campos son obligatorios.', 'error');
+  if (!usuarioNuevo.value.nombre || !usuarioNuevo.value.email || !usuarioNuevo.value.contraseña) {
+    mostrarMensajeModal('Todos los campos son obligatorios.', 'error');
     return;
   }
 
@@ -145,13 +145,13 @@ async function crearUsuario() {
     if (!response.ok) throw new Error('Error al crear usuario');
 
     // Se muestra un mensaje de exito y cerramos el modal
-    mostrarMensaje('Usuario creado con éxito.', 'success', true);
+    mostrarMensajeModal('Usuario creado con éxito.', 'success', true);
 
     // Se recarga los datos de la tabla
     fetchData();
   } catch (error) {
     // Si hay un error, mostramos un mensaje de error
-    mostrarMensaje('Hubo un problema al crear el usuario.', 'error');
+    mostrarMensajeModal('Hubo un problema al crear el usuario.', 'error');
   }
 }
 
@@ -171,7 +171,7 @@ async function actualizarRol() {
     // Si la API devuelve un estado de exito
     if (result.status === 'success') {
       // Se muestra un mensaje de exito y se cierra el modal
-      mostrarMensaje('Rol actualizado con éxito.', 'success', true);
+      mostrarMensajeModal('Rol actualizado con éxito.', 'success', true);
 
       // Recargamos los datos de la tabla
       fetchData();
@@ -181,7 +181,7 @@ async function actualizarRol() {
     }
   } catch (error) {
     // Si hay un error, se muestra un mensaje de error
-    mostrarMensaje('Hubo un problema al actualizar el rol.', 'error');
+    mostrarMensajeModal('Hubo un problema al actualizar el rol.', 'error');
   }
 }
 
@@ -293,7 +293,7 @@ async function eliminarUsuario() {
               <label class="form-label">Email</label>
               <input type="email" class="form-control" v-model="usuarioNuevo.email" />
               <label class="form-label">Contraseña</label>
-              <input type="password" class="form-control" v-model="usuarioNuevo.contrasena" />
+              <input type="password" class="form-control" v-model="usuarioNuevo.contraseña" />
             </div>
           </form>
         </div>

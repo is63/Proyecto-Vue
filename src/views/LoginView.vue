@@ -3,10 +3,43 @@ import { ref } from "vue"
 import router from "../router";
 
 
+
 let mostrarForm = ref(true);
 
 function cambiarForm() {
   mostrarForm.value = !mostrarForm.value;
+}
+
+const API_URL = 'http://localhost/freetours/api.php/usuarios';
+
+const emits = defineEmits(["sesionIniciada"]);
+const form = ref({ nombre: '', password: '' });
+const error = ref('');
+
+async function iniciarSesion() {
+    try {
+        const response = await fetch(API_URL);
+        const usuarios = await response.json();
+        const usuarioEncontrado = usuarios.find(
+            (u) => u.nombre === form.value.nombre && u.contraseña === form.value.password
+        );
+        if (usuarioEncontrado) {
+            //TODO: HABRÍA QUE NOTIFICAR A APP.VUE CON UN EMIT PARA QUE SEPA QUE LA SESIÓN ESTÁ INICIADA
+            emits("sesionIniciada", 
+            { 
+              nombre: usuarioEncontrado.nombre,
+              rol: usuarioEncontrado.rol 
+            });
+
+            error.value = '';
+            router.push({ name: "home" });
+
+        } else {
+            error.value = 'Usuario o contraseña incorrectos';
+        }
+    } catch (err) {
+        error.value = 'Error al cargar los datos';
+    }
 }
 
 
@@ -24,18 +57,18 @@ function cambiarForm() {
             <h2 class="text-center mb-4">Iniciar Sesión</h2>
             <div class="mb-3">
               <label for="emailLogIn" class="form-label">Email</label>
-              <input type="text" id="emailLogIn" class="form-control" placeholder="Ingresa tu email">
+              <input v-model="form.nombre" type="text" id="emailLogIn" class="form-control" placeholder="Ingresa tu email">
             </div>
             <div class="mb-3">
               <label for="passwordLogIn" class="form-label">Contraseña</label>
-              <input type="password" id="passwordLogIn" class="form-control" placeholder="Ingresa tu contraseña">
+              <input v-model="form.password" type="password" id="passwordLogIn" class="form-control" placeholder="Ingresa tu contraseña">
             </div>
             <div class="mb-3">
               <label class="form-text">
-                ¿No está registrado? <a href="#" id="registrarse" class="text-primary" @click="cambiarForm()">Regístrese</a>
+                ¿No está registrado? <a href="#" id="registrarse" class="text-primary" @click.prevent="cambiarForm()">Regístrese</a>
               </label>
             </div>
-            <button type="submit" class="btn btn-primary w-100">Log In</button>
+            <button @click.prevent="iniciarSesion()" type="submit" class="btn btn-primary w-100">Log In</button>
           </form>
         </div>
       </div>
@@ -70,7 +103,7 @@ function cambiarForm() {
             </div>
             <div class="mb-3">
               <label class="form-text">
-                ¿Ya estás registrado? <a href="#" id="iniciarSesion" class="text-primary" @click="cambiarForm()">Iniciar Sesión</a>
+                ¿Ya estás registrado? <a href="#" id="iniciarSesion" class="text-primary" @click.prevent="cambiarForm()">Iniciar Sesión</a>
               </label>
             </div>
             <button type="submit" class="btn btn-success w-100">Registrar</button>

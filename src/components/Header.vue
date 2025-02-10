@@ -27,6 +27,7 @@ function cerrarSesion() {
         <div class="col-6"></div>
         <div class="col-6">
           <div class="text-center">
+            <img src="../assets/logo.svg" width="100px">
             <ul class="navbar-nav ">
               <li class="nav-item">
                 <a class="nav-link" href="#">Preguntas </a>
@@ -48,6 +49,10 @@ function cerrarSesion() {
               </li>
             </ul>
           </div>
+          <div v-if="usuarioAutenticado" class="container text-end">
+          <span>Bienvenido, {{ usuarioAutenticado.nombre }} ({{ usuarioAutenticado.rol }})</span>
+          <button @click="cerrarSesion" class="btn btn-danger">Cerrar Sesión</button>
+        </div>
         </div>
       </div>
     </nav>
