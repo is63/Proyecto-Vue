@@ -1,12 +1,12 @@
 <template>
-  <footer class="footer">
+  <footer class="footer bg-dark p-3">
     <p>&copy; {{ new Date().getFullYear() }} - Todos los derechos reservados.</p>
   </footer>
 </template>
   
 <style scoped>
 .footer {
-  background: #34495e;
+  background: #4f85bb;
   color: white;
   padding: 1rem;
   text-align: center;
@@ -14,7 +14,7 @@
   width: 100%;
   position: relative;
   margin-top: auto;  
-  width: 100%;
+  
   height: 70px;
 }
 

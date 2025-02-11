@@ -2,22 +2,22 @@
 import { ref, onMounted } from 'vue';
 import { Modal } from 'bootstrap';
 
-// Referencia al modal de crear/editar usuario
+// Modal de crear/editar usuario
 const modalRefCreate = ref(null);
 
-// Referencia al modal de confirmación de eliminación
+// Modal de confirmación de eliminación
 const modalConfirmacionRef = ref(null);
 
-// Referencia al modal de mensajes de error
+// Modal de mensajes de error
 const modalErrorRef = ref(null);
 
-// Instancia del modal de crear/editar usuario
+// Modal de crear/editar usuario
 let modalInstanceCreate = null;
 
-// Instancia del modal de confirmación de eliminación
+// Modal de confirmación de eliminación
 let modalConfirmacionInstance = null;
 
-// Instancia del modal de mensajes de error
+// Modal de mensajes de error
 let modalErrorInstance = null;
 
 // Datos de los usuarios obtenidos de la API

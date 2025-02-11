@@ -12,9 +12,9 @@ const API_URL = 'http://localhost/freetours/api.php/usuarios';
 
 const emits = defineEmits(["sesionIniciada"]);
 const form = ref({ nombre: '', password: '' });
-const formRegistro = ref({ nombre: '', email: '', contraseña: '' }); // Eliminado el campo de apellidos
+const formRegistro = ref({ nombre: '', email: '', contraseña: '' });
 const error = ref('');
-const mensajeExito = ref(''); // Estado para el mensaje de éxito
+const mensajeExito = ref(''); 
 
 async function iniciarSesion() {
   try {
@@ -24,15 +24,13 @@ async function iniciarSesion() {
     }
 
     const usuarios = await response.json();
-    console.log("Usuarios cargados:", usuarios); // Para depuración
-
+    
     // Buscar el usuario en la lista
     const usuarioEncontrado = usuarios.find(
         (u) => u.nombre === form.value.nombre && u.contraseña === form.value.password
     );
-
     if (usuarioEncontrado) {
-      console.log("Usuario encontrado:", usuarioEncontrado); // Para depuración
+      
 
       // Emitir el evento con los datos del usuario autenticado
       emits("sesionIniciada", {
@@ -44,9 +42,12 @@ async function iniciarSesion() {
       router.push({ name: "home" }); // Redirigir a /home
     } else {
       error.value = 'Usuario o contraseña incorrectos';
+      setTimeout(() => {
+        error.value = '';  // Limpiar el mensaje de error después de 3 segundos
+      }, 3000);
     }
   } catch (err) {
-    console.error("Error en iniciarSesion:", err); // Para depuración
+    
     error.value = 'Error al cargar los datos';
   }
 }
@@ -55,9 +56,9 @@ async function registrarUsuario() {
   try {
     // Validar que todos los campos estén completos
     if (
-        !formRegistro.value.nombre ||
-        !formRegistro.value.email ||
-        !formRegistro.value.contraseña
+        formRegistro.value.nombre.trim() == ""||
+        formRegistro.value.email.trim() == "" ||
+        formRegistro.value.contraseña.trim() == ""
     ) {
       error.value = 'Todos los campos son obligatorios';
       setTimeout(() => {
@@ -83,7 +84,6 @@ async function registrarUsuario() {
       nombre: formRegistro.value.nombre,
       email: formRegistro.value.email,
       contraseña: formRegistro.value.contraseña,
-      rol: 'usuario', // Rol por defecto
     };
 
     // Enviar la solicitud POST a la API para registrar el usuario
