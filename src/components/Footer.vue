@@ -13,11 +13,9 @@
   bottom: 0;
   width: 100%;
   position: relative;
-  margin-top: auto;
-  bottom: 0;
+  margin-top: auto;  
   width: 100%;
   height: 70px;
 }
 
 </style>
-º
