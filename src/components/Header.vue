@@ -6,55 +6,50 @@ const emits = defineEmits(["sesionCerrada"]);
 
 const props = defineProps({
   title: String,
-  usuarioAutenticado: Object, // Recibe el usuario autenticado
+  usuarioAutenticado: Object,
 });
 
 function cerrarSesion() {
-  emits("sesionCerrada", null); // Emite el evento de cierre de sesión
-  router.push({ name: "home" }); // Redirige a la página de inicio
+  emits("sesionCerrada", null);
+  router.push({ name: "home" });
 }
 </script>
 
 <template>
-  <header class="bg-white text-dark p-3">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container-fluid">
-        <!-- Logo a la izquierda -->
-        <div class="navbar-brand">
-          <router-link to="/">
-            <img src="../assets/img/olimpo.png"  alt="Logo" />
+  <header class="bg-primary-dark text-light">
+    <nav class="navbar navbar-expand-lg navbar-dark py-2">
+      <div class="container-fluid d-flex justify-content-between align-items-center">
+        <!-- Logo y Nombre -->
+        <div class="d-flex align-items-center">
+          <router-link to="/" class="me-2">
+            <img src="../../public/img/olimpo.png" class="logo" alt="Logo" />
           </router-link>
-        </div>
-        <div class="navbar-brand ">
-            <p class="text-warning fs-2 fw-bold text-shadow mt-4">Olímpo Tours</p>
+          <span class="text-gold fs-4 fw-bold text-shadow">Olímpo Tours</span>
         </div>
 
-        <!-- Botones de navegación en el centro -->
-        <div class="mx-auto">
-          <ul class="navbar-nav d-flex flex-row gap-3">
-            <li class="nav-item">
-              <router-link class="nav-link btn btn-lg" to="/">Home</router-link>
-            </li>
-            <li class="nav-item">
-              <router-link class="nav-link btn btn-lg" to="/gestionusuarios">Gestionar Usuarios</router-link>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link btn btn-lg" href="#">Crear Rutas</a>
-            </li>
+        <!-- Menú de navegación -->
+        <ul class="navbar-nav flex-row gap-3">
+          <li class="nav-item">
+            <router-link class="nav-link btn-custom" to="/">Home</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link btn-custom" to="/gestionusuarios">Gestionar Usuarios</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link btn-custom" to="#">Crear Rutas</router-link>
+          </li>
+        </ul>
 
-          </ul>
-        </div>
-
-        <!-- Botón de "Iniciar sesión" o "Cerrar sesión" -->
-        <div class="d-flex align-items-center nav-item">
-          <!-- Mostrar "Cerrar sesión" si hay un usuario autenticado -->
+        <!-- Botón de Sesión -->
+        <div class="nav-item">
           <div v-if="usuarioAutenticado" class="d-flex align-items-center">
-            <span class="me-4"><label class="fw-bold">{{ usuarioAutenticado.nombre }}</label>, rol: <label class="text-success fw-bold"> {{ usuarioAutenticado.rol }} </label></span>
-            <button @click="cerrarSesion" class="btn btn-danger ms-2">Cerrar Sesión</button>
+            <span class="me-3">
+              <label class="fw-bold">{{ usuarioAutenticado.nombre }}</label>,
+              <label class="text-gold fw-bold"> {{ usuarioAutenticado.rol }} </label>
+            </span>
+            <button @click="cerrarSesion" class="btn btn-danger">Cerrar Sesión</button>
           </div>
-
-          <!-- Mostrar "Iniciar sesión" si no hay un usuario autenticado -->
-          <router-link v-else to="/login" class="nav-link btn btn-lg text-success fs-4">Iniciar Sesión</router-link>
+          <router-link v-else to="/login" class="nav-link btn-login">Iniciar Sesión</router-link>
         </div>
       </div>
     </nav>
@@ -62,21 +57,69 @@ function cerrarSesion() {
 </template>
 
 <style scoped>
-
-.navbar-nav .nav-link {
-  font-weight: 500;
+/* Colores personalizados */
+.bg-primary-dark {
+  background-color: #1a1a2e; /* Azul oscuro elegante */
 }
 
-.navbar-nav .nav-link:hover {
-  color: #007bff;
+.text-light {
+  color: #ffffff !important;
 }
+
+.text-gold {
+  color: #f4a261 !important; /* Dorado elegante */
+}
+
 .text-shadow {
- 
-  text-shadow: 1px 0 0 black, -1px 0 0 black, 0 1px 0 black, 0 -1px 0 black;
+  text-shadow: 1px 1px 2px black;
 }
 
-.text-success{
-  color: rgb(17, 177, 17) !important;
+/* Ajuste del tamaño del header */
+.navbar {
+  height: 70px; /* Reduce la altura */
 }
 
+/* Logo */
+.logo {
+  width: 50px;
+  height: auto;
+}
+
+/* Estilos de los botones de navegación */
+.btn-custom {
+  color: #f4a261;
+  font-weight: 600;
+  font-size: 1.2rem; /* Aumentado el tamaño de fuente */
+  transition: all 0.3s ease;
+}
+
+.btn-custom:hover {
+  color: #ffffff;
+  background-color: rgba(244, 162, 97, 0.2);
+  border-radius: 5px;
+}
+
+/* Estilo del botón de login */
+.btn-login {
+  color: #f4a261;
+  font-size: 1.3em; /* Aumentado el tamaño */
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn-login:hover {
+  color: #ffffff;
+}
+
+/* Estilo del botón de cerrar sesión */
+.btn-danger {
+  background-color: #e63946;
+  border: none;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+  background-color: #d62828;
+}
 </style>

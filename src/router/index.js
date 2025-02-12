@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import Login from '../views/LoginView.vue';
 import GestionUsuarios from '@/views/GestionUsuariosView.vue';
+import VerRuta from "@/views/verRuta.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,7 +21,13 @@ const router = createRouter({
         path: '/gestionusuarios',
         name: 'gestionusuarios',
         component: GestionUsuarios,
-      }
+      },
+    {
+      path: "/ruta/:id",
+      name: "verRuta",
+      component: VerRuta,
+      props: true,
+    },
   ],
 })
 
