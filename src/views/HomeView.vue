@@ -84,7 +84,7 @@ onMounted(async () => {
 <template>
   <div class="container">
     <!-- Carrusel con sombra -->
-    <div id="carouselExample" class="carousel slide shadow-lg mb-5 bg-white rounded mt-5" data-bs-ride="carousel">
+    <div id="carouselExample" class="carousel slide border mb-5 bg-white rounded mt-5" data-bs-ride="carousel">
       <div class="carousel-inner">
         <div v-for="(imagen, index) in imagenesCarrusel" :key="index" class="carousel-item" :class="{ active: index === 0 }">
           <img :src="imagen" class="d-block w-100" style="height: 450px; object-fit: cover;" alt="Imagen carrusel">
@@ -105,7 +105,7 @@ onMounted(async () => {
     <div v-if="error" class="alert alert-danger text-center">{{ error }}</div>
 
     <!-- Tarjetas de rutas obtenidas desde la API -->
-    <div v-if="rutas.length > 0" class="row g-4">
+    <div v-if="rutas.length > 0" class="row g-4 mb-4">
       <div v-for="(ruta, index) in rutas" :key="index" class="col-12">
         <div class="card h-100 shadow-sm mb-4">
           <div class="row g-0">
