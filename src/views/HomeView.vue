@@ -10,9 +10,9 @@ const router = useRouter(); // Instancia de Vue Router
 
 // Lista de imágenes del carrusel
 const imagenesCarrusel = [
-  "public/img/Almagro.webp",
-  "public/img/EmbajadaBerlin.webp",
-  "public/img/MezquitaCordoba.webp"
+  "/img/Almagro.webp",
+  "/img/EmbajadaBerlin.webp",
+  "/img/MezquitaCordoba.webp"
 ];
 
 // Función para obtener las rutas desde la API
@@ -112,7 +112,7 @@ onMounted(async () => {
           <div class="row g-0">
             <!-- Imagen de la API -->
             <div class="col-md-5 p-3">
-              <img :src="'public/img/' + ruta.foto" class="img-fluid rounded-start w-100"
+              <img :src="'/img/' + ruta.foto" class="img-fluid rounded-start w-100"
                 style="height: 250px; object-fit: cover;" alt="Imagen de la ruta">
             </div>
             <!-- Contenido de la tarjeta -->

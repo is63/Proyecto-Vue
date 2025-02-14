@@ -22,7 +22,7 @@ function cerrarSesion() {
         <!-- Logo y Nombre -->
         <div class="d-flex align-items-center">
           <router-link to="/" class="me-2">
-            <img src="../../public/img/olimpo.png" class="logo" alt="Logo" />
+            <img src="../../img/olimpo.png" class="logo" alt="Logo" />
           </router-link>
           <span class="text-gold fs-4 fw-bold text-shadow">Olímpo Tours</span>
         </div>
