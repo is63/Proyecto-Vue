@@ -54,8 +54,8 @@ onMounted(() => {
 <template>
   <div class="container-fluid px-0">
     <!-- Imagen de la ruta con margen -->
-    <div class="w-100 mt-3 px-3">
-      <img :src="`/img/${ruta.foto}`" alt="Imagen de la ruta" class="img-fluid w-100 rounded" style="height: 400px; object-fit: cover;">
+    <div class="w-100 ">
+      <img :src="`/img/${ruta.foto}`" alt="Imagen de la ruta" class="img-fluid w-100 rounded" style="height: 400px; background-size: cover;">
     </div>
 
     <!-- Título de la ruta -->

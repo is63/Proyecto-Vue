@@ -14,7 +14,6 @@
   width: 100%;
   position: relative;
   margin-top: auto;  
-  
   height: 70px;
 }
 

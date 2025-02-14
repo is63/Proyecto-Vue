@@ -10,9 +10,9 @@ const router = useRouter(); // Instancia de Vue Router
 
 // Lista de imágenes del carrusel
 const imagenesCarrusel = [
-  "public/img/pantenon.jpg",
-  "public/img/temploHera.webp",
-  "public/img/atenas.webp"
+  "public/img/Almagro.webp",
+  "public/img/EmbajadaBerlin.webp",
+  "public/img/MezquitaCordoba.webp"
 ];
 
 // Función para obtener las rutas desde la API
@@ -57,7 +57,7 @@ async function obtenerValoraciones() {
       // Asignamos las valoraciones a las rutas correspondientes
       rutas.value.forEach((ruta) => {
         ruta.valoraciones = valoraciones.value.filter(
-            (valoracion) => valoracion.ruta_id === ruta.id
+          (valoracion) => valoracion.ruta_id === ruta.id
         );
       });
     } else {
@@ -83,10 +83,11 @@ onMounted(async () => {
 
 <template>
   <div class="container">
-    <!-- Carrusel con sombra -->
+    <!-- Carrusel -->
     <div id="carouselExample" class="carousel slide border mb-5 bg-white rounded mt-5" data-bs-ride="carousel">
       <div class="carousel-inner">
-        <div v-for="(imagen, index) in imagenesCarrusel" :key="index" class="carousel-item" :class="{ active: index === 0 }">
+        <div v-for="(imagen, index) in imagenesCarrusel" :key="index" class="carousel-item" data-bs-interval="4000"
+          data-bs-pause="hover" :class="{ active: index === 0 }">
           <img :src="imagen" class="d-block w-100" style="height: 450px; object-fit: cover;" alt="Imagen carrusel">
         </div>
       </div>
@@ -111,7 +112,8 @@ onMounted(async () => {
           <div class="row g-0">
             <!-- Imagen de la API -->
             <div class="col-md-5 p-3">
-              <img :src="'public/img/' + ruta.foto" class="img-fluid rounded-start w-100" style="height: 250px; object-fit: cover;" alt="Imagen de la ruta">
+              <img :src="'public/img/' + ruta.foto" class="img-fluid rounded-start w-100"
+                style="height: 250px; object-fit: cover;" alt="Imagen de la ruta">
             </div>
             <!-- Contenido de la tarjeta -->
             <div class="col-md-7">
@@ -166,7 +168,8 @@ onMounted(async () => {
 
 /* Ajustes para la imagen dentro de la tarjeta */
 .card img {
-  padding: 10px; /* Espaciado interno para la imagen */
+  padding: 10px;
+  /* Espaciado interno para la imagen */
 }
 
 /* Estilos para la sección de valoraciones */

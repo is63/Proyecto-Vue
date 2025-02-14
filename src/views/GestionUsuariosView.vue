@@ -262,7 +262,7 @@ async function eliminarUsuario() {
     <div class="table-responsive w-75">
       <!-- Tabla con la lista de usuarios -->
       <table class="table table-bordered table-hover">
-        <thead class="table-dark">
+        <thead class="table cabecera-tabla">
         <tr>
           <th>ID</th>
           <th>Nombre</th>
@@ -401,5 +401,9 @@ async function eliminarUsuario() {
 /* Ajustar la columna de acciones (botones) */
 .acciones-col {
   width: 150px;
+}
+.cabecera-tabla{
+  background-color: #232342;
+  color: white;
 }
 </style>
