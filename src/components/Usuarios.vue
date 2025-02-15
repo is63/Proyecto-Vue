@@ -1,84 +1,3 @@
-<template>
-  <div class="container">
-    <h2>Gestión de usuarios</h2>
-    <div v-if="loading">Loading...</div>
-    <div v-else>
-
-      <div class="row">
-        <div class="col-md-4 col-sm-6">
-          <button @click="mostrarModalCrearUsuario()" class="btn btn-primary btn-block">Crear usuario</button>
-        </div>
-      </div>
-
-      <ul class="list-group mt-3">
-        <li v-for="user in users" :key="user.id" class="list-group-item">
-          <div class=" d-flex justify-content-between align-items-center">
-            <div class="col-9">
-              {{ user.nombre }} - {{ user.dni }} - {{ user.usuario }} - {{ user.cuentaHabilitada ? 'Habilitado' : 'Deshabilitado' }}
-            </div>
-            <div class="col-3">
-              <button @click="editUser(user)" class="btn btn-sm btn-warning">Editar</button>
-              <button @click="deleteUser(user.id)" class="btn btn-sm btn-danger">Eliminar</button>
-            </div>
-          </div>
-        </li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="modal" :class="{ 'd-block': showModalCrearUsuario}" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header d-flex justify-content-between">
-          <h5 v-if="editingUser" class="modal-title">Editando usuario</h5>
-          <h5 v-else class="modal-title">Nuevo usuario</h5>
-          <button type="button" class="close" aria-label="Close" @click="cerrarModalCrearUsuario">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="modal-body">
-            <div class="row">
-              <div class="col-md-6">
-                <label for="nombre" class="form-label">Nombre:</label>
-                <input type="text" id="nombre" v-model="newUser.nombre" class="form-control" required />
-              </div>
-              <div class="col-md-6">
-                <label for="dni" class="form-label">DNI:</label>
-                <input type="text" id="dni" v-model="newUser.dni" class="form-control" required />
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-6">
-                <label for="correo" class="form-label">Correo:</label>
-                <input type="email" id="correo" v-model="newUser.usuario" class="form-control" required />
-              </div>
-              <div class="col-md-6">
-                <label for="contraseña" class="form-label">Contraseña:</label>
-                <input type="password" id="contraseña" v-model="newUser.contraseña" class="form-control" required />
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-6">
-                <label for="habilitado" class="form-label">Habilitado:</label>
-                <select id="habilitado" v-model="newUser.cuentaHabilitada" class="form-select" required>
-                  <option value="true">Sí</option>
-                  <option value="false">No</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="cerrarModalCrearUsuario">Cerrar</button>
-          <button v-if="editingUser" type="button" class="btn btn-primary" @click="saveChanges">Guardar</button>
-          <button v-else type="button" class="btn btn-primary" @click="crearUsuario">Crear</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { defineProps, toRefs } from 'vue';
@@ -106,7 +25,6 @@ const newUser = reactive({
   dni: '',
   usuario: '',
   contraseña: '',
-  cuentaHabilitada: 'true'
 })
 const editingUser = ref(null)
 
@@ -159,7 +77,6 @@ const editUser = (user) => {
   newUser.dni = user.dni
   newUser.usuario = user.usuario
   newUser.contraseña = user.contraseña
-  newUser.cuentaHabilitada = user.cuentaHabilitada.toString()
   showModalCrearUsuario.value = true;
 
 }
@@ -200,10 +117,87 @@ const clearForm = () => {
   newUser.dni = ''
   newUser.usuario = ''
   newUser.contraseña = ''
-  newUser.cuentaHabilitada = 'true'
   editingUser.value = null
 }
 </script>
+
+<template>
+  <div class="container">
+    <h2>Gestión de usuarios</h2>
+    <div v-if="loading">Loading...</div>
+    <div v-else>
+
+      <div class="row">
+        <div class="col-md-4 col-sm-6">
+          <button @click="mostrarModalCrearUsuario()" class="btn btn-primary btn-block">Crear usuario</button>
+        </div>
+      </div>
+
+      <ul class="list-group mt-3">
+        <li v-for="user in users" :key="user.id" class="list-group-item">
+          <div class=" d-flex justify-content-between align-items-center">
+            <div class="col-9">
+              {{ user.nombre }} - {{ user.dni }} - {{ user.usuario }}
+            </div>
+            <div class="col-3">
+              <button @click="editUser(user)" class="btn btn-sm btn-warning">Editar</button>
+              <button @click="deleteUser(user.id)" class="btn btn-sm btn-danger">Eliminar</button>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="modal" :class="{ 'd-block': showModalCrearUsuario}" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header d-flex justify-content-between">
+          <h5 v-if="editingUser" class="modal-title">Editando usuario</h5>
+          <h5 v-else class="modal-title">Nuevo usuario</h5>
+          <button type="button" class="close" aria-label="Close" @click="cerrarModalCrearUsuario">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6">
+                <label for="nombre" class="form-label">Nombre:</label>
+                <input type="text" id="nombre" v-model="newUser.nombre" class="form-control" required />
+              </div>
+              <div class="col-md-6">
+                <label for="dni" class="form-label">DNI:</label>
+                <input type="text" id="dni" v-model="newUser.dni" class="form-control" required />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <label for="correo" class="form-label">Correo:</label>
+                <input type="email" id="correo" v-model="newUser.usuario" class="form-control" required />
+              </div>
+              <div class="col-md-6">
+                <label for="contraseña" class="form-label">Contraseña:</label>
+                <input type="password" id="contraseña" v-model="newUser.contraseña" class="form-control" required />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <label for="habilitado" class="form-label">Habilitado:</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" @click="cerrarModalCrearUsuario">Cerrar</button>
+          <button v-if="editingUser" type="button" class="btn btn-primary" @click="saveChanges">Guardar</button>
+          <button v-else type="button" class="btn btn-primary" @click="crearUsuario">Crear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
 
 <style scoped>
 .user-management {
