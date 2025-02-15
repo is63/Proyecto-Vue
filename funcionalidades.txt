@@ -1,0 +1,184 @@
+Página Principal
++---------------------------------------------------+
+| Barra de Búsqueda (Localidad + Fecha)             |
++---------------------------------------------------+
+| Carrusel de Vídeo/Imágenes                        |
++---------------------------------------------------+
+| Listado de Rutas (Tarjetas con Foto, Título, etc.)|
++---------------------------------------------------+
+
+Dashboard de Administracion
++---------------------------------------------------+
+| Listado de Usuarios (Filtrar por rol)             |
+| Listado de Rutas (Editar/Duplicar/Cancelar)       |
+| Formulario de Creación de Ruta                    |
++---------------------------------------------------+
+
+Panel de Guía
++---------------------------------------------------+
+| Listado de Rutas Asignadas (Ordenadas por fecha)  |
+| Detalle de Ruta (Asistentes + Pasar lista)        |
++---------------------------------------------------+
+
+Mis Reservas (cliente)
++---------------------------------------------------+
+| Listado de Reservas Activas (Modificar/Cancelar)  |
+| Histórico de Rutas Realizadas (Valorar)           |
++---------------------------------------------------+
+
+
+
+-------------------------------------------------------------------
+Diagrama de Flujo de Funcionalidades Clave
+
+---Reserva de Ruta (Cliente):
+-Buscar ruta por localidad/fecha.
+-Seleccionar ruta y ver detalles.
+-Hacer clic en "Reservar".
+-Rellenar formulario con número de asistentes (1-8).
+-Confirmar reserva (se guarda en "Mis Reservas").
+
+---Creación de Ruta (Administrador):
+-Acceder al dashboard de administración.
+-Rellenar formulario de creación de ruta.
+-Asignar guía disponible en la fecha seleccionada.
+-Publicar ruta (aparece en listados públicos).
+
+---Asistencia de Ruta (Guía):
+-Acceder al panel de guía.
+-Seleccionar ruta asignada.
+-Marcar asistentes en la lista.
+-Guardar cambios (opcionalmente, enviar confirmación al sistema).
+
+
+-------------------------------------------------------------------
+1. Página Principal (Usuarios no registrados y Clientes)
+    Descripción: Vista pública accesible para todos los usuarios.
+
+    Funcionalidades:
+
+        - Búsqueda de rutas:
+            - Por localidad (obligatorio) y fecha (opcional).
+            - Muestra tarjetas con información básica de las rutas (título, foto, fecha, hora, localidad).
+
+        - Visualización de detalles de la ruta:
+            - Ampliación de información al hacer clic en una tarjeta:
+                - Ítems a visitar (título, descripción, foto).
+                - Punto de encuentro (mapa interactivo con latitud y longitud).
+                - Descripción completa.
+
+        - Para usuarios no registrados:
+            - Mensaje para registrarse o loguearse al intentar reservar.
+
+        - Para clientes registrados:
+            - Botón de reserva con formulario para número de asistentes (máximo 8).
+
+        - Vídeo promocional:
+            - Carrusel o vídeo destacado con controles personalizados (play/pause, volumen).
+
+2. Rol de Administrador
+    Páginas y Funcionalidades:
+
+        - Dashboard de Administración:
+
+            - Gestión de Usuarios:
+                - Listado de usuarios (clientes y guías).
+                - Cambiar rol de usuario (e.g., asignar "Guía" a un cliente).
+
+            - Gestión de Rutas:
+
+                - Crear Ruta:
+                    - Formulario con campos obligatorios:
+                        - Título, localidad, descripción, foto, fecha, hora, punto de encuentro (mapa interactivo).
+                    - Campos opcionales: Ítems a visitar (título, descripción, foto).
+
+                - Asignar Guía a Ruta:
+                    - Listado de guías disponibles en la fecha seleccionada.
+                    - Validación de disponibilidad del guía (no asignar si ya tiene otra ruta ese día).
+
+                - Duplicar Ruta:
+                    - Copiar una ruta existente y modificar fecha/guía.
+
+                - Cancelar Ruta:
+                    - Opción para cancelar si hay menos de 10 inscritos (icono de warning en la lista).
+
+                - Listado de Rutas Pendientes:
+                    - Filtros por fecha, localidad o guía.
+                    - Iconos de alerta para rutas con menos de 10 inscritos.
+                    - Acciones rápidas: Editar, duplicar, cancelar.
+
+3. Rol de Guía Turístico
+    Páginas y Funcionalidades:
+
+        - Panel de Guía:
+
+            - Ver Rutas Asignadas:
+                - Listado cronológico de rutas (próximas primero).
+                - Detalles de cada ruta: fecha, hora, localidad, número de asistentes.
+
+            - Pasar Lista:
+                - Acceso a la lista de asistentes inscritos en una ruta.
+                - Opción para marcar asistencia (checkboxes: presente/ausente).
+                - (Opcional) Guardar registro de asistencia en la base de datos.
+
+            - Detalle de Ruta:
+                - Información completa de la ruta (ítems a visitar, punto de encuentro).
+
+4. Rol de Cliente
+    Páginas y Funcionalidades:
+
+        - Búsqueda y Reserva:
+            - Mismo flujo que la página principal, pero con acceso a reservas.
+
+        - Mis Reservas:
+            - Listado de reservas activas con opciones:
+                - Modificar número de asistentes (hasta 8).
+                - Cancelar reserva.
+                - Notificaciones de cambios (e.g., ruta cancelada por el administrador).
+
+        - Mis Rutas Realizadas:
+            - Histórico de rutas finalizadas.
+
+        - Valorar Ruta:
+            - Formulario para puntuar (1-5 estrellas) y dejar comentario.
+
+        - Perfil de Usuario:
+            - Editar datos personales (nombre, email, contraseña).
+
+Diagrama de Flujo de Funcionalidades Clave
+
+    - Reserva de Ruta (Cliente):
+        - Buscar ruta por localidad/fecha.
+        - Seleccionar ruta y ver detalles.
+        - Hacer clic en "Reservar".
+        - Rellenar formulario con número de asistentes (1-8).
+        - Confirmar reserva (se guarda en "Mis Reservas").
+
+    - Creación de Ruta (Administrador):
+        - Acceder al dashboard de administración.
+        - Rellenar formulario de creación de ruta.
+        - Asignar guía disponible en la fecha seleccionada.
+        - Publicar ruta (aparece en listados públicos).
+
+    - Asistencia de Ruta (Guía):
+        - Acceder al panel de guía.
+        - Seleccionar ruta asignada.
+        - Marcar asistentes en la lista.
+        - Guardar cambios (opcionalmente, enviar confirmación al sistema).
+
+Requisitos Técnicos Clave
+
+    - Integración con Google Maps API:
+        - Selección de punto de encuentro (latitud y longitud).
+        - Mapa interactivo en detalles de la ruta.
+
+    - Validación de Disponibilidad:
+        - Guías no pueden tener dos rutas el mismo día.
+        - Límite de asistentes por ruta (máximo definido por el administrador).
+
+    - Autenticación y Autorización:
+        - Roles diferenciados (admin, guía, cliente).
+        - Acceso restringido a funciones críticas (e.g., cancelar ruta solo para admin).
+
+    - Notificaciones:
+        - Envío de emails para confirmación de reserva, cancelaciones o cambios.
