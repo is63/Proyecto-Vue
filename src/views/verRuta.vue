@@ -1,12 +1,11 @@
 <script setup>
-// Definir las propiedades y referencias necesarias
 import { ref, onMounted } from 'vue';
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import flatpickr from "flatpickr";
+import L from "leaflet"; // Mapa
+import flatpickr from "flatpickr"; //Fecha y Hora (Calendario)
 import "flatpickr/dist/flatpickr.min.css";
 
-// Propiedades recibidas
+// Propiedades recibidas del componente padre
 const props = defineProps({
   id: {
     type: String,
@@ -14,87 +13,88 @@ const props = defineProps({
   },
 });
 
-const ruta = ref({});
-const guias = ref([]);
-const error = ref("");
-let map = null;
+// Variables reactivas
+const ruta = ref({}); // Almacenar los datos de la ruta
+const guias = ref([]); // Guardar los guías disponibles
+const error = ref(""); //  mostrar mensajes de error
+
+let map = null; // Variable para guardar el mapa
 
 // Estados para el modal de duplicar
-const nuevaFecha = ref("");
-const nuevaHora = ref("");
-const nuevoGuia = ref("");
+const nuevaFecha = ref(""); // Guardar la fecha seleccionada
+const nuevaHora = ref(""); // Guardar la hora seleccionada
+const nuevoGuia = ref(""); // Guardar el guía seleccionado
 
 // Estado para el modal de confirmación
-const mostrarConfirmacion = ref(false);
-const mensajeConfirmacion = ref("");
-const confirmacionExitosa = ref(false);
+const mostrarConfirmacion = ref(false); // Mostrar el modal de confirmación
+const mensajeConfirmacion = ref(""); // Guardar el mensaje de confirmación
+const confirmacionExitosa = ref(false); // Para saber si la duplicación fue exitosa
 
-// Función para cargar datos de la ruta y guías
+// Función para cargar los datos de la ruta y los guias
 async function cargarDatos() {
   try {
+    // Cargar datos de la ruta actual
     const responseRuta = await fetch(`http://localhost/freetours/api.php/rutas?id=${props.id}`);
     if (!responseRuta.ok) {
       throw new Error(`Error al cargar la ruta: ${responseRuta.status} ${responseRuta.statusText}`);
     }
     const dataRuta = await responseRuta.json();
-    ruta.value = dataRuta;
+    ruta.value = dataRuta; // Guardar los datos de la ruta
 
-    // Cargar guías disponibles
+    // Cargar guias disponibles
     const responseGuias = await fetch("http://localhost/freetours/api.php/usuarios");
     if (!responseGuias.ok) {
       throw new Error(`Error al cargar los guías: ${responseGuias.status} ${responseGuias.statusText}`);
     }
     const dataGuias = await responseGuias.json();
-    guias.value = dataGuias.filter(usuario => usuario.rol === "guia");
+    guias.value = dataGuias.filter(usuario => usuario.rol === "guia"); // Filtrar solo los guías
 
+    // Si la ruta tiene coordenadas, se inicializa el mapa
     if (ruta.value.latitud && ruta.value.longitud) {
       inicializarMapa(ruta.value.latitud, ruta.value.longitud);
     }
   } catch (err) {
     console.error("Error:", err);
-    error.value = `No se pudieron cargar los datos de la ruta. ${err.message}`;
+    error.value = `No se pudieron cargar los datos de la ruta. ${err.message}`; // Añadir el mensaje de error
   }
 }
 
+// Función para inicializar el mapa
 function inicializarMapa(latitud, longitud) {
   if (map) {
-    map.remove();
+    map.remove(); // Si ya existe un mapa, se elimina
   }
 
-  map = L.map("map").setView([latitud, longitud], 16);
+  map = L.map("map").setView([latitud, longitud], 16); // Crear el mapa
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  }).addTo(map);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { //Añadir la "atribucion" al mapa (abajo derecha)
+    attribution: '', })
+    .addTo(map);
 
-  L.marker([latitud, longitud])
-      .addTo(map)
-      .bindPopup("Punto de encuentro")
-      .openPopup();
+  L.marker([latitud, longitud]) // Crear un marcador
+      .addTo(map) // Añadir al mapa
+      .bindPopup("Punto de encuentro") // Añadir texto a un popup al marcador
+      .openPopup(); // Abrir el PoPup solo
 }
 
-// Inicializar Flatpickr para fecha y hora
 onMounted(() => {
   cargarDatos();
 
-  // Configuración de Flatpickr para la fecha
-  flatpickr("#fechaPicker", {
-    dateFormat: "Y-m-d", // Formato de fecha
-    defaultDate: new Date(), // Fecha por defecto (hoy)
-    minDate: "today", // No permitir fechas anteriores a hoy
+  flatpickr("#fechaPicker", { // Calendario de fecha
+    dateFormat: "Y-m-d", // Formato de fecha Año-mes-dia
+    defaultDate: new Date(), // Fecha por defecto
+    minDate: "today", // Establecer la fecha minima como hoy
     onChange: (selectedDates, dateStr) => {
       nuevaFecha.value = dateStr; // Asignar la fecha seleccionada
     },
-    static: true, // Hacer el calendario estático
-    position: "bottom", // Asegura que el calendario se muestre abajo
+    static: true, // Hacer que el calendario sea estático
+    position: "bottom", // Posicionar el calendario debajo del campo de entrada
   });
 
-  // Configuración de Flatpickr para la hora
-  flatpickr("#horaPicker", {
-    enableTime: true, // Habilitar selector de hora
-    noCalendar: true, // Ocultar el calendario
-    dateFormat: "H:i:S", // Formato de hora (HH:MM:SS)
+  flatpickr("#horaPicker", { // Selector de hora
+    enableTime: true, // Habilitar la selección de hora
+    noCalendar: true, // Deshabilitar el calendario
+    dateFormat: "H:i:S", // Formato de hora de Hora:minutos:segundos
     time_24hr: true, // Usar formato de 24 horas
     onChange: (selectedDates, dateStr) => {
       nuevaHora.value = dateStr; // Asignar la hora seleccionada
@@ -104,8 +104,7 @@ onMounted(() => {
 
 // Función para duplicar la ruta
 async function duplicarRuta() {
-  // Crear el objeto de datos para la duplicación
-  const rutaData = {
+  const rutaData = { // Preparar los datos de la nueva ruta
     titulo: ruta.value.titulo,
     localidad: ruta.value.localidad,
     descripcion: ruta.value.descripcion,
@@ -114,11 +113,10 @@ async function duplicarRuta() {
     hora: nuevaHora.value,
     latitud: ruta.value.latitud,
     longitud: ruta.value.longitud,
-    guia_id: nuevoGuia.value || null, // Asignar guía si se seleccionó uno
+    guia_id: nuevoGuia.value || null,
   };
 
   try {
-    // Realizar la llamada a la API para duplicar la ruta
     const response = await fetch("http://localhost/freetours/api.php/rutas", {
       method: "POST",
       headers: {
@@ -127,29 +125,29 @@ async function duplicarRuta() {
       body: JSON.stringify(rutaData),
     });
 
-    if (response.ok) {
-      mensajeConfirmacion.value = "Ruta duplicada con éxito";
-      confirmacionExitosa.value = true;
-    } else {
-      throw new Error("Error al duplicar la ruta");
-    }
+    if (response.ok) { // Si la respuesta es exitosa
+      mensajeConfirmacion.value = "Ruta duplicada con éxito"; // Mensaje de éxito
+      confirmacionExitosa.value = true; // Marcar como exitosa
 
-    // Mostrar el modal de confirmación y cerrar después de 3 segundos
-    mostrarConfirmacion.value = true;
-    setTimeout(() => {
-      mostrarConfirmacion.value = false;
-
-      // Limpiar los campos del modal después de la duplicación exitosa
+      // Limpiar los campos del modal
       nuevaFecha.value = "";
       nuevaHora.value = "";
       nuevoGuia.value = "";
+    } else {
+      throw new Error("Error al duplicar la ruta"); // Si la respuesta no es exitosa, lanzar un error
+    }
+
+    // Mostrar el modal de confirmacion
+    mostrarConfirmacion.value = true;
+    setTimeout(() => {
+      mostrarConfirmacion.value = false;
     }, 3000);
 
-  } catch (error) {
-    mensajeConfirmacion.value = "Error al duplicar la ruta";
-    confirmacionExitosa.value = false;
+  } catch (error) { // Si ocurre un error al duplicar la ruta
+    mensajeConfirmacion.value = "Error al duplicar la ruta"; // Mensaje de error
+    confirmacionExitosa.value = false; // Marcar como no exitosa
 
-    // Mostrar el modal de error y cerrarlo después de 3 segundos
+    // Mostrar el modal de error
     mostrarConfirmacion.value = true;
     setTimeout(() => {
       mostrarConfirmacion.value = false;
@@ -160,28 +158,27 @@ async function duplicarRuta() {
 
 <template>
   <div class="container-fluid px-0">
-    <!-- Imagen principal de la ruta -->
+    <!-- Imagen principal -->
     <div class="w-100">
       <img :src="`/img/${ruta.foto}`" alt="Imagen de la ruta" class="img-fluid w-100 rounded" style="height: 400px; object-fit: cover;">
     </div>
 
-    <!-- Título de la ruta -->
+    <!-- Titulo -->
     <h1 class="text-center my-4 display-4 fw-bold">{{ ruta.titulo }}</h1>
 
     <div class="container">
       <div class="row justify-content-between">
-        <!-- Columna izquierda: Descripción y Mapa -->
+        <!-- Parte izquierda: Descripción y Mapa -->
         <div class="col-md-7 pe-md-5">
           <div class="mb-4 descripcion-container">
             <p class="descripcion">{{ ruta.descripcion }}</p>
           </div>
-
           <div class="mb-4 map-container">
             <div id="map" class="map-styled"></div>
           </div>
         </div>
 
-        <!-- Columna derecha: Detalles y Botones -->
+        <!-- Parte derecha derecha: Detalles y Botones -->
         <div class="col-md-4 detalles-col">
           <div class="mb-3">
             <p class="h4 fw-bold text-decoration-underline text-secondary">Localidad</p>
@@ -200,7 +197,7 @@ async function duplicarRuta() {
             <p class="detalle">{{ ruta.hora }}</p>
           </div>
 
-          <!-- Botones de acciones -->
+          <!-- Botones -->
           <div class="btn-group mb-3 w-100" role="group">
             <button type="button" class="btn btn-primary">Editar</button>
             <button type="button" class="btn btn-danger">Borrar</button>
@@ -210,7 +207,7 @@ async function duplicarRuta() {
       </div>
     </div>
 
-    <!-- Modal para Duplicar Ruta -->
+    <!-- Modal de Duplicar Ruta -->
     <div class="modal fade" id="duplicarModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -219,7 +216,7 @@ async function duplicarRuta() {
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <!-- Campo de fecha con Flatpickr -->
+            <!-- Fecha -->
             <div class="mb-3">
               <label class="form-label">Fecha</label> <br>
               <input
@@ -231,7 +228,7 @@ async function duplicarRuta() {
                   readonly style="width: 465px">
             </div>
 
-            <!-- Campo de hora con Flatpickr -->
+            <!-- Hora -->
             <div class="mb-3">
               <label class="form-label">Hora (HH:MM:SS)</label>
               <input
@@ -243,7 +240,7 @@ async function duplicarRuta() {
                   readonly>
             </div>
 
-            <!-- Selector de guía -->
+            <!-- Guia -->
             <div class="mb-3">
               <label class="form-label">Nuevo Guía</label>
               <select class="form-select" v-model="nuevoGuia">
@@ -260,13 +257,14 @@ async function duplicarRuta() {
       </div>
     </div>
 
-    <!-- Modal de Confirmación -->
+    <!-- Modal de Confirmacion -->
     <div v-if="mostrarConfirmacion" class="modal fade show" tabindex="-1" aria-hidden="true" style="display: block;">
       <div class="modal-dialog">
         <div :class="['modal-content', confirmacionExitosa ? 'bg-success' : 'bg-danger']">
           <div class="modal-body">
-            <!-- Mensaje con texto más pequeño y sin negrita -->
+            <!-- Mensaje Correcto -->
             <p class="text-white fs-5 text-center" v-if="confirmacionExitosa">{{ mensajeConfirmacion }}</p>
+            <!-- Mensaje Error -->
             <p class="text-white fs-5 text-center" v-if="!confirmacionExitosa">{{ mensajeConfirmacion }}</p>
           </div>
         </div>
@@ -307,45 +305,10 @@ h1 {
   width: 33.33%;
 }
 
-/* Estilo para el calendario en el modal */
-.flatpickr-calendar {
-  width: 100% !important; /* Asegura que el calendario ocupe todo el ancho disponible */
-  margin-top: 10px; /* Añade un pequeño margen superior */
-  position: absolute; /* Asegura que el calendario quede alineado con el campo */
-  top: 0;
-  left: 0;
-}
-
-/* Asegura que el campo de entrada y el calendario estén alineados adecuadamente */
-#fechaPicker {
-  width: 100%; /* Hace que el campo de fecha ocupe todo el ancho */
-  display: inline-block;
-}
-
-/* Asegura que el contenedor del calendario tiene suficiente espacio debajo del campo */
-.modal-body {
-  position: relative;
-
-}
-
-.flatpickr-calendar {
-  z-index: 1050 !important; /* Asegura que el calendario esté encima del modal */
-}
-.bg-success {
-  background-color: #28a745 !important;
-}
-
-.bg-danger {
-  background-color: #dc3545 !important;
-}
-
 .text-white {
   color: white !important;
 }
 
-.fs-5 {
-  font-size: 1.25rem !important; /* Tamaño de texto un poco más pequeño */
-}
 
 .text-center {
   text-align: center !important;
