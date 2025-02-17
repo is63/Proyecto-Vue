@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import router from '@/router';
 import "leaflet/dist/leaflet.css";
 import L from "leaflet"; // Mapa
 import flatpickr from "flatpickr"; //Fecha y Hora (Calendario)
@@ -30,6 +31,9 @@ const mostrarConfirmacion = ref(false); // Mostrar el modal de confirmación
 const mensajeConfirmacion = ref(""); // Guardar el mensaje de confirmación
 const confirmacionExitosa = ref(false); // Para saber si la duplicación fue exitosa
 
+const mostrarEliminacion = ref(false);//Mostrar el modal de Eliminacion
+const eliminacionExitosa = ref("")//Guardar el mensaje de confirmacion de la eliminacion
+
 // Función para cargar los datos de la ruta y los guias
 async function cargarDatos() {
   try {
@@ -40,6 +44,10 @@ async function cargarDatos() {
     }
     const dataRuta = await responseRuta.json();
     ruta.value = dataRuta; // Guardar los datos de la ruta
+  
+  if(ruta.value == null){
+    router.push("/");
+  }
 
     // Cargar guias disponibles
     const responseGuias = await fetch("http://localhost/freetours/api.php/usuarios");
@@ -57,6 +65,7 @@ async function cargarDatos() {
     console.error("Error:", err);
     error.value = `No se pudieron cargar los datos de la ruta. ${err.message}`; // Añadir el mensaje de error
   }
+
 }
 
 // Función para inicializar el mapa
@@ -115,8 +124,15 @@ async function duplicarRuta() {
     longitud: ruta.value.longitud,
     guia_id: nuevoGuia.value || null,
   };
+  console.log(rutaData);
+  
 
   try {
+
+    if(rutaData.hora == "" || rutaData.fecha == ""){
+      throw new Error("Los campos de la fecha u hora estan vacios")
+    }
+
     const response = await fetch("http://localhost/freetours/api.php/rutas", {
       method: "POST",
       headers: {
@@ -154,10 +170,37 @@ async function duplicarRuta() {
     }, 3000);
   }
 }
+
+
+async function eliminarRuta(id){
+
+  mostrarEliminacion.value = true
+
+  const rutaAEliminar = id;
+  try{
+  const response = await fetch(`http://localhost/freetours/api.php/rutas?id=${rutaAEliminar}`, {
+    method: 'DELETE',
+})
+
+
+if (response.ok) { // Si la respuesta es exitosa
+      eliminacionExitosa.value = "Ruta duplicada con éxito"; // Mensaje de éxito
+      modalEl.value = true; // Marcar como exitosa
+
+    } else {
+      throw new Error("Error al duplicar la ruta"); // Si la respuesta no es exitosa, lanzar un error
+    }
+
+  }
+  catch(error){
+
+  }
+
+}
 </script>
 
 <template>
-  <div class="container-fluid px-0">
+  <div class="container-fluid mb-4 px-0">
     <!-- Imagen principal -->
     <div class="w-100">
       <img :src="`/img/${ruta.foto}`" alt="Imagen de la ruta" class="img-fluid w-100 rounded" style="height: 400px; object-fit: cover;">
@@ -200,8 +243,8 @@ async function duplicarRuta() {
           <!-- Botones -->
           <div class="btn-group mb-3 w-100" role="group">
             <button type="button" class="btn btn-primary">Editar</button>
-            <button type="button" class="btn btn-danger">Borrar</button>
-            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#duplicarModal">Duplicar</button>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal">Borrar</button>
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#duplicarModal">Duplicar</button>
           </div>
         </div>
       </div>
@@ -259,6 +302,38 @@ async function duplicarRuta() {
 
     <!-- Modal de Confirmacion -->
     <div v-if="mostrarConfirmacion" class="modal fade show" tabindex="-1" aria-hidden="true" style="display: block;">
+      <div class="modal-dialog">
+        <div :class="['modal-content', confirmacionExitosa ? 'bg-success' : 'bg-danger']">
+          <div class="modal-body">
+            <!-- Mensaje Correcto -->
+            <p class="text-white fs-5 text-center" v-if="confirmacionExitosa">{{ mensajeConfirmacion }}</p>
+            <!-- Mensaje Error -->
+            <p class="text-white fs-5 text-center" v-if="!confirmacionExitosa">{{ mensajeConfirmacion }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Eliminación-->
+    <div class="modal fade" id="eliminarModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Eliminar Ruta</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>¿Seguro que quiere <strong class="text-danger text-decoration-none" style="font-size: large;">eliminar</strong> esta ruta?</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-danger" @click="eliminarRuta(ruta.id)">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+     <!-- Modal de Confirmacion -->
+    <div v-if="mostrarEliminacion" class="modal fade show" aria-hidden="true" style="display: block;">
       <div class="modal-dialog">
         <div :class="['modal-content', confirmacionExitosa ? 'bg-success' : 'bg-danger']">
           <div class="modal-body">

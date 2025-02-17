@@ -63,7 +63,7 @@ const operacionExitosa = ref(false);
 
 // Estado para el modal de error
 const mensajeError = ref(''); // Mensaje de error a mostrar
-const mostrarModalError = ref(false); // Controlar la visibilidad del modal de error
+
 
 // Función para obtener los datos de la API
 async function fetchData() {
@@ -261,7 +261,7 @@ async function eliminarUsuario() {
   <main class="d-flex justify-content-center mt-5 text-center">
     <div class="table-responsive w-75">
       <!-- Tabla con la lista de usuarios -->
-      <table class="table table-bordered table-hover">
+      <table class="table table-bordered table-striped">
         <thead class="table cabecera-tabla">
         <tr>
           <th>ID</th>
@@ -398,12 +398,14 @@ async function eliminarUsuario() {
 </template>
 
 <style scoped>
-/* Ajustar la columna de acciones (botones) */
 .acciones-col {
   width: 150px;
 }
 .cabecera-tabla{
   background-color: #232342;
   color: white;
+}
+tbody tr:hover{
+background-color: #d6d4d4;
 }
 </style>

@@ -46,7 +46,7 @@ async function obtenerRutas() {
 // Función para obtener las valoraciones desde la API
 async function obtenerValoraciones() {
   try {
-    const response = await fetch(`${API_BASE_URL}/valoraciones`); // Endpoint para valoraciones
+    const response = await fetch(`${API_BASE_URL}/valoraciones`); 
     if (!response.ok) throw new Error("Error al cargar las valoraciones");
 
     const data = await response.json();
@@ -58,7 +58,7 @@ async function obtenerValoraciones() {
       // Asignamos las valoraciones a las rutas correspondientes
       rutas.value.forEach((ruta) => {
         ruta.valoraciones = valoraciones.value.filter(
-            (valoracion) => valoracion.ruta_id === ruta.id
+            (valoracion) => valoracion.ruta_id == ruta.id
         );
       });
     } else {
@@ -155,8 +155,8 @@ onMounted(async () => {
             <h5 class="mb-3">Valoraciones:</h5>
             <div v-if="ruta.valoraciones.length > 0">
               <div
-                  v-for="(valoracion, idx) in ruta.valoraciones"
-                  :key="idx"
+                  v-for="(valoracion, index) in ruta.valoraciones"
+                  :key="index"
                   class="mb-3"
               >
                 <div class="d-flex align-items-center">
