@@ -96,7 +96,7 @@ onMounted(() => {
     onChange: (selectedDates, dateStr) => {
       nuevaFecha.value = dateStr; // Asignar la fecha seleccionada
     },
-    static: true, // Hacer que el calendario sea estático
+    static: false, // Hacer que el calendario sea estático
     position: "bottom", // Posicionar el calendario debajo del campo de entrada
   });
 
@@ -268,7 +268,7 @@ if (response.ok) { // Si la respuesta es exitosa
                   id="fechaPicker"
                   v-model="nuevaFecha"
                   placeholder="Seleccione una fecha"
-                  readonly style="width: 465px">
+                  readonly>
             </div>
 
             <!-- Hora -->
