@@ -32,7 +32,7 @@ const mensajeConfirmacion = ref(""); // Guardar el mensaje de confirmación
 const confirmacionExitosa = ref(false); // Para saber si la duplicación fue exitosa
 
 const mostrarEliminacion = ref(false);//Mostrar el modal de Eliminacion
-const eliminacionExitosa = ref("")//Guardar el mensaje de confirmacion de la eliminacion
+const mensajeEliminacion = ref("")//Guardar el mensaje de confirmacion de la eliminacion
 
 // Función para cargar los datos de la ruta y los guias
 async function cargarDatos() {
@@ -157,7 +157,7 @@ async function duplicarRuta() {
     mostrarConfirmacion.value = true;
     setTimeout(() => {
       mostrarConfirmacion.value = false;
-    }, 3000);
+    }, 2000);
 
   } catch (error) { // Si ocurre un error al duplicar la ruta
     mensajeConfirmacion.value = "Error al duplicar la ruta"; // Mensaje de error
@@ -167,7 +167,7 @@ async function duplicarRuta() {
     mostrarConfirmacion.value = true;
     setTimeout(() => {
       mostrarConfirmacion.value = false;
-    }, 3000);
+    }, 2000);
   }
 }
 
@@ -184,8 +184,8 @@ async function eliminarRuta(id){
 
 
 if (response.ok) { // Si la respuesta es exitosa
-      eliminacionExitosa.value = "Ruta duplicada con éxito"; // Mensaje de éxito
-      modalEl.value = true; // Marcar como exitosa
+      mensajeEliminacion.value = "Ruta eliminada con éxito"; // Mensaje de éxito
+      mostrarEliminacion.value = true; // Marcar como exitosa
 
     } else {
       throw new Error("Error al duplicar la ruta"); // Si la respuesta no es exitosa, lanzar un error
@@ -193,7 +193,7 @@ if (response.ok) { // Si la respuesta es exitosa
 
   }
   catch(error){
-
+    mensajeEliminacion.value="Error al eliminar la ruta";
   }
 
 }
@@ -333,12 +333,12 @@ if (response.ok) { // Si la respuesta es exitosa
       </div>
     </div>
      <!-- Modal de Confirmacion -->
-    <div v-if="mostrarEliminacion" class="modal fade show" aria-hidden="true" style="display: block;">
+    <div v-if="mostrarEliminacion" class="modal fade show"  aria-hidden="true" style="display: block;">
       <div class="modal-dialog">
-        <div :class="['modal-content', confirmacionExitosa ? 'bg-success' : 'bg-danger']">
+        <div :class="['modal-content', mensajeEliminacion ? 'bg-success' : 'bg-danger']">
           <div class="modal-body">
             <!-- Mensaje Correcto -->
-            <p class="text-white fs-5 text-center" v-if="confirmacionExitosa">{{ mensajeConfirmacion }}</p>
+            <p class="text-white fs-5 text-center" v-if="mensajeEliminacion">{{ mensajeConfirmacion }}</p>
             <!-- Mensaje Error -->
             <p class="text-white fs-5 text-center" v-if="!confirmacionExitosa">{{ mensajeConfirmacion }}</p>
           </div>
