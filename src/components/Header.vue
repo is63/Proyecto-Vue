@@ -36,7 +36,7 @@ function cerrarSesion() {
             <router-link class="nav-link btn-custom" to="/gestionusuarios">Gestionar Usuarios</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link btn-custom" to="#">Crear Rutas</router-link>
+            <router-link class="nav-link btn-custom" to="/crearRuta">Crear Rutas</router-link>
           </li>
         </ul>
 
