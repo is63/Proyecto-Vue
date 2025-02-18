@@ -242,9 +242,8 @@ if (response.ok) { // Si la respuesta es exitosa
 
           <!-- Botones -->
           <div class="btn-group mb-3 w-100" role="group">
-            <button type="button" class="btn btn-primary">Editar</button>
-            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal">Borrar</button>
             <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#duplicarModal">Duplicar</button>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal">Borrar</button>
           </div>
         </div>
       </div>

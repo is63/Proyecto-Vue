@@ -70,13 +70,13 @@ const LimiteUsuarios = ref(10);
 const TotalUsuarios = computed(() => datos.value.length);
 const PaginasTotales = computed(() => Math.ceil(TotalUsuarios.value / LimiteUsuarios.value));
 
-const paginatedData = computed(() => {
-  const start = (PaginaActual.value - 1) * LimiteUsuarios.value;
-  const end = start + LimiteUsuarios.value;
-  return datos.value.slice(start, end);
+const datosPaginacion = computed(() => {
+  const inicio = (PaginaActual.value - 1) * LimiteUsuarios.value;
+  const final  = inicio + LimiteUsuarios.value;
+  return datos.value.slice(inicio, final);
 });
 
-function changePage(page) {
+function cambiarPagina(page) {
   if (page >= 1 && page <= PaginasTotales.value) {
     PaginaActual.value = page;
   }
@@ -290,7 +290,7 @@ async function eliminarUsuario() {
         </thead>
         <tbody>
           <!-- Iterar sobre los usuarios -->
-          <tr v-for="dato in paginatedData" :key="dato.id">
+          <tr v-for="dato in datosPaginacion" :key="dato.id">
             <td>{{ dato.id }}</td>
             <td>{{ dato.nombre }}</td>
             <td>{{ dato.email }}</td>
@@ -303,31 +303,31 @@ async function eliminarUsuario() {
                 <button class="btn btn-danger btn-sm" @click="abrirModalConfirmacion(dato.id)">Eliminar</button>
               </div>
               <div v-else>
-                <td class="text-center d-flex justify-content-center align-items-center">
-                  <p class="btn btn-secondary btn-sm" disabled>No disponible</p>
-                </td>
-              </div>
+            <td class="text-center d-flex justify-content-center align-items-center">
+              <a class="btn btn-secondary btn-sm" disabled>No disponible</a>
             </td>
-          </tr>
-        </tbody>
-      </table>
-      <!-- Botón de Crear Usuario -->
-      <button class="btn btn-primary mt-4" @click="abrirModalCrear">Crear usuario</button>
+    </div>
+    </td>
+    </tr>
+    </tbody>
+    </table>
+    <!-- Botón de Crear Usuario -->
+    <button class="btn btn-primary mt-4" @click="abrirModalCrear">Crear usuario</button>
 
-      <!-- Paginacion -->
-      <nav class="mt-4">
-        <ul class="pagination justify-content-center">
-          <li class="page-item" :class="{ disabled: PaginaActual === 1 }">
-            <a class="page-link" href="#" @click.prevent="changePage(PaginaActual - 1)">&lt;</a> <!--Anterior-->
-          </li>
-          <li class="page-item" v-for="page in PaginasTotales" :key="page" :class="{ active: PaginaActual === page }">
-            <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
-          </li>
-          <li class="page-item" :class="{ disabled: PaginaActual === PaginasTotales }">
-            <a class="page-link" href="#" @click.prevent="changePage(PaginaActual + 1)">&gt;</a> <!--Siguiente-->
-          </li>
-        </ul>
-      </nav>
+    <!-- Paginacion -->
+    <nav class="mt-4">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" :class="{ disabled: PaginaActual === 1 }">
+          <a class="page-link" href="#" @click.prevent="cambiarPagina(PaginaActual - 1)">&lt;</a> <!--Anterior-->
+        </li>
+        <li class="page-item" v-for="page in PaginasTotales" :key="page" :class="{ active: PaginaActual === page }">
+          <a class="page-link" href="#" @click.prevent="cambiarPagina(page)">{{ page }}</a>
+        </li>
+        <li class="page-item" :class="{ disabled: PaginaActual === PaginasTotales }">
+          <a class="page-link" href="#" @click.prevent="cambiarPagina(PaginaActual + 1)">&gt;</a> <!--Siguiente-->
+        </li>
+      </ul>
+    </nav>
     </div>
   </main>
 
