@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { Modal } from 'bootstrap';
 
 // Modal de crear/editar usuario
@@ -45,7 +45,7 @@ const usuarioNuevo = ref({
 const usuarioAEliminar = ref(null);
 
 // Roles permitidos
-const rolesPermitidos = ['admin', 'guia', 'cliente'];
+const rolesPermitidos = ['guia', 'cliente'];
 
 // URL de la API
 const API_URL = 'http://localhost/freetours/api.php/usuarios';
@@ -64,6 +64,23 @@ const operacionExitosa = ref(false);
 // Estado para el modal de error
 const mensajeError = ref(''); // Mensaje de error a mostrar
 
+// Paginación
+const PaginaActual = ref(1);
+const LimiteUsuarios = ref(10);
+const TotalUsuarios = computed(() => datos.value.length);
+const PaginasTotales = computed(() => Math.ceil(TotalUsuarios.value / LimiteUsuarios.value));
+
+const paginatedData = computed(() => {
+  const start = (PaginaActual.value - 1) * LimiteUsuarios.value;
+  const end = start + LimiteUsuarios.value;
+  return datos.value.slice(start, end);
+});
+
+function changePage(page) {
+  if (page >= 1 && page <= PaginasTotales.value) {
+    PaginaActual.value = page;
+  }
+}
 
 // Función para obtener los datos de la API
 async function fetchData() {
@@ -146,10 +163,10 @@ function abrirModalCrear() {
 // Función para validar los datos del usuario
 function validarUsuario(usuario) {
   if (
-      usuario.nombre == "" ||
-      usuario.email.indexOf("@") == -1 ||
-      usuario.email == "" ||
-      usuario.contraseña == ""
+    usuario.nombre == "" ||
+    usuario.email.indexOf("@") == -1 ||
+    usuario.email == "" ||
+    usuario.contraseña == ""
   ) {
     return false; // Retorna false si la validación falla
   }
@@ -263,32 +280,54 @@ async function eliminarUsuario() {
       <!-- Tabla con la lista de usuarios -->
       <table class="table table-bordered table-striped">
         <thead class="table cabecera-tabla">
-        <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Email</th>
-          <th>Rol</th>
-          <th class="acciones-col">Acciones</th>
-        </tr>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th class="acciones-col">Acciones</th>
+          </tr>
         </thead>
         <tbody>
-        <!-- Iterar sobre los usuarios -->
-        <tr v-for="dato in datos" :key="dato.id">
-          <td>{{ dato.id }}</td>
-          <td>{{ dato.nombre }}</td>
-          <td>{{ dato.email }}</td>
-          <td>{{ dato.rol }}</td>
-          <td class="text-center">
-            <!-- Botón de Editar -->
-            <button class="btn btn-warning btn-sm me-2" @click="abrirModalEditar(dato)">Editar</button>
-            <!-- Botón de Eliminar -->
-            <button class="btn btn-danger btn-sm" @click="abrirModalConfirmacion(dato.id)">Eliminar</button>
-          </td>
-        </tr>
+          <!-- Iterar sobre los usuarios -->
+          <tr v-for="dato in paginatedData" :key="dato.id">
+            <td>{{ dato.id }}</td>
+            <td>{{ dato.nombre }}</td>
+            <td>{{ dato.email }}</td>
+            <td>{{ dato.rol }}</td>
+            <td class="text-center">
+              <div v-if="dato.rol != 'admin'">
+                <!-- Botón de Editar -->
+                <button class="btn btn-warning btn-sm me-2" @click="abrirModalEditar(dato)">Editar</button>
+                <!-- Botón de Eliminar -->
+                <button class="btn btn-danger btn-sm" @click="abrirModalConfirmacion(dato.id)">Eliminar</button>
+              </div>
+              <div v-else>
+                <td class="text-center d-flex justify-content-center align-items-center">
+                  <p class="btn btn-secondary btn-sm" disabled>No disponible</p>
+                </td>
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
       <!-- Botón de Crear Usuario -->
       <button class="btn btn-primary mt-4" @click="abrirModalCrear">Crear usuario</button>
+
+      <!-- Paginacion -->
+      <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" :class="{ disabled: PaginaActual === 1 }">
+            <a class="page-link" href="#" @click.prevent="changePage(PaginaActual - 1)">&lt;</a> <!--Anterior-->
+          </li>
+          <li class="page-item" v-for="page in PaginasTotales" :key="page" :class="{ active: PaginaActual === page }">
+            <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+          </li>
+          <li class="page-item" :class="{ disabled: PaginaActual === PaginasTotales }">
+            <a class="page-link" href="#" @click.prevent="changePage(PaginaActual + 1)">&gt;</a> <!--Siguiente-->
+          </li>
+        </ul>
+      </nav>
     </div>
   </main>
 
@@ -401,11 +440,17 @@ async function eliminarUsuario() {
 .acciones-col {
   width: 150px;
 }
-.cabecera-tabla{
+
+.cabecera-tabla {
   background-color: #232342;
   color: white;
 }
-tbody tr:hover{
-background-color: #d6d4d4;
+
+tbody tr:hover {
+  background-color: #d6d4d4;
+}
+
+.pagination {
+  margin-top: 2%;
 }
 </style>

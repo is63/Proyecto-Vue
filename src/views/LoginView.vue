@@ -11,7 +11,7 @@ function cambiarForm() {
 const API_URL = 'http://localhost/freetours/api.php/usuarios';
 
 const emits = defineEmits(["sesionIniciada"]);
-const form = ref({ nombre: '', password: '' });
+const form = ref({ email: '', password: '' });
 const formRegistro = ref({ nombre: '', email: '', contraseña: '' });
 const error = ref('');
 const mensajeExito = ref(''); 
@@ -27,7 +27,7 @@ async function iniciarSesion() {
     
     // Buscar el usuario en la lista
     const usuarioEncontrado = usuarios.find(
-        (u) => u.nombre === form.value.nombre && u.contraseña === form.value.password
+        (u) => u.email === form.value.email && u.contraseña === form.value.password
     );
     if (usuarioEncontrado) {
       
@@ -41,7 +41,7 @@ async function iniciarSesion() {
       error.value = '';
       router.push({ name: "home" }); // Redirigir a /home
     } else {
-      error.value = 'Usuario o contraseña incorrectos';
+      error.value = 'Email o contraseña incorrectos';
       setTimeout(() => {
         error.value = '';  // Limpiar el mensaje de error después de 3 segundos
       }, 3000);
@@ -133,8 +133,8 @@ async function registrarUsuario() {
           <form id="botonLogIn" class="border p-4 shadow-sm rounded bg-white">
             <h2 class="text-center mb-4">Iniciar Sesión</h2>
             <div class="mb-3">
-              <label for="emailLogIn" class="form-label">Nombre de usuario</label>
-              <input v-model="form.nombre" type="text" id="emailLogIn" class="form-control" placeholder="Ingresa tu nombre">
+              <label for="emailLogIn" class="form-label">Email</label>
+              <input v-model="form.email" type="text" id="emailLogIn" class="form-control" placeholder="Ingresa tu email">
             </div>
             <div class="mb-3">
               <label for="passwordLogIn" class="form-label">Contraseña</label>
