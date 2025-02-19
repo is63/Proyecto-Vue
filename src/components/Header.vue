@@ -28,7 +28,7 @@ function cerrarSesion() {
         </div>
 
         <!-- Menú de navegación -->
-        <ul class="navbar-nav flex-row gap-3">
+        <ul v-if="usuarioAutenticado && usuarioAutenticado.rol === 'admin'" class="navbar-nav flex-row gap-3">
           <li class="nav-item">
             <router-link class="nav-link btn-custom" to="/">Home</router-link>
           </li>
