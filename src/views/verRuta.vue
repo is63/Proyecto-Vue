@@ -32,11 +32,13 @@ const mostrarConfirmacion = ref(false); // Mostrar el modal de confirmación
 const mensajeConfirmacion = ref(""); // Guardar el mensaje de confirmación
 const confirmacionExitosa = ref(false); // Para saber si la duplicación fue exitosa
 
-const mostrarEliminacion = ref(false);//Mostrar el modal de Eliminacion
-const mensajeEliminacion = ref("")//Guardar el mensaje de confirmacion de la eliminacion
+const mostrarConfirmacionEliminacion = ref(false);
+const mensajeConfirmacionEliminacion = ref("");
+const eliminacionExitosa = ref(false);
 
 let duplicarModalInstance = null; // Instancia del modal de duplicar
-let eliminarModalInstance = null; // Instancia del modal de eliminación
+
+let eliminacionCompletada = ref(false); // Add this new ref at the top with other refs
 
 // Función para cargar los datos de la ruta y los guias
 async function cargarDatos() {
@@ -114,7 +116,14 @@ onMounted(() => {
   });
 
   duplicarModalInstance = new Modal(document.getElementById('duplicarModal'));
-  eliminarModalInstance = new Modal(document.getElementById('eliminarModal'));
+  new Modal(document.getElementById('eliminarModal'));
+
+  // Add event listener for when elimination modal is hidden
+  document.getElementById('eliminarModal').addEventListener('hidden.bs.modal', () => {
+    if (eliminacionCompletada.value) {
+      router.push("/");
+    }
+  });
 });
 
 // Función para duplicar la ruta
@@ -177,40 +186,44 @@ async function duplicarRuta() {
   }
 }
 
-// Función para eliminar la ruta
-async function eliminarRuta(id){
+// Reemplazar la función confirmarEliminacion por esta
+async function confirmarEliminacion() {
   try {
-    const response = await fetch(`http://localhost/freetours/api.php/rutas?id=${id}`, {
+    const response = await fetch(`http://localhost/freetours/api.php/rutas?id=${ruta.value.id}`, {
       method: 'DELETE',
     });
 
     if (response.ok) {
-      // Cerrar el modal de confirmación de eliminación
-      eliminarModalInstance.hide();
+      // Configurar mensaje y estado
+      mensajeConfirmacionEliminacion.value = "Ruta eliminada con éxito";
+      eliminacionExitosa.value = true;
+      eliminacionCompletada.value = true;
       
-      // Mostrar el feedback
-      mensajeEliminacion.value = "Ruta eliminada con éxito";
-      mostrarEliminacion.value = true;
-
-      // Cerrar el modal de feedback después de 3 segundos
+      // Mostrar modal de confirmación
+      mostrarConfirmacionEliminacion.value = true;
+      
+      // Cerrar solo el modal de feedback después de 3 segundos
       setTimeout(() => {
-        mostrarEliminacion.value = false;
-        // router.push('/'); // Descomentar cuando quieras añadir la redirección
+        mostrarConfirmacionEliminacion.value = false;
       }, 3000);
-
     } else {
       throw new Error("Error al eliminar la ruta");
     }
-  } catch(error) {
-    // Cerrar el modal de confirmación de eliminación
-    eliminarModalInstance.hide();
+  } catch (error) {
+    // En caso de error
+    mensajeConfirmacionEliminacion.value = "Error al eliminar la ruta";
+    eliminacionExitosa.value = false;
+    eliminacionCompletada.value = false;
     
-    mensajeEliminacion.value = "Error al eliminar la ruta";
-    mostrarEliminacion.value = true;
+    // Mostrar modal de error
+    mostrarConfirmacionEliminacion.value = true;
     
+    // Cerrar el modal de error después de 3 segundos
     setTimeout(() => {
-      mostrarEliminacion.value = false;
+      mostrarConfirmacionEliminacion.value = false;
     }, 3000);
+
+    console.error('Error:', error);
   }
 }
 </script>
@@ -329,34 +342,31 @@ async function eliminarRuta(id){
       </div>
     </div>
 
-    <!-- Modal de confirmación de eliminación -->
+    <!-- Modal de Confirmación de Eliminación -->
     <div class="modal fade" id="eliminarModal" tabindex="-1" aria-labelledby="eliminarModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="eliminarModalLabel">Confirmar eliminación</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <p>¿Está seguro de que desea eliminar esta ruta?</p>
+            <p class="mb-0">¿Seguro que quiere <strong class="text-danger">eliminar</strong> la ruta?</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-danger" @click="eliminarRuta(ruta.id)">Eliminar</button>
+            <button type="button" class="btn btn-danger" @click="confirmarEliminacion">Confirmar</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal de feedback de eliminación -->
-    <div v-if="mostrarEliminacion" class="modal fade show" style="display: block;">
+    <!-- Feedback de Eliminación -->
+    <div v-if="mostrarConfirmacionEliminacion" class="modal fade show" tabindex="-1" aria-hidden="true" style="display: block;">
       <div class="modal-dialog">
-        <div :class="['modal-content', mensajeEliminacion === 'Ruta eliminada con éxito' ? 'bg-success' : 'bg-danger']">
-          <div class="modal-header border-0">
-            <button type="button" class="btn-close btn-close-white" @click="mostrarEliminacion = false"></button>
-          </div>
+        <div :class="['modal-content', eliminacionExitosa ? 'bg-success' : 'bg-danger']">
           <div class="modal-body">
-            <p class="text-white fs-5 text-center mb-0">{{ mensajeEliminacion }}</p>
+            <p class="text-white fs-5 text-center">{{ mensajeConfirmacionEliminacion }}</p>
           </div>
         </div>
       </div>
