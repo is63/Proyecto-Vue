@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet"; // Mapa
 import flatpickr from "flatpickr"; //Fecha y Hora (Calendario)
 import "flatpickr/dist/flatpickr.min.css";
+import { Modal } from 'bootstrap';
 
 // Propiedades recibidas del componente padre
 const props = defineProps({
@@ -33,6 +34,8 @@ const confirmacionExitosa = ref(false); // Para saber si la duplicación fue exi
 
 const mostrarEliminacion = ref(false);//Mostrar el modal de Eliminacion
 const mensajeEliminacion = ref("")//Guardar el mensaje de confirmacion de la eliminacion
+
+let duplicarModalInstance = null; // Instancia del modal de duplicar
 
 // Función para cargar los datos de la ruta y los guias
 async function cargarDatos() {
@@ -109,6 +112,8 @@ onMounted(() => {
       nuevaHora.value = dateStr; // Asignar la hora seleccionada
     },
   });
+
+  duplicarModalInstance = new Modal(document.getElementById('duplicarModal'));
 });
 
 // Función para duplicar la ruta
@@ -154,20 +159,22 @@ async function duplicarRuta() {
     }
 
     // Mostrar el modal de confirmacion
+    duplicarModalInstance.hide(); // Cerrar el modal de duplicar
     mostrarConfirmacion.value = true;
     setTimeout(() => {
       mostrarConfirmacion.value = false;
-    }, 2000);
+    }, 2500);
 
   } catch (error) { // Si ocurre un error al duplicar la ruta
     mensajeConfirmacion.value = "Error al duplicar la ruta"; // Mensaje de error
     confirmacionExitosa.value = false; // Marcar como no exitosa
 
     // Mostrar el modal de error
+    duplicarModalInstance.hide(); // Cerrar el modal de duplicar
     mostrarConfirmacion.value = true;
     setTimeout(() => {
       mostrarConfirmacion.value = false;
-    }, 2000);
+    }, 2500);
   }
 }
 
@@ -187,8 +194,15 @@ if (response.ok) { // Si la respuesta es exitosa
       mensajeEliminacion.value = "Ruta eliminada con éxito"; // Mensaje de éxito
       mostrarEliminacion.value = true; // Marcar como exitosa
 
+      setTimeout(() => {
+        mostrarEliminacion.value = false;
+      }, 2500); // Cerrar el modal después de 2,5 segundos
+      setTimeout(() => {
+        router.push('/');
+      }, 3000); // Redirigir después de 3 segundos
+
     } else {
-      throw new Error("Error al duplicar la ruta"); // Si la respuesta no es exitosa, lanzar un error
+      throw new Error("Error al eliminar la ruta"); // Si la respuesta no es exitosa, lanzar un error
     }
 
   }
@@ -334,12 +348,10 @@ if (response.ok) { // Si la respuesta es exitosa
      <!-- Modal de Confirmacion -->
     <div v-if="mostrarEliminacion" class="modal fade show"  aria-hidden="true" style="display: block;">
       <div class="modal-dialog">
-        <div :class="['modal-content', mensajeEliminacion ? 'bg-success' : 'bg-danger']">
+        <div :class="['modal-content', mensajeEliminacion == 'Ruta eliminada con éxito' ? 'bg-success' : 'bg-danger']">
           <div class="modal-body">
             <!-- Mensaje Correcto -->
-            <p class="text-white fs-5 text-center" v-if="mensajeEliminacion">{{ mensajeConfirmacion }}</p>
-            <!-- Mensaje Error -->
-            <p class="text-white fs-5 text-center" v-if="!confirmacionExitosa">{{ mensajeConfirmacion }}</p>
+            <p class="text-white fs-5 text-center">{{ mensajeEliminacion }}</p>
           </div>
         </div>
       </div>

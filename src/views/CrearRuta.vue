@@ -29,6 +29,8 @@ let modalInstance = null;
 let map = null;
 let marker = null;
 
+const botonDeshabilitado = ref(false); // Variable para controlar el estado del botón
+
 async function obtenerGuias() {
   try {
     const response = await fetch('http://localhost/freetours/api.php/usuarios');
@@ -106,13 +108,17 @@ async function crearRuta() {
 
     modalMensaje.value = 'Ruta creada correctamente';
     modalExito.value = true;
+    modalInstance.show();
+    botonDeshabilitado.value = true; // Deshabilitar el botón
+    setTimeout(() => {
+      modalInstance.hide();
+    }, 2500); // Cerrar el modal después de 2,5 segundos
     setTimeout(() => {
       router.push('/');
-    }, 3000);
+    }, 3000); // Redirigir después de 3 segundos
   } catch (error) {
     modalMensaje.value = 'Error al crear la ruta';
     modalExito.value = false;
-  } finally {
     modalInstance.show();
   }
 }
@@ -217,7 +223,7 @@ onMounted(() => {
         <input type="text" class="form-control" id="direccion" @change="buscarDireccion($event.target.value)">
       </div>
       <div id="map" class="estilo-mapa mb-3"></div>
-      <button :class="['btn', 'w-100', esFormularioValido ? 'btn-success' : 'btn-danger']" type="submit">Crear Ruta</button>
+      <button :class="['btn', 'w-100', esFormularioValido ? 'btn-success' : 'btn-danger']" type="submit" :disabled="botonDeshabilitado">Crear Ruta</button>
     </form>
 
     <!-- Modal -->
