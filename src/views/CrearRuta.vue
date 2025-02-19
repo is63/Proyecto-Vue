@@ -8,15 +8,18 @@ import { Modal } from 'bootstrap';
 
 const router = useRouter();
 
-const titulo = ref('');
-const localidad = ref('');
-const descripcion = ref('');
-const foto = ref('');
-const fecha = ref('');
-const hora = ref('');
-const latitud = ref('');
-const longitud = ref('');
-const guia_id = ref(null);
+const rutaNueva = ref({
+  titulo: '',
+  localidad: '',
+  descripcion: '',
+  foto: '',
+  fecha: '',
+  hora: '',
+  latitud: '',
+  longitud: '',
+  guia_id: null
+});
+
 const guias = ref([]); // Variable para almacenar los guías
 
 const modalMensaje = ref('');
@@ -54,11 +57,11 @@ function validarFecha(fecha) {
 }
 
 function validarCampos() {
-  return titulo.value && localidad.value && descripcion.value && foto.value && fecha.value && hora.value && latitud.value && longitud.value;
+  return rutaNueva.value.titulo && rutaNueva.value.localidad && rutaNueva.value.descripcion && rutaNueva.value.foto && rutaNueva.value.fecha && rutaNueva.value.hora && rutaNueva.value.latitud && rutaNueva.value.longitud;
 }
 
 const esFormularioValido = computed(() => {
-  return validarCampos() && validarFecha(fecha.value);
+  return validarCampos() && validarFecha(rutaNueva.value.fecha);
 });
 
 async function crearRuta() {
@@ -69,7 +72,7 @@ async function crearRuta() {
     return;
   }
 
-  if (!validarFecha(fecha.value)) {
+  if (!validarFecha(rutaNueva.value.fecha)) {
     modalMensaje.value = 'La fecha no puede ser anterior al día de hoy';
     modalExito.value = false;
     modalInstance.show();
@@ -77,15 +80,15 @@ async function crearRuta() {
   }
 
   const rutaData = {
-    titulo: titulo.value,
-    localidad: localidad.value,
-    descripcion: descripcion.value,
-    foto: foto.value,
-    fecha: formatearFecha(fecha.value),
-    hora: hora.value,
-    latitud: latitud.value,
-    longitud: longitud.value,
-    guia_id: guia_id.value,
+    titulo: rutaNueva.value.titulo,
+    localidad: rutaNueva.value.localidad,
+    descripcion: rutaNueva.value.descripcion,
+    foto: rutaNueva.value.foto,
+    fecha: formatearFecha(rutaNueva.value.fecha),
+    hora: rutaNueva.value.hora,
+    latitud: rutaNueva.value.latitud,
+    longitud: rutaNueva.value.longitud,
+    guia_id: rutaNueva.value.guia_id,
   };
 
   try {
@@ -126,8 +129,8 @@ function inicializarMapa() {
       map.removeLayer(marker);
     }
     marker = L.marker(e.latlng).addTo(map);
-    latitud.value = e.latlng.lat;
-    longitud.value = e.latlng.lng;
+    rutaNueva.value.latitud = e.latlng.lat;
+    rutaNueva.value.longitud = e.latlng.lng;
   });
 }
 
@@ -142,8 +145,8 @@ async function buscarDireccion(direccion) {
       map.removeLayer(marker);
     }
     marker = L.marker([y, x]).addTo(map);
-    latitud.value = y;
-    longitud.value = x;
+    rutaNueva.value.latitud = y;
+    rutaNueva.value.longitud = x;
   }
 }
 
@@ -162,35 +165,35 @@ onMounted(() => {
         <div class="col-md-6">
           <div class="mb-3">
             <label for="titulo" class="form-label">Título</label>
-            <input type="text" class="form-control" id="titulo" v-model="titulo">
+            <input type="text" class="form-control" id="titulo" v-model="rutaNueva.titulo">
           </div>
           <div class="mb-3">
             <label for="localidad" class="form-label">Localidad</label>
-            <input type="text" class="form-control" id="localidad" v-model="localidad">
+            <input type="text" class="form-control" id="localidad" v-model="rutaNueva.localidad">
           </div>
           <div class="mb-3">
             <label for="descripcion" class="form-label">Descripción</label>
-            <textarea class="form-control" id="descripcion" rows="3" v-model="descripcion"></textarea>
+            <textarea class="form-control" id="descripcion" rows="3" v-model="rutaNueva.descripcion"></textarea>
           </div>
         </div>
         <div class="col-md-6">
           <div class="mb-3">
             <label for="foto" class="form-label">Foto</label>
-            <input type="text" class="form-control" id="foto" v-model="foto" placeholder="Url de la imagen">
+            <input type="text" class="form-control" id="foto" v-model="rutaNueva.foto" placeholder="Url de la imagen">
           </div>
           <div class="mb-3">
             <label for="fecha" class="form-label">Fecha</label>
-            <input type="date" class="form-control" id="fecha" v-model="fecha">
+            <input type="date" class="form-control" id="fecha" v-model="rutaNueva.fecha">
           </div>
           <div class="mb-3">
             <label for="hora" class="form-label">Hora</label>
-            <input type="time" class="form-control" id="hora" v-model="hora">
+            <input type="time" class="form-control" id="hora" v-model="rutaNueva.hora">
           </div>
         </div>
       </div>
       <div class="mb-3">
         <label for="guia_id" class="form-label">Guía (opcional)</label>
-        <select class="form-select" id="guia_id" v-model="guia_id">
+        <select class="form-select" id="guia_id" v-model="rutaNueva.guia_id">
           <option value="">No seleccionar guía</option>
           <option v-for="guia in guias" :key="guia.id" :value="guia.id">{{ guia.nombre }}</option>
         </select>
@@ -199,13 +202,13 @@ onMounted(() => {
         <div class="col-md-6">
           <div class="mb-3">
             <label for="latitud" class="form-label">Latitud</label>
-            <input type="text" class="form-control" id="latitud" v-model="latitud" readonly>
+            <input type="text" class="form-control" id="latitud" v-model="rutaNueva.latitud" readonly>
           </div>
         </div>
         <div class="col-md-6">
           <div class="mb-3">
             <label for="longitud" class="form-label">Longitud</label>
-            <input type="text" class="form-control" id="longitud" v-model="longitud" readonly>
+            <input type="text" class="form-control" id="longitud" v-model="rutaNueva.longitud" readonly>
           </div>
         </div>
       </div>
