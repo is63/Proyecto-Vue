@@ -3,11 +3,10 @@ import { ref, onMounted } from 'vue';
 import router from '@/router';
 import "leaflet/dist/leaflet.css";
 import L from "leaflet"; // Mapa
-import flatpickr from "flatpickr"; //Fecha y Hora (Calendario)
+import flatpickr from "flatpickr"; // Fecha y Hora (Calendario)
 import "flatpickr/dist/flatpickr.min.css";
 import { Modal } from 'bootstrap';
 
-// Propiedades recibidas del componente padre
 const props = defineProps({
   id: {
     type: String,
@@ -15,19 +14,18 @@ const props = defineProps({
   },
 });
 
-// Variables reactivas
 const ruta = ref({}); // Almacenar los datos de la ruta
-const guias = ref([]); // Guardar los guías disponibles
-const error = ref(""); //  mostrar mensajes de error
+const guias = ref([]); // Guardar los guias disponibles
+const error = ref(""); // Mostrar mensajes de error
 
-let map = null; // Variable para guardar el mapa
+let mapa = null; //Guardar el mapa
 
-// Estados para el modal de duplicar
+
 const nuevaFecha = ref(""); // Guardar la fecha seleccionada
 const nuevaHora = ref(""); // Guardar la hora seleccionada
 const nuevoGuia = ref(""); // Guardar el guía seleccionado
 
-// Estado para el modal de confirmación
+
 const mostrarConfirmacion = ref(false); // Mostrar el modal de confirmación
 const mensajeConfirmacion = ref(""); // Guardar el mensaje de confirmación
 const confirmacionExitosa = ref(false); // Para saber si la duplicación fue exitosa
@@ -36,32 +34,54 @@ const mostrarConfirmacionEliminacion = ref(false);
 const mensajeConfirmacionEliminacion = ref("");
 const eliminacionExitosa = ref(false);
 
-let duplicarModalInstance = null; // Instancia del modal de duplicar
+let instanciaModalDuplicar = null; // Instancia del modal de duplicar
 
-let eliminacionCompletada = ref(false); // Add this new ref at the top with other refs
+let eliminacionCompletada = ref(false); // Eliminación exitosa
 
-// Función para cargar los datos de la ruta y los guias
+const guiaSeleccionado = ref(''); // Guardar el guia seleccionado en el select
+const instanciaModalAsignarGuia = ref(null);
+
+
+const mostrarFeedbackAsignacion = ref(false); //Mostral el modal de asignacion
+const mensajeFeedbackAsignacion = ref(""); //Mensaje de asignacion
+const asignacionExitosa = ref(false); //Asignacion exitosa
+
+
+const asignacionGuia = ref(null); //Guardar al guia asignado si existe
+
+
 async function cargarDatos() {
   try {
     // Cargar datos de la ruta actual
-    const responseRuta = await fetch(`http://localhost/freetours/api.php/rutas?id=${props.id}`);
-    if (!responseRuta.ok) {
-      throw new Error(`Error al cargar la ruta: ${responseRuta.status} ${responseRuta.statusText}`);
+    const respuestaRuta = await fetch(`http://localhost/freetours/api.php/rutas?id=${props.id}`);
+    if (!respuestaRuta.ok) {
+      throw new Error(`Error al cargar la ruta: ${respuestaRuta.status} ${respuestaRuta.statusText}`);
     }
-    const dataRuta = await responseRuta.json();
-    ruta.value = dataRuta; // Guardar los datos de la ruta
+    const datosRuta = await respuestaRuta.json();
+    ruta.value = datosRuta; // Guardar los datos de la ruta
   
     if(ruta.value == null){
       router.push("/");
     }
 
-    // Cargar guias disponibles
-    const responseGuias = await fetch("http://localhost/freetours/api.php/usuarios");
-    if (!responseGuias.ok) {
-      throw new Error(`Error al cargar los guías: ${responseGuias.status} ${responseGuias.statusText}`);
+    // Cargar datos de las asignaciones
+    const respuestaAsignaciones = await fetch("http://localhost/freetours/api.php/asignaciones");
+    if (!respuestaAsignaciones.ok) {
+      throw new Error(`Error al cargar las asignaciones: ${respuestaAsignaciones.status}`);
     }
-    const dataGuias = await responseGuias.json();
-    guias.value = dataGuias.filter(usuario => usuario.rol === "guia"); // Filtrar solo los guías
+    const asignaciones = await respuestaAsignaciones.json();
+    
+    // Buscar el guia asignado para la ruta actual
+    const asignacionActual = asignaciones.find(asig => asig.ruta_id == props.id);
+    asignacionGuia.value = asignacionActual ? asignacionActual.guia_id : null;
+
+    // Cargar guias disponibles 
+    const respuestaGuias = await fetch("http://localhost/freetours/api.php/usuarios");
+    if (!respuestaGuias.ok) {
+      throw new Error(`Error al cargar los guías: ${respuestaGuias.status} ${respuestaGuias.statusText}`);
+    }
+    const datosGuias = await respuestaGuias.json();
+    guias.value = datosGuias.filter(usuario => usuario.rol == "guia"); // Filtrar solo los guías
 
     // Si la ruta tiene coordenadas, se inicializa el mapa
     if (ruta.value.latitud && ruta.value.longitud) {
@@ -73,22 +93,22 @@ async function cargarDatos() {
   }
 }
 
-// Función para inicializar el mapa
+// Funcion para inicializar el mapa
 function inicializarMapa(latitud, longitud) {
-  if (map) {
-    map.remove(); // Si ya existe un mapa, se elimina
+  if (mapa) {
+    mapa.remove(); // Si ya existe un mapa, se elimina
   }
 
-  map = L.map("map").setView([latitud, longitud], 16); // Crear el mapa
+  mapa = L.map("mapa").setView([latitud, longitud], 16); // Crear el mapa
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { //Añadir la "atribucion" al mapa (abajo derecha)
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { // Añadir la "atribución" al mapa (abajo derecha)
     attribution: '', })
-    .addTo(map);
+    .addTo(mapa);
 
   L.marker([latitud, longitud]) // Crear un marcador
-      .addTo(map) // Añadir al mapa
+      .addTo(mapa) // Añadir al mapa
       .bindPopup("Punto de encuentro") // Añadir texto a un popup al marcador
-      .openPopup(); // Abrir el PoPup solo
+      .openPopup(); // Abrir el mensaje del marcador cuando se carga el mapa
 }
 
 onMounted(() => {
@@ -97,7 +117,7 @@ onMounted(() => {
   flatpickr("#fechaPicker", { // Calendario de fecha
     dateFormat: "Y-m-d", // Formato de fecha Año-mes-dia
     defaultDate: new Date(), // Fecha por defecto
-    minDate: "today", // Establecer la fecha minima como hoy
+    minDate: "today", // Establecer la fecha mínima como hoy
     onChange: (selectedDates, dateStr) => {
       nuevaFecha.value = dateStr; // Asignar la fecha seleccionada
     },
@@ -115,20 +135,23 @@ onMounted(() => {
     },
   });
 
-  duplicarModalInstance = new Modal(document.getElementById('duplicarModal'));
+  instanciaModalDuplicar = new Modal(document.getElementById('duplicarModal'));
   new Modal(document.getElementById('eliminarModal'));
 
-  // Add event listener for when elimination modal is hidden
-  document.getElementById('eliminarModal').addEventListener('hidden.bs.modal', () => {
-    if (eliminacionCompletada.value) {
+  // Añadir event listener para cuando el modal de eliminación se oculta/cierra
+  document.getElementById('eliminarModal').addEventListener('hidden.bs.modal', () => { 
+    if (eliminacionCompletada.value) { //Si se ha eliminado correctamente hace la redireccion
       router.push("/");
     }
   });
+
+  instanciaModalAsignarGuia.value = new Modal(document.getElementById('asignarGuiaModal'));
+  cargarGuias();
 });
 
 // Función para duplicar la ruta
 async function duplicarRuta() {
-  const rutaData = { // Preparar los datos de la nueva ruta
+  const datosRuta = { // Preparar los datos de la nueva ruta
     titulo: ruta.value.titulo,
     localidad: ruta.value.localidad,
     descripcion: ruta.value.descripcion,
@@ -139,11 +162,11 @@ async function duplicarRuta() {
     longitud: ruta.value.longitud,
     guia_id: nuevoGuia.value || null,
   };
-  console.log(rutaData);
+  console.log(datosRuta);
   
   try {
-    if(rutaData.hora == "" || rutaData.fecha == ""){
-      throw new Error("Los campos de la fecha u hora estan vacios")
+    if(datosRuta.hora == "" || datosRuta.fecha == ""){
+      throw new Error("Los campos de la fecha u hora están vacíos")
     }
 
     const response = await fetch("http://localhost/freetours/api.php/rutas", {
@@ -151,7 +174,7 @@ async function duplicarRuta() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(rutaData),
+      body: JSON.stringify(datosRuta),
     });
 
     if (response.ok) { // Si la respuesta es exitosa
@@ -226,6 +249,66 @@ async function confirmarEliminacion() {
     console.error('Error:', error);
   }
 }
+
+// Añadir esta nueva función para cargar los guías
+async function cargarGuias() {
+  try {
+    const response = await fetch("http://localhost/freetours/api.php/usuarios");
+    if (!response.ok) {
+      throw new Error(`Error al cargar los guías: ${response.status}`);
+    }
+    const usuarios = await response.json();
+    guias.value = usuarios.filter(usuario => usuario.rol == "guia");
+  } catch (error) {
+    console.error("Error al cargar guías:", error);
+  }
+}
+
+// Modificar la función asignarGuia en la sección del script
+async function asignarGuia() {
+  try {
+    const datosAsignacion = {
+      ruta_id: ruta.value.id,
+      guia_id: guiaSeleccionado.value
+    };
+
+    const response = await fetch('http://localhost/freetours/api.php/asignaciones', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(datosAsignacion)
+    });
+
+    if (response.ok) {
+      // Mostrar feedback de éxito
+      mensajeFeedbackAsignacion.value = "Guía asignado exitosamente";
+      asignacionExitosa.value = true;
+      mostrarFeedbackAsignacion.value = true;
+
+      // Recargar datos de la ruta para mostrar el nuevo guía
+      cargarDatos();
+
+      // Cerrar solo el feedback después de 3 segundos
+      setTimeout(() => {
+        mostrarFeedbackAsignacion.value = false;
+      }, 3000);
+    } else {
+      throw new Error("Error al asignar el guía");
+    }
+  } catch (error) {
+    // Mostrar feedback de error
+    mensajeFeedbackAsignacion.value = "Error al asignar el guía";
+    asignacionExitosa.value = false;
+    mostrarFeedbackAsignacion.value = true;
+
+    setTimeout(() => {
+      mostrarFeedbackAsignacion.value = false;
+    }, 3000);
+
+    console.error('Error:', error);
+  }
+}
 </script>
 
 <template>
@@ -246,7 +329,7 @@ async function confirmarEliminacion() {
             <p class="descripcion">{{ ruta.descripcion }}</p>
           </div>
           <div class="mb-4 map-container">
-            <div id="map" class="map-styled"></div>
+            <div id="mapa" class="map-styled"></div>
           </div>
         </div>
 
@@ -259,7 +342,7 @@ async function confirmarEliminacion() {
 
           <div class="mb-3">
             <p class="h4 fw-bold text-decoration-underline text-secondary">Guía</p>
-            <p v-if="ruta.guia_nombre" class="detalle">{{ ruta.guia_nombre }}</p>
+            <p v-if="asignacionGuia" class="detalle">{{ asignacionGuia }}</p>
             <p v-else class="detalle text-muted">No hay guía asignado</p>
           </div>
 
@@ -272,6 +355,7 @@ async function confirmarEliminacion() {
           <!-- Botones -->
           <div class="btn-group mb-3 w-100" role="group">
             <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#duplicarModal">Duplicar</button>
+            <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#asignarGuiaModal">Asignar guía</button>
             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal">Borrar</button>
           </div>
         </div>
@@ -367,6 +451,44 @@ async function confirmarEliminacion() {
         <div :class="['modal-content', eliminacionExitosa ? 'bg-success' : 'bg-danger']">
           <div class="modal-body">
             <p class="text-white fs-5 text-center">{{ mensajeConfirmacionEliminacion }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Asignar Guía -->
+    <div class="modal fade" id="asignarGuiaModal" tabindex="-1" aria-labelledby="asignarGuiaModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="asignarGuiaModalLabel">Asignar Guía</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Seleccionar Guía</label>
+              <select class="form-select" v-model="guiaSeleccionado">
+                <option value="" disabled selected>Seleccione un guía</option>
+                <option v-for="guia in guias" :key="guia.id" :value="guia.id">
+                  {{ guia.nombre }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" @click="asignarGuia">Asignar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feedback de Asignación -->
+    <div v-if="mostrarFeedbackAsignacion" class="modal fade show" tabindex="-1" aria-hidden="true" style="display: block;">
+      <div class="modal-dialog">
+        <div :class="['modal-content', asignacionExitosa ? 'bg-success' : 'bg-danger']">
+          <div class="modal-body">
+            <p class="text-white fs-5 text-center">{{ mensajeFeedbackAsignacion }}</p>
           </div>
         </div>
       </div>
