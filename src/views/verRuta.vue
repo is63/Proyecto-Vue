@@ -71,17 +71,23 @@ async function cargarDatos() {
     }
     const asignaciones = await respuestaAsignaciones.json();
     
-    // Buscar el guia asignado para la ruta actual
-    const asignacionActual = asignaciones.find(asig => asig.ruta_id == props.id);
-    asignacionGuia.value = asignacionActual ? asignacionActual.guia_id : null;
-
     // Cargar guias disponibles 
     const respuestaGuias = await fetch("http://localhost/freetours/api.php/usuarios");
     if (!respuestaGuias.ok) {
       throw new Error(`Error al cargar los guías: ${respuestaGuias.status} ${respuestaGuias.statusText}`);
     }
     const datosGuias = await respuestaGuias.json();
-    guias.value = datosGuias.filter(usuario => usuario.rol == "guia"); // Filtrar solo los guías
+    guias.value = datosGuias.filter(usuario => usuario.rol === "guia");
+
+    // Buscar el guia asignado para la ruta actual
+    const asignacionActual = asignaciones.find(asig => asig.ruta_id == props.id);
+    if (asignacionActual) {
+      // Find guide's name from guides list
+      const guiaAsignado = guias.value.find(guia => guia.id == asignacionActual.guia_id);
+      asignacionGuia.value = guiaAsignado ? guiaAsignado.nombre : 'Guía no encontrado';
+    } else {
+      asignacionGuia.value = null;
+    }
 
     // Si la ruta tiene coordenadas, se inicializa el mapa
     if (ruta.value.latitud && ruta.value.longitud) {
