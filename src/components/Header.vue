@@ -21,10 +21,10 @@ function cerrarSesion() {
       <div class="container-fluid d-flex justify-content-between align-items-center">
         <!-- Logo y Nombre -->
         <div class="d-flex align-items-center">
-          <router-link to="/" class="me-2">
-            <img src="../../img/olimpo.png" class="logo" alt="Logo" />
+          <router-link to="/" class="me-2 d-flex align-items-center text-decoration-none">
+            <img src="../../img/olimpo.png" class="logo me-2" alt="Logo" />
+            <span class="text-gold fs-4 fw-bold text-shadow">Olímpo Tours</span>
           </router-link>
-          <span class="text-gold fs-4 fw-bold text-shadow">Olímpo Tours</span>
         </div>
 
         <!-- Menú de navegación -->
@@ -57,7 +57,10 @@ function cerrarSesion() {
 </template>
 
 <style scoped>
-/* Colores personalizados */
+*{
+font-family: monocraft;
+}
+
 .bg-primary-dark {
   background-color: #1a1a2e; /* Azul oscuro elegante */
 }
@@ -82,7 +85,12 @@ function cerrarSesion() {
 /* Logo */
 .logo {
   width: 50px;
-  height: auto;
+  height: 50px; /* Altura fija para mejor alineación */
+  object-fit: contain; /* Mantiene la proporción de la imagen */
+}
+
+router-link {
+  text-decoration: none !important;
 }
 
 /* Estilos de los botones de navegación */
