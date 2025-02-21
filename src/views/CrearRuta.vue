@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -31,18 +31,47 @@ let marker = null;
 
 const botonDeshabilitado = ref(false); // Variable para controlar el estado del botón
 
+// Reemplazar la función obtenerGuias actual
 async function obtenerGuias() {
   try {
-    const response = await fetch('http://localhost/freetours/api.php/usuarios');
-    if (!response.ok) {
+    // Obtener los guías
+    const respuestaGuias = await fetch('http://localhost/freetours/api.php/usuarios');
+    if (!respuestaGuias.ok) {
       throw new Error('Error al cargar los guías');
     }
-    const data = await response.json();
-    guias.value = data.filter(usuario => usuario.rol === 'guia');
+    const datosGuias = await respuestaGuias.json();
+    const guiasDisponibles = datosGuias.filter(usuario => usuario.rol === 'guia');
+
+    // Obtener las rutas
+    const respuestaRutas = await fetch('http://localhost/freetours/api.php/rutas');
+    if (!respuestaRutas.ok) {
+      throw new Error('Error al cargar las rutas');
+    }
+    const rutas = await respuestaRutas.json();
+
+    // Filtrar los guías que no tienen más de 2 rutas en la fecha seleccionada
+    guias.value = guiasDisponibles.filter(guia => {
+      // Si no hay fecha seleccionada, mostrar todos los guías
+      if (!rutaNueva.value.fecha) return true;
+
+      // Contar cuántas rutas tiene el guía en la fecha seleccionada
+      const rutasDelGuia = rutas.filter(ruta => 
+        ruta.guia_id === guia.id && 
+        ruta.fecha === formatearFecha(rutaNueva.value.fecha)
+      );
+
+      // Devolver true si el guía tiene menos de 2 rutas ese día
+      return rutasDelGuia.length < 2;
+    });
   } catch (error) {
     console.error('Error al obtener los guías:', error);
   }
 }
+
+// Añadir un watcher para la fecha
+watch(() => rutaNueva.value.fecha, () => {
+  obtenerGuias(); // Actualizar la lista de guías cuando cambie la fecha
+});
 
 function formatearFecha(fecha) {
   const date = new Date(fecha);
