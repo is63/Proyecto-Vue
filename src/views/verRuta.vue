@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import router from '@/router';
 import "leaflet/dist/leaflet.css";
 import L from "leaflet"; // Mapa
@@ -48,6 +48,10 @@ const asignacionExitosa = ref(false); //Asignacion exitosa
 
 
 const asignacionGuia = ref(null); //Guardar al guia asignado si existe
+
+// Añadir nueva ref para almacenar los guías con sus datos
+const guiasConAsignaciones = ref([]);
+const rutas = ref([]); // Para almacenar todas las rutas
 
 
 async function cargarDatos() {
@@ -152,6 +156,7 @@ onMounted(() => {
   });
 
   instanciaModalAsignarGuia.value = new Modal(document.getElementById('asignarGuiaModal'));
+  obtenerGuiasConAsignaciones();
   cargarGuias();
 });
 
@@ -256,19 +261,87 @@ async function confirmarEliminacion() {
   }
 }
 
-// Añadir esta nueva función para cargar los guías
-async function cargarGuias() {
+// Nueva función para obtener los guías y sus asignaciones
+async function obtenerGuiasConAsignaciones() {
   try {
-    const response = await fetch("http://localhost/freetours/api.php/usuarios");
-    if (!response.ok) {
-      throw new Error(`Error al cargar los guías: ${response.status}`);
+    // Obtener los guías
+    const respuestaGuias = await fetch("http://localhost/freetours/api.php/usuarios");
+    if (!respuestaGuias.ok) {
+      throw new Error(`Error al cargar los guías: ${respuestaGuias.status}`);
     }
-    const usuarios = await response.json();
-    guias.value = usuarios.filter(usuario => usuario.rol == "guia");
+    const usuarios = await respuestaGuias.json();
+    const guiasDisponibles = usuarios.filter(usuario => usuario.rol === "guia");
+
+    // Obtener las asignaciones
+    const respuestaAsignaciones = await fetch("http://localhost/freetours/api.php/asignaciones");
+    if (!respuestaAsignaciones.ok) {
+      throw new Error(`Error al cargar las asignaciones: ${respuestaAsignaciones.status}`);
+    }
+    const asignaciones = await respuestaAsignaciones.json();
+
+    // Procesar los datos de cada guía
+    guiasConAsignaciones.value = guiasDisponibles.map(guia => {
+      const asignacionesGuia = asignaciones.filter(asig => asig.guia_id === guia.id);
+      return {
+        id: guia.id,
+        nombre: guia.nombre,
+        asignaciones: asignacionesGuia
+      };
+    });
+
   } catch (error) {
-    console.error("Error al cargar guías:", error);
+    console.error("Error al obtener guías con asignaciones:", error);
+    guiasConAsignaciones.value = [];
   }
 }
+
+// Modificar la función cargarGuias en la sección del script
+async function cargarGuias() {
+  try {
+    // Si no hay fecha seleccionada, no mostrar guías
+    if (!nuevaFecha.value) {
+      guias.value = [];
+      return;
+    }
+
+    // Obtener las rutas si no están cargadas
+    if (rutas.value.length === 0) {
+      const respuestaRutas = await fetch("http://localhost/freetours/api.php/rutas");
+      if (!respuestaRutas.ok) {
+        throw new Error(`Error al cargar las rutas: ${respuestaRutas.status}`);
+      }
+      rutas.value = await respuestaRutas.json();
+    }
+
+    // Filtrar los guías basándonos en las asignaciones existentes
+    guias.value = guiasConAsignaciones.value.filter(guia => {
+      // Si el guía no tiene asignaciones, está disponible
+      if (guia.asignaciones.length === 0) {
+        return true;
+      }
+
+      // Contar las rutas del guía en la fecha seleccionada
+      const rutasEnFecha = guia.asignaciones.filter(asig => {
+        const rutaAsignada = rutas.value.find(r => r.id === asig.ruta_id);
+        return rutaAsignada && rutaAsignada.fecha === nuevaFecha.value;
+      });
+
+      // El guía está disponible si tiene menos de 2 rutas en esa fecha
+      return rutasEnFecha.length < 2;
+    });
+
+  } catch (error) {
+    console.error("Error al cargar guías:", error);
+    guias.value = [];
+  }
+}
+
+// Añadir un watcher para la fecha
+watch(() => nuevaFecha.value, () => {
+  if (nuevaFecha.value) {
+    cargarGuias();
+  }
+});
 
 // Modificar la función asignarGuia en la sección del script
 async function asignarGuia() {
@@ -406,7 +479,9 @@ async function asignarGuia() {
               <label class="form-label">Nuevo Guía</label>
               <select class="form-select" v-model="nuevoGuia">
                 <option value="" disabled>Seleccione un guía</option>
-                <option v-for="guia in guias" :key="guia.id" :value="guia.id">{{ guia.nombre }}</option>
+                 <option v-for="guia in guias" :key="guia.id" :value="guia.id">
+                  {{ guia.nombre }}
+                </option>
               </select>
             </div>
           </div>
