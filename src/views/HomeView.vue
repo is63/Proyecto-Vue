@@ -8,6 +8,7 @@ const valoraciones = ref([]); // Estado reactivo para almacenar las valoraciones
 const error = ref(""); // Estado para manejar errores
 const router = useRouter(); // Instancia de Vue Router
 const busqueda = ref(""); // Estado para almacenar el texto de búsqueda
+const tipoBusqueda = ref('texto'); // Nuevo estado para controlar el tipo de búsqueda (texto/fecha)
 
 // Lista de imágenes del carrusel
 const imagenesCarrusel = [
@@ -19,20 +20,20 @@ const imagenesCarrusel = [
 // Función para obtener las rutas desde la API
 async function obtenerRutas() {
   try {
-    const response = await fetch(`${API_BASE_URL}/rutas`); // Endpoint para rutas
+    const response = await fetch(`${API_BASE_URL}/rutas`);
     if (!response.ok) throw new Error("Error al cargar las rutas");
 
     const data = await response.json();
 
-    // Verificamos que los datos tengan la estructura esperada
     if (Array.isArray(data)) {
       rutas.value = data.map((ruta) => ({
-        id: ruta.id, // ID de la ruta
+        id: ruta.id,
         titulo: ruta.titulo,
         localidad: ruta.localidad,
         descripcion: ruta.descripcion,
         foto: ruta.foto,
-        valoraciones: [], // Inicializamos un array para las valoraciones de esta ruta
+        fecha: ruta.fecha, // Añadir la fecha
+        valoraciones: [],
       }));
     } else {
       throw new Error("La API no devolvió un array de rutas");
@@ -75,12 +76,34 @@ function verRuta(id) {
   router.push(`/ruta/${id}`); // Redirigimos a la ruta dinámica
 }
 
-// Función para filtrar rutas según la búsqueda
+// Función modificada para filtrar rutas según la búsqueda
 function filtrarRutas() {
-  return rutas.value.filter((ruta) =>
+  if (tipoBusqueda.value === 'fecha') {
+    // Si la fecha está vacía, mostrar todas las rutas
+    if (!busqueda.value) {
+      return rutas.value;
+    }
+    // Formatear la fecha de búsqueda a YYYY-MM-DD
+    const fechaFormateada = new Date(busqueda.value).toISOString().split('T')[0];
+    return rutas.value.filter((ruta) =>
+      ruta.fecha === fechaFormateada
+    );
+  } else {
+    // Búsqueda por texto (título o localidad)
+    if (!busqueda.value) {
+      return rutas.value;
+    }
+    return rutas.value.filter((ruta) =>
       ruta.titulo.toLowerCase().includes(busqueda.value.toLowerCase()) ||
       ruta.localidad.toLowerCase().includes(busqueda.value.toLowerCase())
-  );
+    );
+  }
+}
+
+// Nueva función para cambiar el tipo de búsqueda
+function cambiarTipoBusqueda() {
+  tipoBusqueda.value = tipoBusqueda.value === 'texto' ? 'fecha' : 'texto';
+  busqueda.value = ''; // Limpiar el campo de búsqueda al cambiar
 }
 
 // Ejecutamos las funciones al montar el componente
@@ -92,11 +115,27 @@ onMounted(async () => {
 
 <template>
   <div class="container">
-    <!-- Barra de búsqueda  -->
+    <!-- Barra de búsqueda modificada -->
     <div class="mb-4 mt-4">
-      <form @submit.prevent="filtrarRutas" class="buscador">
-        <input v-model="busqueda" type="text" class="form-control rounded-pill ps-5" placeholder="Buscar rutas por título o localidad" aria-label="Buscar"/>
-        <i class="bi bi-search icono-busqueda"></i>
+      <form @submit.prevent="filtrarRutas" class="buscador-container">
+        <div class="buscador">
+          <input 
+            v-model="busqueda" 
+            :type="tipoBusqueda === 'fecha' ? 'date' : 'text'"
+            class="form-control rounded-pill ps-5" 
+            :placeholder="tipoBusqueda === 'fecha' ? 'Buscar por fecha' : 'Buscar por título o localidad'"
+            aria-label="Buscar"
+          />
+          <i class="bi bi-search icono-busqueda"></i>
+        </div>
+        <button 
+          type="button" 
+          @click="cambiarTipoBusqueda" 
+          class="btn btn-outline-primary rounded-pill ms-3 btn-fixed-width"
+        >
+          <i class="bi" :class="tipoBusqueda === 'fecha' ? 'bi-text-left' : 'bi-calendar3'"></i>
+          {{ tipoBusqueda === 'fecha' ? 'Fecha' : 'Nombre/Localidad' }}
+        </button>
       </form>
     </div>
 
@@ -146,6 +185,9 @@ onMounted(async () => {
                 <p class="card-text">
                   <small class="text-muted">{{ ruta.localidad }}</small>
                 </p>
+                <p class="card-text">
+                  <small class="text-muted"><i class="bi bi-calendar3"></i> {{ ruta.fecha }}</small>
+                </p>
               </div>
             </div>
           </div>
@@ -186,10 +228,41 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/*Contenedor de la Barra de búsqueda */
-.buscador {
-  max-width: 600px;
+/* Estilos actualizados */
+.buscador-container {
+  max-width: 800px;
   margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.buscador {
   position: relative;
+  flex: 1;
+}
+
+.icono-busqueda {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+}
+
+input[type="date"] {
+  font-family: inherit;
+}
+
+/* Estilo para el botón cuando está en modo fecha */
+.btn-outline-primary.active {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.btn-fixed-width {
+  min-width: 160px;
+  white-space: nowrap;
 }
 </style>
+
