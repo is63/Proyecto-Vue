@@ -1,6 +1,8 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router"; // Importamos useRouter para redirigir
+import flatpickr from "flatpickr";
+import "flatpickr/dist/flatpickr.min.css";
 
 const API_BASE_URL = "http://localhost/freetours/api.php"; // URL base de la API
 const rutas = ref([]); // Estado reactivo para almacenar las rutas
@@ -104,6 +106,18 @@ function filtrarRutas() {
 function cambiarTipoBusqueda() {
   tipoBusqueda.value = tipoBusqueda.value === 'texto' ? 'fecha' : 'texto';
   busqueda.value = ''; // Limpiar el campo de búsqueda al cambiar
+  
+  // Si cambiamos a fecha, inicializar flatpickr
+  if (tipoBusqueda.value === 'fecha') {
+    setTimeout(() => {
+      flatpickr("#fechaBusqueda", {
+        dateFormat: "Y-m-d",
+        onChange: (selectedDates, dateStr) => {
+          busqueda.value = dateStr;
+        }
+      });
+    });
+  }
 }
 
 // Ejecutamos las funciones al montar el componente
@@ -121,9 +135,10 @@ onMounted(async () => {
         <div class="buscador">
           <input 
             v-model="busqueda" 
-            :type="tipoBusqueda === 'fecha' ? 'date' : 'text'"
+            :type="tipoBusqueda === 'fecha' ? 'text' : 'text'"
             class="form-control rounded-pill ps-5" 
             :placeholder="tipoBusqueda === 'fecha' ? 'Buscar por fecha' : 'Buscar por título o localidad'"
+            :id="tipoBusqueda === 'fecha' ? 'fechaBusqueda' : ''"
             aria-label="Buscar"
           />
           <i class="bi bi-search icono-busqueda"></i>
@@ -263,6 +278,12 @@ input[type="date"] {
 .btn-fixed-width {
   min-width: 160px;
   white-space: nowrap;
+}
+
+/* Añadir estilo para el input de fecha */
+input[type="text"]#fechaBusqueda {
+  background-color: white;
+  cursor: pointer;
 }
 </style>
 
