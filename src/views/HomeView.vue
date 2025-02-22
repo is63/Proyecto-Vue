@@ -12,6 +12,9 @@ const router = useRouter(); // Instancia de Vue Router
 const busqueda = ref(""); // Estado para almacenar el texto de búsqueda
 const tipoBusqueda = ref('texto'); // Nuevo estado para controlar el tipo de búsqueda (texto/fecha)
 
+// Variable para almacenar la instancia de flatpickr
+const fpInstance = ref(null);
+
 // Lista de imágenes del carrusel
 const imagenesCarrusel = [
   "/img/Almagro.webp",
@@ -104,13 +107,19 @@ function filtrarRutas() {
 
 // Nueva función para cambiar el tipo de búsqueda
 function cambiarTipoBusqueda() {
+  // Destruir la instancia anterior de flatpickr si existe
+  if (fpInstance.value) {
+    fpInstance.value.destroy();
+    fpInstance.value = null;
+  }
+
   tipoBusqueda.value = tipoBusqueda.value === 'texto' ? 'fecha' : 'texto';
   busqueda.value = ''; // Limpiar el campo de búsqueda al cambiar
   
   // Si cambiamos a fecha, inicializar flatpickr
   if (tipoBusqueda.value === 'fecha') {
     setTimeout(() => {
-      flatpickr("#fechaBusqueda", {
+      fpInstance.value = flatpickr("#fechaBusqueda", {
         dateFormat: "Y-m-d",
         onChange: (selectedDates, dateStr) => {
           busqueda.value = dateStr;
