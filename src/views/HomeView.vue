@@ -22,6 +22,60 @@ const imagenesCarrusel = [
   "/img/MezquitaCordoba.webp"
 ];
 
+// Modificar las refs del video
+const medio = ref(null);
+const play = ref('&#9654;'); // ▶️ (este cambia entre play y pause)
+
+// En la sección de script, añadir la ref para controlar la visibilidad
+const mostrarVideo = ref(false); // false por defecto para mostrar el carrusel
+
+// Añadir función para alternar la visualización
+function alternarVisualizacion() {
+  mostrarVideo.value = !mostrarVideo.value;
+}
+
+function accionPlay() {
+  if (!medio.value.paused && !medio.value.ended) {
+    medio.value.pause();
+    play.value = '&#9654;'; // ▶️
+  } else {
+    medio.value.play();
+    play.value = '&#9208;'; // ⏸️
+  }
+}
+
+function accionReiniciar() {
+  medio.value.currentTime = 0;
+}
+
+function accionRetrasar() {
+  if (medio.value.currentTime > 0) {
+    medio.value.currentTime = medio.value.currentTime - 1;
+  }
+}
+
+function accionAdelantar() {
+  if (medio.value.currentTime < medio.value.duration) {
+    medio.value.currentTime = medio.value.currentTime + 1;
+  }
+}
+
+function accionSilenciar() {
+  medio.value.muted = !medio.value.muted;
+}
+
+function accionMasVolumen() {
+  if (medio.value.volume < 1) {
+    medio.value.volume = Math.min(1, medio.value.volume + 0.1);
+  }
+}
+
+function accionMenosVolumen() {
+  if (medio.value.volume > 0) {
+    medio.value.volume = Math.max(0, medio.value.volume - 0.1);
+  }
+}
+
 // Función para obtener las rutas desde la API
 async function obtenerRutas() {
   try {
@@ -129,7 +183,7 @@ function cambiarTipoBusqueda() {
   }
 }
 
-// Ejecutamos las funciones al montar el componente
+// Modificar la función onMounted
 onMounted(async () => {
   await obtenerRutas();
   await obtenerValoraciones();
@@ -138,14 +192,23 @@ onMounted(async () => {
 
 <template>
   <div class="container">
-    <!-- Barra de búsqueda modificada -->
+    <!-- Barra de búsqueda con botón de alternar -->
     <div class="mb-4 mt-4">
       <form @submit.prevent="filtrarRutas" class="buscador-container">
-        <div class="buscador">
+        <button 
+          type="button"
+          @click="alternarVisualizacion"
+          class="btn btn-outline-primary rounded-circle"
+          :title="mostrarVideo ? 'Mostrar Carrusel' : 'Mostrar Video'"
+        >
+          <span v-html="mostrarVideo ? '&#128247;' : '&#9654;'"></span>
+        </button>
+        <!-- Resto del formulario de búsqueda -->
+        <div class="buscador ms-3">
           <input 
             v-model="busqueda" 
             :type="tipoBusqueda === 'fecha' ? 'text' : 'text'"
-            class="form-control rounded-pill ps-5" 
+            class="form-control rounded-pill ps-5 search-input" 
             :placeholder="tipoBusqueda === 'fecha' ? 'Buscar por fecha' : 'Buscar por título o localidad'"
             :id="tipoBusqueda === 'fecha' ? 'fechaBusqueda' : ''"
             aria-label="Buscar"
@@ -163,8 +226,8 @@ onMounted(async () => {
       </form>
     </div>
 
-    <!-- Carrusel -->
-    <div id="carouselExample" class="carousel slide border mb-5 bg-white rounded mt-5" data-bs-ride="carousel">
+    <!-- Carrusel y Video con v-show -->
+    <div v-show="!mostrarVideo" id="carouselExample" class="carousel slide border mb-4 bg-white rounded mt-5" data-bs-ride="carousel">
       <div class="carousel-inner">
         <div v-for="(imagen, index) in imagenesCarrusel" :key="index" class="carousel-item" data-bs-interval="4000" data-bs-pause="hover" :class="{ active: index === 0 }">
           <img :src="imagen" class="d-block w-100" style="height: 450px; object-fit: cover" alt="Imagen carrusel"/>
@@ -182,6 +245,38 @@ onMounted(async () => {
       >
         <span class="carousel-control-next-icon" aria-hidden="true"></span>
       </button>
+    </div>
+
+    <div v-show="mostrarVideo" class="video-container mb-5">
+      <video ref="medio" width="720" height="400" class="mx-auto d-block" controls>
+        <source src="/video/crush.mp4" type="video/mp4">
+        Tu navegador no soporta el elemento video.
+      </video>
+
+      <nav class="d-flex justify-content-center gap-2 mt-3">
+        <button class="btn btn-outline-primary" @click="accionReiniciar">
+          <span v-html="'&#9198;'"></span>
+        </button>
+        <button class="btn btn-outline-primary" @click="accionRetrasar">
+          <span v-html="'&#9194;'"></span>
+        </button>
+        <button class="btn btn-outline-primary" @click="accionPlay">
+          <span v-html="play"></span>
+        </button>
+        <button class="btn btn-outline-primary" @click="accionAdelantar">
+          <span v-html="'&#9193;'"></span>
+        </button>
+        <button class="btn btn-outline-primary" @click="accionSilenciar">
+          <span v-html="'&#128263;'"></span>
+        </button>
+        <span class="d-flex align-items-center text-dark">Volumen</span>
+        <button class="btn btn-outline-primary" @click="accionMenosVolumen">
+          <span v-html="'&#128265;'"></span>
+        </button>
+        <button class="btn btn-outline-primary" @click="accionMasVolumen">
+          <span v-html="'&#128266;'"></span>
+        </button>
+      </nav>
     </div>
 
     <h1 class="text-center text-primary mb-4">Lista de Rutas</h1>
@@ -290,9 +385,33 @@ input[type="date"] {
 }
 
 /* Añadir estilo para el input de fecha */
-input[type="text"]#fechaBusqueda {
+.search-input {
   background-color: white;
   cursor: pointer;
+}
+
+.video-container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+video {
+  width: 100%;
+  height: auto;
+}
+
+.btn {
+  min-width: 40px;
+}
+
+/* Añadir estilos para el botón circular */
+.btn.rounded-circle {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
 
