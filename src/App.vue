@@ -27,7 +27,7 @@ function actualizaDatosSesion(usuario) {
     <NavBar :datosSesion="sesion" />
 
     <!-- RouterView: Maneja las rutas y emite el evento cuando se inicia sesión -->
-    <RouterView @sesionIniciada="actualizaDatosSesion"></RouterView>
+    <RouterView @sesionIniciada="actualizaDatosSesion" :usuarioAutenticado="sesion"></RouterView>
 
     <!-- Footer -->
     <Footer />

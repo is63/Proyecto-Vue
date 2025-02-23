@@ -12,6 +12,10 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  usuarioAutenticado: {
+    type: Object,
+    default: null
+  }
 });
 
 const ruta = ref({
@@ -22,11 +26,9 @@ const error = ref(""); // Mostrar mensajes de error
 
 let mapa = null; //Guardar el mapa
 
-
 const nuevaFecha = ref(""); // Guardar la fecha seleccionada
 const nuevaHora = ref(""); // Guardar la hora seleccionada
 const nuevoGuia = ref(""); // Guardar el guía seleccionado
-
 
 const mostrarConfirmacion = ref(false); // Mostrar el modal de confirmación
 const mensajeConfirmacion = ref(""); // Guardar el mensaje de confirmación
@@ -43,11 +45,9 @@ let eliminacionCompletada = ref(false); // Eliminación exitosa
 const guiaSeleccionado = ref(''); // Guardar el guia seleccionado en el select
 const instanciaModalAsignarGuia = ref(null);
 
-
 const mostrarFeedbackAsignacion = ref(false); //Mostral el modal de asignacion
 const mensajeFeedbackAsignacion = ref(""); //Mensaje de asignacion
 const asignacionExitosa = ref(false); //Asignacion exitosa
-
 
 const asignacionGuia = ref(null); //Guardar al guia asignado si existe
 
@@ -439,11 +439,32 @@ async function asignarGuia() {
             <p class="detalle">{{ ruta.asistentes || 2 }}</p>
           </div>
 
-          <!-- Botones -->
-          <div class="btn-group mb-3 w-100" role="group">
-            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#duplicarModal">Duplicar</button>
-            <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#asignarGuiaModal">Asignar guía</button>
-            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal">Borrar</button>
+          <!-- Botones - Solo visibles para administradores, usando el mismo estilo de comprobación que en Header.vue -->
+          <div v-if="usuarioAutenticado && usuarioAutenticado.rol === 'admin'" class="btn-group mb-3 w-100" role="group">
+            <button 
+              type="button" 
+              class="btn btn-warning" 
+              data-bs-toggle="modal" 
+              data-bs-target="#duplicarModal"
+            >
+              Duplicar
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-info text-white" 
+              data-bs-toggle="modal" 
+              data-bs-target="#asignarGuiaModal"
+            >
+              Asignar guía
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-danger" 
+              data-bs-toggle="modal" 
+              data-bs-target="#eliminarModal"
+            >
+              Borrar
+            </button>
           </div>
         </div>
       </div>
