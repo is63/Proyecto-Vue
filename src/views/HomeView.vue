@@ -307,6 +307,18 @@ onMounted(async () => {
                 <p class="card-text">
                   <small class="text-muted"><i class="bi bi-calendar3"></i> {{ ruta.fecha }}</small>
                 </p>
+                <!-- Modificar la sección de Fecha y Hora en el template -->
+                <div class="mb-3">
+                  <p class="h4 fw-bold text-decoration-underline text-secondary">Fecha y Hora</p>
+                  <p class="detalle">{{ ruta.fecha }}</p>
+                  <p class="detalle">{{ ruta.hora }}</p>
+                </div>
+
+                <!-- Asistentes -->
+                <div class="mb-3">
+                  <p class="h4 fw-bold text-decoration-underline text-secondary">Asistentes</p>
+                  <p class="detalle">{{ ruta.asistentes || 2 }}</p>
+                </div>
               </div>
             </div>
           </div>

@@ -14,7 +14,9 @@ const props = defineProps({
   },
 });
 
-const ruta = ref({}); // Almacenar los datos de la ruta
+const ruta = ref({
+  asistentes: 0 // Añadir esta propiedad
+}); // Almacenar los datos de la ruta
 const guias = ref([]); // Guardar los guias disponibles
 const error = ref(""); // Mostrar mensajes de error
 
@@ -429,6 +431,12 @@ async function asignarGuia() {
             <p class="h4 fw-bold text-decoration-underline text-secondary">Fecha y Hora</p>
             <p class="detalle">{{ ruta.fecha }}</p>
             <p class="detalle">{{ ruta.hora }}</p>
+          </div>
+
+          <!-- Asistentes -->
+          <div class="mb-3">
+            <p class="h4 fw-bold text-decoration-underline text-secondary">Asistentes</p>
+            <p class="detalle">{{ ruta.asistentes || 2 }}</p>
           </div>
 
           <!-- Botones -->
