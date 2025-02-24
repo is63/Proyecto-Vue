@@ -24,7 +24,7 @@ const imagenesCarrusel = [
 
 // Modificar las refs del video
 const medio = ref(null);
-const play = ref('&#9654;'); // ▶️ (este cambia entre play y pause)
+const play = ref('/img/jugar.png'); // ▶️ (este cambia entre play y pause)
 
 // En la sección de script, añadir la ref para controlar la visibilidad
 const mostrarVideo = ref(false); // false por defecto para mostrar el carrusel
@@ -37,10 +37,10 @@ function alternarVisualizacion() {
 function accionPlay() {
   if (!medio.value.paused && !medio.value.ended) {
     medio.value.pause();
-    play.value = '&#9654;'; // ▶️
+    play.value = '/img/jugar.png'; // ▶️
   } else {
     medio.value.play();
-    play.value = '&#9208;'; // ⏸️
+    play.value = '/img/pausa.png'; // ⏸️
   }
 }
 
@@ -106,19 +106,19 @@ async function obtenerRutas() {
 // Función para obtener las valoraciones desde la API
 async function obtenerValoraciones() {
   try {
-    const response = await fetch(`${API_BASE_URL}/valoraciones`); 
+    const response = await fetch(`${API_BASE_URL}/valoraciones`);
     if (!response.ok) throw new Error("Error al cargar las valoraciones");
 
     const data = await response.json();
 
-    // Verificamos que los datos tengan la estructura esperada
+    // Verificamos que los datos sean un array
     if (Array.isArray(data)) {
       valoraciones.value = data;
 
       // Asignamos las valoraciones a las rutas correspondientes
       rutas.value.forEach((ruta) => {
         ruta.valoraciones = valoraciones.value.filter(
-            (valoracion) => valoracion.ruta_id == ruta.id
+          (valoracion) => valoracion.ruta_id == ruta.id
         );
       });
     } else {
@@ -169,7 +169,7 @@ function cambiarTipoBusqueda() {
 
   tipoBusqueda.value = tipoBusqueda.value === 'texto' ? 'fecha' : 'texto';
   busqueda.value = ''; // Limpiar el campo de búsqueda al cambiar
-  
+
   // Si cambiamos a fecha, inicializar flatpickr
   if (tipoBusqueda.value === 'fecha') {
     setTimeout(() => {
@@ -195,30 +195,22 @@ onMounted(async () => {
     <!-- Barra de búsqueda con botón de alternar -->
     <div class="mb-4 mt-4">
       <form @submit.prevent="filtrarRutas" class="buscador-container">
-        <button 
-          type="button"
-          @click="alternarVisualizacion"
-          class="btn btn-outline-primary rounded-circle"
-          :title="mostrarVideo ? 'Mostrar Carrusel' : 'Mostrar Video'"
-        >
-          <span v-html="mostrarVideo ? '&#128247;' : '&#9654;'"></span>
+        <button type="button" @click="alternarVisualizacion" class="btn btn-outline-primary rounded-circle"
+          :title="mostrarVideo ? 'Mostrar Carrusel' : 'Mostrar Video'">
+          <span><img :src="mostrarVideo ? '/img/carrusel.png' : '/img/jugar.png'"></span>
         </button>
         <!-- Resto del formulario de búsqueda -->
         <div class="buscador ms-3">
-          <input 
-            v-model="busqueda" 
-            :type="tipoBusqueda === 'fecha' ? 'text' : 'text'"
-            class="form-control rounded-pill ps-5 search-input" 
+          <input v-model="busqueda" :type="tipoBusqueda === 'fecha' ? 'text' : 'text'"
+            class="form-control rounded-pill ps-5 search-input"
             :placeholder="tipoBusqueda === 'fecha' ? 'Buscar por fecha' : 'Buscar por título o localidad'"
-            :id="tipoBusqueda === 'fecha' ? 'fechaBusqueda' : ''"
-            aria-label="Buscar"
-          />
+            :id="tipoBusqueda === 'fecha' ? 'fechaBusqueda' : ''" aria-label="Buscar" />
           <i class="bi bi-search icono-busqueda"></i>
         </div>
         <button 
           type="button" 
           @click="cambiarTipoBusqueda" 
-          class="btn btn-outline-primary rounded-pill ms-3 btn-fixed-width"
+          class="btn btn-outline-primary rounded-pill ms-3 btn-toggle"
         >
           <i class="bi" :class="tipoBusqueda === 'fecha' ? 'bi-text-left' : 'bi-calendar3'"></i>
           {{ tipoBusqueda === 'fecha' ? 'Fecha' : 'Nombre/Localidad' }}
@@ -227,54 +219,53 @@ onMounted(async () => {
     </div>
 
     <!-- Carrusel y Video con v-show -->
-    <div v-show="!mostrarVideo" id="carouselExample" class="carousel slide border mb-4 bg-white rounded mt-5" data-bs-ride="carousel">
+    <div v-show="!mostrarVideo" id="carouselExample" class="carousel slide border mb-4 bg-white rounded mt-5"
+      data-bs-ride="carousel">
       <div class="carousel-inner">
-        <div v-for="(imagen, index) in imagenesCarrusel" :key="index" class="carousel-item" data-bs-interval="4000" data-bs-pause="hover" :class="{ active: index === 0 }">
-          <img :src="imagen" class="d-block w-100" style="height: 450px; object-fit: cover" alt="Imagen carrusel"/>
+        <div v-for="(imagen, index) in imagenesCarrusel" :key="index" class="carousel-item" data-bs-interval="4000"
+          data-bs-pause="hover" :class="{ active: index === 0 }">
+          <img :src="imagen" class="d-block w-100" style="height: 450px; object-fit: cover" alt="Imagen carrusel" />
         </div>
       </div>
       <!-- Controles del carrusel -->
       <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
       </button>
-      <button
-          class="carousel-control-next"
-          type="button"
-          data-bs-target="#carouselExample"
-          data-bs-slide="next"
-      >
+      <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
         <span class="carousel-control-next-icon" aria-hidden="true"></span>
       </button>
     </div>
 
+    <!-- Video -->
     <div v-show="mostrarVideo" class="video-container mb-5">
       <video ref="medio" width="720" height="400" class="mx-auto d-block" controls>
         <source src="/video/crush.mp4" type="video/mp4">
         Tu navegador no soporta el elemento video.
       </video>
 
+      <!-- Controles de video -->
       <nav class="d-flex justify-content-center gap-2 mt-3">
         <button class="btn btn-outline-primary" @click="accionReiniciar">
-          <span v-html="'&#9198;'"></span>
+          <span> <img src="/img/atrasdoble.png"></span>
         </button>
         <button class="btn btn-outline-primary" @click="accionRetrasar">
-          <span v-html="'&#9194;'"></span>
+          <span><img src='/img/atras.png'></span>
         </button>
         <button class="btn btn-outline-primary" @click="accionPlay">
-          <span v-html="play"></span>
+          <span><img :src="play"></span>
         </button>
         <button class="btn btn-outline-primary" @click="accionAdelantar">
-          <span v-html="'&#9193;'"></span>
+          <span><img src='/img/alante.png'></span>
         </button>
         <button class="btn btn-outline-primary" @click="accionSilenciar">
-          <span v-html="'&#128263;'"></span>
+          <span><img src="/img/sin-sonido.png"></span>
         </button>
         <span class="d-flex align-items-center text-dark">Volumen</span>
         <button class="btn btn-outline-primary" @click="accionMenosVolumen">
-          <span v-html="'&#128265;'"></span>
+          <span><img src="/img/altavoz-bajo.png"></span>
         </button>
         <button class="btn btn-outline-primary" @click="accionMasVolumen">
-          <span v-html="'&#128266;'"></span>
+          <span><img src="/img/altavoz-alto.png"></span>
         </button>
       </nav>
     </div>
@@ -291,7 +282,8 @@ onMounted(async () => {
           <div class="row g-0">
             <!-- Imagen de la API -->
             <div class="col-md-5 p-3">
-              <img :src="'/img/' + ruta.foto" class="img-fluid rounded-start w-100" style="height: 250px; object-fit: cover" alt="Imagen de la ruta"/>
+              <img :src="'/img/' + ruta.foto" class="img-fluid rounded-start w-100"
+                style="height: 250px; object-fit: cover" alt="Imagen de la ruta" />
             </div>
             <!-- Contenido de la tarjeta -->
             <div class="col-md-7">
@@ -306,7 +298,7 @@ onMounted(async () => {
                 </p>
                 <p class="card-text">
                   <small class="text-muted"><i class="bi bi-calendar3"></i> {{ ruta.fecha }}</small>
-                </p>               
+                </p>
               </div>
             </div>
           </div>
@@ -315,20 +307,14 @@ onMounted(async () => {
           <div class="card-footer bg-light">
             <h5 class="mb-3">Valoraciones:</h5>
             <div v-if="ruta.valoraciones.length > 0">
-              <div
-                  v-for="(valoracion, index) in ruta.valoraciones"
-                  :key="index"
-                  class="mb-3"
-              >
+              <div v-for="(valoracion, index) in ruta.valoraciones" :key="index" class="mb-3">
                 <div class="d-flex align-items-center">
                   <span class="badge bg-primary me-2">
                     {{ valoracion.puntuacion }} ★
                   </span>
                   <p class="mb-0">{{ valoracion.comentario }}</p>
                 </div>
-                <small class="text-muted"
-                >{{ valoracion.fecha_valoracion }}</small
-                >
+                <small class="text-muted">{{ valoracion.fecha_valoracion }}</small>
               </div>
             </div>
             <p v-else class="text-muted">
@@ -379,9 +365,15 @@ input[type="date"] {
   color: white;
 }
 
-.btn-fixed-width {
-  min-width: 160px;
+.btn-toggle {
+  width: 160px; /* Ancho fijo */
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* Espacio entre el icono y el texto */
 }
 
 /* Añadir estilo para el input de fecha */
@@ -414,4 +406,3 @@ video {
   justify-content: center;
 }
 </style>
-

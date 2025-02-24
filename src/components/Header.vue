@@ -57,9 +57,6 @@ function cerrarSesion() {
 </template>
 
 <style scoped>
-*{
-font-family: monocraft;
-}
 
 .bg-primary-dark {
   background-color: #1a1a2e; /* Azul oscuro elegante */

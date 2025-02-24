@@ -318,14 +318,14 @@ async function cargarGuias() {
     // Filtrar los guías basándonos en las asignaciones existentes
     guias.value = guiasConAsignaciones.value.filter(guia => {
       // Si el guía no tiene asignaciones, está disponible
-      if (guia.asignaciones.length === 0) {
+      if (guia.asignaciones.length == 0) {
         return true;
       }
 
       // Contar las rutas del guía en la fecha seleccionada
       const rutasEnFecha = guia.asignaciones.filter(asig => {
         const rutaAsignada = rutas.value.find(r => r.id === asig.ruta_id);
-        return rutaAsignada && rutaAsignada.fecha === nuevaFecha.value;
+        return rutaAsignada && rutaAsignada.fecha == nuevaFecha.value;
       });
 
       // El guía está disponible si tiene menos de 2 rutas en esa fecha
