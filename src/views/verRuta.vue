@@ -65,8 +65,8 @@ async function cargarDatos() {
     }
     const datosRuta = await respuestaRuta.json();
     ruta.value = datosRuta; // Guardar los datos de la ruta
-  
-    if(ruta.value == null){
+
+    if (ruta.value == null) {
       router.push("/");
     }
 
@@ -76,7 +76,7 @@ async function cargarDatos() {
       throw new Error(`Error al cargar las asignaciones: ${respuestaAsignaciones.status}`);
     }
     const asignaciones = await respuestaAsignaciones.json();
-    
+
     // Cargar guias disponibles 
     const respuestaGuias = await fetch("http://localhost/freetours/api.php/usuarios");
     if (!respuestaGuias.ok) {
@@ -114,13 +114,14 @@ function inicializarMapa(latitud, longitud) {
   mapa = L.map("mapa").setView([latitud, longitud], 16); // Crear el mapa
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { // Añadir la "atribución" al mapa (abajo derecha)
-    attribution: '', })
+    attribution: '',
+  })
     .addTo(mapa);
 
   L.marker([latitud, longitud]) // Crear un marcador
-      .addTo(mapa) // Añadir al mapa
-      .bindPopup("Punto de encuentro") // Añadir texto a un popup al marcador
-      .openPopup(); // Abrir el mensaje del marcador cuando se carga el mapa
+    .addTo(mapa) // Añadir al mapa
+    .bindPopup("Punto de encuentro") // Añadir texto a un popup al marcador
+    .openPopup(); // Abrir el mensaje del marcador cuando se carga el mapa
 }
 
 onMounted(() => {
@@ -151,7 +152,7 @@ onMounted(() => {
   new Modal(document.getElementById('eliminarModal'));
 
   // Añadir event listener para cuando el modal de eliminación se oculta/cierra
-  document.getElementById('eliminarModal').addEventListener('hidden.bs.modal', () => { 
+  document.getElementById('eliminarModal').addEventListener('hidden.bs.modal', () => {
     if (eliminacionCompletada.value) { //Si se ha eliminado correctamente hace la redireccion
       router.push("/");
     }
@@ -176,9 +177,9 @@ async function duplicarRuta() {
     guia_id: nuevoGuia.value || null,
   };
   console.log(datosRuta);
-  
+
   try {
-    if(datosRuta.hora == "" || datosRuta.fecha == ""){
+    if (datosRuta.hora == "" || datosRuta.fecha == "") {
       throw new Error("Los campos de la fecha u hora están vacíos")
     }
 
@@ -234,10 +235,10 @@ async function confirmarEliminacion() {
       mensajeConfirmacionEliminacion.value = "Ruta eliminada con éxito";
       eliminacionExitosa.value = true;
       eliminacionCompletada.value = true;
-      
+
       // Mostrar modal de confirmación
       mostrarConfirmacionEliminacion.value = true;
-      
+
       // Cerrar solo el modal de feedback después de 3 segundos
       setTimeout(() => {
         mostrarConfirmacionEliminacion.value = false;
@@ -250,10 +251,10 @@ async function confirmarEliminacion() {
     mensajeConfirmacionEliminacion.value = "Error al eliminar la ruta";
     eliminacionExitosa.value = false;
     eliminacionCompletada.value = false;
-    
+
     // Mostrar modal de error
     mostrarConfirmacionEliminacion.value = true;
-    
+
     // Cerrar el modal de error después de 3 segundos
     setTimeout(() => {
       mostrarConfirmacionEliminacion.value = false;
@@ -396,7 +397,8 @@ async function asignarGuia() {
   <div class="container-fluid mb-4 px-0">
     <!-- Imagen principal -->
     <div class="w-100">
-      <img :src="`/img/${ruta.foto}`" alt="Imagen de la ruta" class="img-fluid w-100 rounded" style="height: 400px; object-fit: cover;">
+      <img :src="`/img/${ruta.foto}`" alt="Imagen de la ruta" class="img-fluid w-100 rounded"
+        style="height: 400px; object-fit: cover;">
     </div>
 
     <!-- Titulo -->
@@ -440,29 +442,16 @@ async function asignarGuia() {
           </div>
 
           <!-- Botones - Solo visibles para administradores, usando el mismo estilo de comprobación que en Header.vue -->
-          <div v-if="usuarioAutenticado && usuarioAutenticado.rol === 'admin'" class="btn-group mb-3 w-100" role="group">
-            <button 
-              type="button" 
-              class="btn btn-warning" 
-              data-bs-toggle="modal" 
-              data-bs-target="#duplicarModal"
-            >
+          <div v-if="usuarioAutenticado && usuarioAutenticado.rol === 'admin'" class="btn-group mb-3 w-100"
+            role="group">
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#duplicarModal">
               Duplicar
             </button>
-            <button 
-              type="button" 
-              class="btn btn-info text-white" 
-              data-bs-toggle="modal" 
-              data-bs-target="#asignarGuiaModal"
-            >
+            <button type="button" class="btn btn-info text-white" data-bs-toggle="modal"
+              data-bs-target="#asignarGuiaModal">
               Asignar guía
             </button>
-            <button 
-              type="button" 
-              class="btn btn-danger" 
-              data-bs-toggle="modal" 
-              data-bs-target="#eliminarModal"
-            >
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal">
               Borrar
             </button>
           </div>
@@ -482,25 +471,15 @@ async function asignarGuia() {
             <!-- Fecha -->
             <div class="mb-3">
               <label class="form-label">Fecha</label> <br>
-              <input
-                  type="text"
-                  class="form-control"
-                  id="fechaPicker"
-                  v-model="nuevaFecha"
-                  placeholder="Seleccione una fecha"
-                  readonly>
+              <input type="text" class="form-control" id="fechaPicker" v-model="nuevaFecha"
+                placeholder="Seleccione una fecha" readonly>
             </div>
 
             <!-- Hora -->
             <div class="mb-3">
               <label class="form-label">Hora (HH:MM:SS)</label>
-              <input
-                  type="text"
-                  class="form-control"
-                  id="horaPicker"
-                  v-model="nuevaHora"
-                  placeholder="Seleccione una hora"
-                  readonly>
+              <input type="text" class="form-control" id="horaPicker" v-model="nuevaHora"
+                placeholder="Seleccione una hora" readonly>
             </div>
 
             <!-- Guia -->
@@ -508,7 +487,7 @@ async function asignarGuia() {
               <label class="form-label">Nuevo Guía</label>
               <select class="form-select" v-model="nuevoGuia">
                 <option value="" disabled>Seleccione un guía</option>
-                 <option v-for="guia in guias" :key="guia.id" :value="guia.id">
+                <option v-for="guia in guias" :key="guia.id" :value="guia.id">
                   {{ guia.nombre }}
                 </option>
               </select>
@@ -556,7 +535,8 @@ async function asignarGuia() {
     </div>
 
     <!-- Feedback de Eliminación -->
-    <div v-if="mostrarConfirmacionEliminacion" class="modal fade show" tabindex="-1" aria-hidden="true" style="display: block;">
+    <div v-if="mostrarConfirmacionEliminacion" class="modal fade show" tabindex="-1" aria-hidden="true"
+      style="display: block;">
       <div class="modal-dialog">
         <div :class="['modal-content', eliminacionExitosa ? 'bg-success' : 'bg-danger']">
           <div class="modal-body">
@@ -567,7 +547,8 @@ async function asignarGuia() {
     </div>
 
     <!-- Modal de Asignar Guía -->
-    <div class="modal fade" id="asignarGuiaModal" tabindex="-1" aria-labelledby="asignarGuiaModalLabel" aria-hidden="true">
+    <div class="modal fade" id="asignarGuiaModal" tabindex="-1" aria-labelledby="asignarGuiaModalLabel"
+      aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -594,7 +575,8 @@ async function asignarGuia() {
     </div>
 
     <!-- Feedback de Asignación -->
-    <div v-if="mostrarFeedbackAsignacion" class="modal fade show" tabindex="-1" aria-hidden="true" style="display: block;">
+    <div v-if="mostrarFeedbackAsignacion" class="modal fade show" tabindex="-1" aria-hidden="true"
+      style="display: block;">
       <div class="modal-dialog">
         <div :class="['modal-content', asignacionExitosa ? 'bg-success' : 'bg-danger']">
           <div class="modal-body">

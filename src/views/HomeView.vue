@@ -19,7 +19,8 @@ const fpInstance = ref(null);
 const imagenesCarrusel = [
   "/img/Almagro.webp",
   "/img/EmbajadaBerlin.webp",
-  "/img/MezquitaCordoba.webp"
+  "/img/MezquitaCordoba.webp",
+  ""
 ];
 
 // Modificar las refs del video
@@ -224,8 +225,12 @@ onMounted(async () => {
       <div class="carousel-inner">
         <div v-for="(imagen, index) in imagenesCarrusel" :key="index" class="carousel-item" data-bs-interval="4000"
           data-bs-pause="hover" :class="{ active: index === 0 }">
-          <img :src="imagen" class="d-block w-100" style="height: 450px; object-fit: cover" alt="Imagen carrusel" />
+          <img v-if="index != imagenesCarrusel.length-1" :src="imagen" class="d-block w-100" style="height: 450px; object-fit: cover" alt="Imagen carrusel" />
+          <video v-if="index == imagenesCarrusel.length-1" class="carrousel-item d-block w-100" style="height: 450px;background-color: black;" alt="video carrusel" controls>
+          <source src="/video/crush.mp4" type="video/mp4" >  
+          </video>
         </div>
+      
       </div>
       <!-- Controles del carrusel -->
       <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
