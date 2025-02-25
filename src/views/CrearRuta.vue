@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { OpenStreetMapProvider } from 'leaflet-geosearch';
+import Swal from 'sweetalert2';
 import { Modal } from 'bootstrap';
 
 const router = useRouter();
@@ -97,16 +98,29 @@ const esFormularioValido = computed(() => {
 
 async function crearRuta() {
   if (!validarCampos()) {
-    modalMensaje.value = 'Todos los campos son obligatorios excepto el del guía';
-    modalExito.value = false;
-    modalInstance.show();
+    Swal.fire({
+      html: '<strong>Todos los campos son obligatorios excepto el del guía</strong>',
+      icon: 'info',
+      iconColor: 'red',
+      confirmButtonColor: '#232342',
+      timer: 2500,
+      timerProgressBar: true,
+      color: "red",
+      
+    });
     return;
   }
 
   if (!validarFecha(rutaNueva.value.fecha)) {
-    modalMensaje.value = 'La fecha no puede ser anterior al día de hoy';
-    modalExito.value = false;
-    modalInstance.show();
+    Swal.fire({
+      html: '<strong>La fecha no puede ser anterior al día de hoy </strong>',
+      icon: 'info',
+      iconColor: 'red',
+      confirmButtonColor: '#232342',
+      timer: 2500,
+      timerProgressBar: true,
+      color: "red",
+    });
     return;
   }
 
@@ -135,20 +149,25 @@ async function crearRuta() {
       throw new Error('Error al crear la ruta');
     }
 
-    modalMensaje.value = 'Ruta creada correctamente';
-    modalExito.value = true;
-    modalInstance.show();
-    botonDeshabilitado.value = true; // Deshabilitar el botón
-    setTimeout(() => {
-      modalInstance.hide();
-    }, 2500); // Cerrar el modal después de 2,5 segundos
-    setTimeout(() => {
+    botonDeshabilitado.value = true;
+    Swal.fire({
+      html: '<strong>Ruta creada correctamente</strong>',
+      icon: 'success',
+      confirmButtonColor: '#232342',
+      timer: 2500,
+      timerProgressBar: true,
+      color: "green", 
+    }).then(() => {
       router.push('/');
-    }, 3000); // Redirigir después de 3 segundos
+    });
+
   } catch (error) {
-    modalMensaje.value = 'Error al crear la ruta';
-    modalExito.value = false;
-    modalInstance.show();
+    Swal.fire({
+      title: 'Error',
+      text: 'Error al crear la ruta',
+      icon: 'error',
+      confirmButtonColor: '#232342'
+    });
   }
 }
 
