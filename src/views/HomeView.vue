@@ -13,7 +13,7 @@ const busqueda = ref(""); // Estado para almacenar el texto de búsqueda
 const tipoBusqueda = ref('texto'); // Nuevo estado para controlar el tipo de búsqueda (texto/fecha)
 
 // Variable para almacenar la instancia de flatpickr
-const fpInstance = ref(null);
+const flatpickInstance = ref(null);
 
 // Modificar las refs del video
 const medio = ref(null);
@@ -155,9 +155,9 @@ function filtrarRutas() {
 // Nueva función para cambiar el tipo de búsqueda
 function cambiarTipoBusqueda() {
   // Destruir la instancia anterior de flatpickr si existe
-  if (fpInstance.value) {
-    fpInstance.value.destroy();
-    fpInstance.value = null;
+  if (flatpickInstance.value) {
+    flatpickInstance.value.destroy();
+    flatpickInstance.value = null;
   }
 
   tipoBusqueda.value = tipoBusqueda.value === 'texto' ? 'fecha' : 'texto';
@@ -166,7 +166,7 @@ function cambiarTipoBusqueda() {
   // Si cambiamos a fecha, inicializar flatpickr
   if (tipoBusqueda.value === 'fecha') {
     setTimeout(() => {
-      fpInstance.value = flatpickr("#fechaBusqueda", {
+      flatpickInstance.value = flatpickr("#fechaBusqueda", {
         dateFormat: "Y-m-d",
         onChange: (selectedDates, dateStr) => {
           busqueda.value = dateStr;
@@ -195,16 +195,12 @@ onMounted(async () => {
         <!-- Resto del formulario de búsqueda -->
         <div class="buscador ms-3">
           <input v-model="busqueda" :type="tipoBusqueda === 'fecha' ? 'text' : 'text'"
-            class="form-control rounded-pill ps-5 search-input"
+            class="form-control rounded-pill ps-5 search-input" :class="{ 'texto': tipoBusqueda === 'texto' }"
             :placeholder="tipoBusqueda === 'fecha' ? 'Buscar por fecha' : 'Buscar por título o localidad'"
             :id="tipoBusqueda === 'fecha' ? 'fechaBusqueda' : ''" aria-label="Buscar" />
           <i class="bi bi-search icono-busqueda"></i>
         </div>
-        <button 
-          type="button" 
-          @click="cambiarTipoBusqueda" 
-          class="btn btn-outline-primary rounded-pill ms-3 btn-toggle"
-        >
+        <button type="button" @click="cambiarTipoBusqueda" class="btn btn-outline-primary rounded-pill ms-3 btn-toggle">
           <i class="bi" :class="tipoBusqueda === 'fecha' ? 'bi-text-left' : 'bi-calendar3'"></i>
           {{ tipoBusqueda === 'fecha' ? 'Fecha' : 'Nombre/Localidad' }}
         </button>
@@ -220,13 +216,16 @@ onMounted(async () => {
           </video>
         </div>
         <div class="carousel-item" data-bs-interval="false" data-bs-pause="hover">
-          <img src="/img/Almagro.webp" class="d-block w-100" style="height: 450px; object-fit: cover" alt="Imagen carrusel 1" />
+          <img src="/img/Almagro.webp" class="d-block w-100" style="height: 450px; object-fit: cover"
+            alt="Imagen carrusel 1" />
         </div>
         <div class="carousel-item" data-bs-interval="false" data-bs-pause="hover">
-          <img src="/img/EmbajadaBerlin.webp" class="d-block w-100" style="height: 450px; object-fit: cover" alt="Imagen carrusel 2" />
+          <img src="/img/EmbajadaBerlin.webp" class="d-block w-100" style="height: 450px; object-fit: cover"
+            alt="Imagen carrusel 2" />
         </div>
         <div class="carousel-item" data-bs-interval="false" data-bs-pause="hover">
-          <img src="/img/MezquitaCordoba.webp" class="d-block w-100" style="height: 450px; object-fit: cover" alt="Imagen carrusel 3" />
+          <img src="/img/MezquitaCordoba.webp" class="d-block w-100" style="height: 450px; object-fit: cover"
+            alt="Imagen carrusel 3" />
         </div>
       </div>
       <!-- Controles del carrusel -->
@@ -360,20 +359,25 @@ input[type="date"] {
 }
 
 .btn-toggle {
-  width: 160px; /* Ancho fijo */
+  width: 160px;
+  /* Ancho fijo */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px; /* Espacio entre el icono y el texto */
+  gap: 8px;
+  /* Espacio entre el icono y el texto */
 }
 
 /* Añadir estilo para el input de fecha */
 .search-input {
   background-color: white;
-  cursor: pointer;
+}
+
+.texto {
+  cursor: text;
 }
 
 .video-container {
