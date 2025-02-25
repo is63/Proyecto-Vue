@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router"; // Importamos useRouter para redirigir
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
@@ -18,14 +18,6 @@ const flatpickInstance = ref(null);
 // Modificar las refs del video
 const medio = ref(null);
 const play = ref('/img/jugar.png'); // ▶️ (este cambia entre play y pause)
-
-// En la sección de script, añadir la ref para controlar la visibilidad
-const mostrarControles = ref(false); // false por defecto para ocultar los controles
-
-// Añadir función para alternar la visualización
-function alternarControles() {
-  mostrarControles.value = !mostrarControles.value;
-}
 
 function accionPlay() {
   if (!medio.value.paused && !medio.value.ended) {
@@ -66,6 +58,26 @@ function accionMasVolumen() {
 function accionMenosVolumen() {
   if (medio.value.volume > 0) {
     medio.value.volume = Math.max(0, medio.value.volume - 0.1);
+  }
+}
+
+// Add after other ref declarations
+const paginaActual = ref(1);
+const rutasPorPagina = ref(5);
+
+// Add this computed property
+const rutasPaginadas = computed(() => {
+  const inicio = (paginaActual.value - 1) * rutasPorPagina.value;
+  const fin = inicio + rutasPorPagina.value;
+  return filtrarRutas().slice(inicio, fin);
+});
+
+const totalPaginas = computed(() => Math.ceil(filtrarRutas().length / rutasPorPagina.value));
+
+// Add this function to handle page changes
+function cambiarPagina(pagina) {
+  if (pagina >= 1 && pagina <= totalPaginas.value) {
+    paginaActual.value = pagina;
   }
 }
 
@@ -188,10 +200,6 @@ onMounted(async () => {
     <!-- Barra de búsqueda con botón de alternar -->
     <div class="mb-4 mt-4">
       <form @submit.prevent="filtrarRutas" class="buscador-container">
-        <button type="button" @click="alternarControles" class="btn btn-outline-primary rounded-circle"
-          :title="mostrarControles ? 'Ocultar Controles' : 'Mostrar Controles'">
-          <span><img :src="mostrarControles ? '/img/ocultar.png' : '/img/mostrar.png'"></span>
-        </button>
         <!-- Resto del formulario de búsqueda -->
         <div class="buscador ms-3">
           <input v-model="busqueda" :type="tipoBusqueda === 'fecha' ? 'text' : 'text'"
@@ -211,11 +219,6 @@ onMounted(async () => {
     <div id="carouselExample" class="carousel slide border mb-4 bg-white rounded mt-5">
       <div class="carousel-inner">
         <div class="carousel-item active" data-bs-interval="false" data-bs-pause="hover">
-          <video ref="medio" class="d-block w-100" style="height: 450px; background-color: black;" controls>
-            <source src="/video/crush.mp4" type="video/mp4">
-          </video>
-        </div>
-        <div class="carousel-item" data-bs-interval="false" data-bs-pause="hover">
           <img src="/img/Almagro.webp" class="d-block w-100" style="height: 450px; object-fit: cover"
             alt="Imagen carrusel 1" />
         </div>
@@ -237,91 +240,123 @@ onMounted(async () => {
       </button>
     </div>
 
-    <!-- Controles de video -->
-    <nav v-if="mostrarControles" class="d-flex justify-content-center gap-2 mt-3 mb-3">
-      <button class="btn btn-outline-primary" @click="accionReiniciar">
-        <span> <img src="/img/atrasdoble.png"></span>
-      </button>
-      <button class="btn btn-outline-primary" @click="accionRetrasar">
-        <span><img src='/img/atras.png'></span>
-      </button>
-      <button class="btn btn-outline-primary" @click="accionPlay">
-        <span><img :src="play"></span>
-      </button>
-      <button class="btn btn-outline-primary" @click="accionAdelantar">
-        <span><img src='/img/alante.png'></span>
-      </button>
-      <button class="btn btn-outline-primary" @click="accionSilenciar">
-        <span><img src="/img/sin-sonido.png"></span>
-      </button>
-      <span class="d-flex align-items-center text-dark">Volumen</span>
-      <button class="btn btn-outline-primary" @click="accionMenosVolumen">
-        <span><img src="/img/altavoz-bajo.png"></span>
-      </button>
-      <button class="btn btn-outline-primary" @click="accionMasVolumen">
-        <span><img src="/img/altavoz-alto.png"></span>
-      </button>
-    </nav>
-
     <h1 class="text-center text-primary mb-4">Lista de Rutas</h1>
 
-    <!-- Mensaje de error si la API falla -->
+    <!-- Mensaje de error y no hay rutas -->
     <div v-if="error" class="alert alert-danger text-center">{{ error }}</div>
-
-    <!-- Tarjetas de rutas obtenidas desde la API -->
-    <div v-if="filtrarRutas().length > 0" class="row g-4 mb-4">
-      <div v-for="(ruta, index) in filtrarRutas()" :key="index" class="col-12">
-        <div class="card h-100 shadow-sm mb-4">
-          <div class="row g-0">
-            <!-- Imagen de la API -->
-            <div class="col-md-5 p-3">
-              <img :src="'/img/' + ruta.foto" class="img-fluid rounded-start w-100"
-                style="height: 250px; object-fit: cover" alt="Imagen de la ruta" />
-            </div>
-            <!-- Contenido de la tarjeta -->
-            <div class="col-md-7">
-              <div class="card-body">
-                <!-- Título como enlace -->
-                <a href="#" @click.prevent="verRuta(ruta.id)" class="text-decoration-none">
-                  <h3 class="card-title text-primary">{{ ruta.titulo }}</h3>
-                </a>
-                <p class="card-text">{{ ruta.descripcion }}</p>
-                <p class="card-text">
-                  <small class="text-muted">{{ ruta.localidad }}</small>
-                </p>
-                <p class="card-text">
-                  <small class="text-muted"><i class="bi bi-calendar3"></i> {{ ruta.fecha }}</small>
-                </p>
+    <div v-else>
+      <!-- Tarjetas de rutas obtenidas desde la API -->
+      <div v-if="filtrarRutas().length > 0" class="row g-4 mb-4">
+        <div v-for="(ruta, index) in rutasPaginadas" :key="index" class="col-12">
+          <div class="card h-100 shadow-sm mb-4">
+            <div class="row g-0">
+              <!-- Imagen de la API -->
+              <div class="col-md-5 p-3">
+                <img :src="'/img/' + ruta.foto" class="img-fluid rounded-start w-100"
+                  style="height: 250px; object-fit: cover" alt="Imagen de la ruta" />
               </div>
-            </div>
-          </div>
-
-          <!-- Sección de valoraciones -->
-          <div class="card-footer bg-light">
-            <h5 class="mb-3">Valoraciones:</h5>
-            <div v-if="ruta.valoraciones.length > 0">
-              <div v-for="(valoracion, index) in ruta.valoraciones" :key="index" class="mb-3">
-                <div class="d-flex align-items-center">
-                  <span class="badge bg-primary me-2">
-                    {{ valoracion.puntuacion }} ★
-                  </span>
-                  <p class="mb-0">{{ valoracion.comentario }}</p>
+              <!-- Contenido de la tarjeta -->
+              <div class="col-md-7">
+                <div class="card-body">
+                  <!-- Título como enlace -->
+                  <a href="#" @click.prevent="verRuta(ruta.id)" class="text-decoration-none">
+                    <h3 class="card-title text-primary">{{ ruta.titulo }}</h3>
+                  </a>
+                  <p class="card-text">{{ ruta.descripcion }}</p>
+                  <p class="card-text">
+                    <small class="text-muted">{{ ruta.localidad }}</small>
+                  </p>
+                  <p class="card-text">
+                    <small class="text-muted"><i class="bi bi-calendar3"></i> {{ ruta.fecha }}</small>
+                  </p>
                 </div>
-                <small class="text-muted">{{ valoracion.fecha_valoracion }}</small>
               </div>
             </div>
-            <p v-else class="text-muted">
-              No hay valoraciones para esta ruta.
-            </p>
+
+            <!-- Sección de valoraciones -->
+            <div class="card-footer bg-light">
+              <h5 class="mb-3">Valoraciones:</h5>
+              <div v-if="ruta.valoraciones.length > 0">
+                <div v-for="(valoracion, index) in ruta.valoraciones" :key="index" class="mb-3">
+                  <div class="d-flex align-items-center">
+                    <span class="badge bg-primary me-2">
+                      {{ valoracion.puntuacion }} ★
+                    </span>
+                    <p class="mb-0">{{ valoracion.comentario }}</p>
+                  </div>
+                  <small class="text-muted">{{ valoracion.fecha_valoracion }}</small>
+                </div>
+              </div>
+              <p v-else class="text-muted">
+                No hay valoraciones para esta ruta.
+              </p>
+            </div>
           </div>
         </div>
+
+        <!-- Add pagination controls -->
+        <nav aria-label="Navegación de páginas" class="mt-4">
+          <ul class="pagination justify-content-center">
+            <li class="page-item" :class="{ disabled: paginaActual === 1 }">
+              <a class="page-link" href="#" @click.prevent="cambiarPagina(paginaActual - 1)">
+                &laquo;
+              </a>
+            </li>
+            <li v-for="pagina in totalPaginas" 
+                :key="pagina" 
+                class="page-item"
+                :class="{ active: paginaActual === pagina }">
+              <a class="page-link" href="#" @click.prevent="cambiarPagina(pagina)">
+                {{ pagina }}
+              </a>
+            </li>
+            <li class="page-item" :class="{ disabled: paginaActual === totalPaginas }">
+              <a class="page-link" href="#" @click.prevent="cambiarPagina(paginaActual + 1)">
+                &raquo;
+              </a>
+            </li>
+          </ul>
+        </nav>
       </div>
+      <p v-else class="text-center text-muted">
+        No se encontraron rutas.
+      </p>
     </div>
 
-    <!-- Mensaje si no hay rutas disponibles -->
-    <p v-else-if="!error" class="text-center text-muted">
-      No se encontraron rutas.
-    </p>
+    <!-- Video section -->
+    <div class="video-section mt-5 mb-4">
+      <div class="video-container border rounded bg-white p-4">
+        <video ref="medio" class="w-100" style="height: 450px; background-color: black;" controls>
+          <source src="/video/crush.mp4" type="video/mp4">
+        </video>
+
+        <!-- Controles de video -->
+        <nav class="d-flex justify-content-center gap-2 mt-4">
+          <button class="btn btn-outline-primary" @click="accionReiniciar">
+            <span><img src="/img/atrasdoble.png"></span>
+          </button>
+          <button class="btn btn-outline-primary" @click="accionRetrasar">
+            <span><img src='/img/atras.png'></span>
+          </button>
+          <button class="btn btn-outline-primary" @click="accionPlay">
+            <span><img :src="play"></span>
+          </button>
+          <button class="btn btn-outline-primary" @click="accionAdelantar">
+            <span><img src='/img/alante.png'></span>
+          </button>
+          <button class="btn btn-outline-primary" @click="accionSilenciar">
+            <span><img src="/img/sin-sonido.png"></span>
+          </button>
+          <span class="d-flex align-items-center text-dark">Volumen</span>
+          <button class="btn btn-outline-primary" @click="accionMenosVolumen">
+            <span><img src="/img/altavoz-bajo.png"></span>
+          </button>
+          <button class="btn btn-outline-primary" @click="accionMasVolumen">
+            <span><img src="/img/altavoz-alto.png"></span>
+          </button>
+        </nav>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -394,13 +429,35 @@ video {
   min-width: 40px;
 }
 
-/* Añadir estilos para el botón circular */
-.btn.rounded-circle {
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Add to the existing <style> section */
+.pagination {
+  margin-bottom: 2rem;
+}
+
+.page-link {
+  color: #0d6efd;
+  cursor: pointer;
+}
+
+.page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.page-item.disabled .page-link {
+  color: #6c757d;
+  pointer-events: none;
+  background-color: #fff;
+  border-color: #dee2e6;
+}
+
+/* Add to the existing <style> section */
+.video-section {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.video-container {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 </style>
