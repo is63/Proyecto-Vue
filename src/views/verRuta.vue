@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet"; // Mapa
 import flatpickr from "flatpickr"; // Fecha y Hora (Calendario)
 import "flatpickr/dist/flatpickr.min.css";
+import Swal from 'sweetalert2'; // SweetAlert
 import { Modal } from 'bootstrap';
 
 const props = defineProps({
@@ -231,35 +232,67 @@ async function confirmarEliminacion() {
     });
 
     if (response.ok) {
-      // Configurar mensaje y estado
-      mensajeConfirmacionEliminacion.value = "Ruta eliminada con éxito";
-      eliminacionExitosa.value = true;
-      eliminacionCompletada.value = true;
+      // Cerrar el modal de eliminación y limpiar completamente
+      const modalEliminar = document.getElementById('eliminarModal');
+      const modal = Modal.getInstance(modalEliminar);
+      modal.hide();
+      
+      // Limpiar completamente todos los rastros del modal
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      
+      // Eliminar el backdrop si existe
+      const backdrop = document.querySelector('.modal-backdrop');
+      if (backdrop) {
+        backdrop.remove();
+      }
 
-      // Mostrar modal de confirmación
-      mostrarConfirmacionEliminacion.value = true;
+      // Mostrar el SweetAlert2
+      await Swal.fire({
+        title: 'Eliminada',
+        html: '<strong>La ruta ha sido eliminada </strong>',
+        icon: 'success',
+        iconColor: 'red',
+        confirmButtonColor: '#232342',
+        timer: 2500,
+        timerProgressBar: true,
+        color: "red",
+        showConfirmButton: true,
+        confirmButtonText: 'Aceptar',
+        backdrop: false,
+        allowOutsideClick: true,
+        
+        showClass: {
+          popup: 'animate__animated animate__fadeInDown'
+        },
+        hideClass: {
+          popup: 'animate__animated animate__fadeOutUp'
+        },
+        didClose: () => {
+          // Asegurarse de que el body esté limpio antes de redirigir
+          document.body.classList.remove('modal-open');
+          document.body.style.overflow = '';
+          document.body.style.paddingRight = '';
+          router.push('/');
+        }
+      });
 
-      // Cerrar solo el modal de feedback después de 3 segundos
-      setTimeout(() => {
-        mostrarConfirmacionEliminacion.value = false;
-      }, 3000);
     } else {
       throw new Error("Error al eliminar la ruta");
     }
   } catch (error) {
     // En caso de error
-    mensajeConfirmacionEliminacion.value = "Error al eliminar la ruta";
-    eliminacionExitosa.value = false;
-    eliminacionCompletada.value = false;
-
-    // Mostrar modal de error
-    mostrarConfirmacionEliminacion.value = true;
-
-    // Cerrar el modal de error después de 3 segundos
-    setTimeout(() => {
-      mostrarConfirmacionEliminacion.value = false;
-    }, 3000);
-
+    Swal.fire({
+      title: 'Error',
+      text: 'Error al eliminar la ruta',
+      icon: 'error',
+      confirmButtonColor: '#232342',
+      showConfirmButton: true,
+      confirmButtonText: 'Aceptar',
+      backdrop: false, // Deshabilitar el backdrop también en el mensaje de error
+      allowOutsideClick: true
+    });
     console.error('Error:', error);
   }
 }
