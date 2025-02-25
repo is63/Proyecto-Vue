@@ -15,24 +15,16 @@ const tipoBusqueda = ref('texto'); // Nuevo estado para controlar el tipo de bú
 // Variable para almacenar la instancia de flatpickr
 const fpInstance = ref(null);
 
-// Lista de imágenes del carrusel
-const imagenesCarrusel = [
-  "/img/Almagro.webp",
-  "/img/EmbajadaBerlin.webp",
-  "/img/MezquitaCordoba.webp",
-  ""
-];
-
 // Modificar las refs del video
 const medio = ref(null);
 const play = ref('/img/jugar.png'); // ▶️ (este cambia entre play y pause)
 
 // En la sección de script, añadir la ref para controlar la visibilidad
-const mostrarVideo = ref(false); // false por defecto para mostrar el carrusel
+const mostrarControles = ref(false); // false por defecto para ocultar los controles
 
 // Añadir función para alternar la visualización
-function alternarVisualizacion() {
-  mostrarVideo.value = !mostrarVideo.value;
+function alternarControles() {
+  mostrarControles.value = !mostrarControles.value;
 }
 
 function accionPlay() {
@@ -196,9 +188,9 @@ onMounted(async () => {
     <!-- Barra de búsqueda con botón de alternar -->
     <div class="mb-4 mt-4">
       <form @submit.prevent="filtrarRutas" class="buscador-container">
-        <button type="button" @click="alternarVisualizacion" class="btn btn-outline-primary rounded-circle"
-          :title="mostrarVideo ? 'Mostrar Carrusel' : 'Mostrar Video'">
-          <span><img :src="mostrarVideo ? '/img/carrusel.png' : '/img/jugar.png'"></span>
+        <button type="button" @click="alternarControles" class="btn btn-outline-primary rounded-circle"
+          :title="mostrarControles ? 'Ocultar Controles' : 'Mostrar Controles'">
+          <span><img :src="mostrarControles ? '/img/ocultar.png' : '/img/mostrar.png'"></span>
         </button>
         <!-- Resto del formulario de búsqueda -->
         <div class="buscador ms-3">
@@ -219,18 +211,23 @@ onMounted(async () => {
       </form>
     </div>
 
-    <!-- Carrusel y Video con v-show -->
-    <div v-show="!mostrarVideo" id="carouselExample" class="carousel slide border mb-4 bg-white rounded mt-5"
-      data-bs-ride="carousel">
+    <!-- Carrusel -->
+    <div id="carouselExample" class="carousel slide border mb-4 bg-white rounded mt-5">
       <div class="carousel-inner">
-        <div v-for="(imagen, index) in imagenesCarrusel" :key="index" class="carousel-item" data-bs-interval="4000"
-          data-bs-pause="hover" :class="{ active: index === 0 }">
-          <img v-if="index != imagenesCarrusel.length-1" :src="imagen" class="d-block w-100" style="height: 450px; object-fit: cover" alt="Imagen carrusel" />
-          <video v-if="index == imagenesCarrusel.length-1" class="carrousel-item d-block w-100" style="height: 450px;background-color: black;" alt="video carrusel" controls>
-          <source src="/video/crush.mp4" type="video/mp4" >  
+        <div class="carousel-item active" data-bs-interval="false" data-bs-pause="hover">
+          <video ref="medio" class="d-block w-100" style="height: 450px; background-color: black;" controls>
+            <source src="/video/crush.mp4" type="video/mp4">
           </video>
         </div>
-      
+        <div class="carousel-item" data-bs-interval="false" data-bs-pause="hover">
+          <img src="/img/Almagro.webp" class="d-block w-100" style="height: 450px; object-fit: cover" alt="Imagen carrusel 1" />
+        </div>
+        <div class="carousel-item" data-bs-interval="false" data-bs-pause="hover">
+          <img src="/img/EmbajadaBerlin.webp" class="d-block w-100" style="height: 450px; object-fit: cover" alt="Imagen carrusel 2" />
+        </div>
+        <div class="carousel-item" data-bs-interval="false" data-bs-pause="hover">
+          <img src="/img/MezquitaCordoba.webp" class="d-block w-100" style="height: 450px; object-fit: cover" alt="Imagen carrusel 3" />
+        </div>
       </div>
       <!-- Controles del carrusel -->
       <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
@@ -241,39 +238,31 @@ onMounted(async () => {
       </button>
     </div>
 
-    <!-- Video -->
-    <div v-show="mostrarVideo" class="video-container mb-5">
-      <video ref="medio" width="720" height="400" class="mx-auto d-block" controls>
-        <source src="/video/crush.mp4" type="video/mp4">
-        Tu navegador no soporta el elemento video.
-      </video>
-
-      <!-- Controles de video -->
-      <nav class="d-flex justify-content-center gap-2 mt-3">
-        <button class="btn btn-outline-primary" @click="accionReiniciar">
-          <span> <img src="/img/atrasdoble.png"></span>
-        </button>
-        <button class="btn btn-outline-primary" @click="accionRetrasar">
-          <span><img src='/img/atras.png'></span>
-        </button>
-        <button class="btn btn-outline-primary" @click="accionPlay">
-          <span><img :src="play"></span>
-        </button>
-        <button class="btn btn-outline-primary" @click="accionAdelantar">
-          <span><img src='/img/alante.png'></span>
-        </button>
-        <button class="btn btn-outline-primary" @click="accionSilenciar">
-          <span><img src="/img/sin-sonido.png"></span>
-        </button>
-        <span class="d-flex align-items-center text-dark">Volumen</span>
-        <button class="btn btn-outline-primary" @click="accionMenosVolumen">
-          <span><img src="/img/altavoz-bajo.png"></span>
-        </button>
-        <button class="btn btn-outline-primary" @click="accionMasVolumen">
-          <span><img src="/img/altavoz-alto.png"></span>
-        </button>
-      </nav>
-    </div>
+    <!-- Controles de video -->
+    <nav v-if="mostrarControles" class="d-flex justify-content-center gap-2 mt-3 mb-3">
+      <button class="btn btn-outline-primary" @click="accionReiniciar">
+        <span> <img src="/img/atrasdoble.png"></span>
+      </button>
+      <button class="btn btn-outline-primary" @click="accionRetrasar">
+        <span><img src='/img/atras.png'></span>
+      </button>
+      <button class="btn btn-outline-primary" @click="accionPlay">
+        <span><img :src="play"></span>
+      </button>
+      <button class="btn btn-outline-primary" @click="accionAdelantar">
+        <span><img src='/img/alante.png'></span>
+      </button>
+      <button class="btn btn-outline-primary" @click="accionSilenciar">
+        <span><img src="/img/sin-sonido.png"></span>
+      </button>
+      <span class="d-flex align-items-center text-dark">Volumen</span>
+      <button class="btn btn-outline-primary" @click="accionMenosVolumen">
+        <span><img src="/img/altavoz-bajo.png"></span>
+      </button>
+      <button class="btn btn-outline-primary" @click="accionMasVolumen">
+        <span><img src="/img/altavoz-alto.png"></span>
+      </button>
+    </nav>
 
     <h1 class="text-center text-primary mb-4">Lista de Rutas</h1>
 
