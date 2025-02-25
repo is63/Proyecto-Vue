@@ -46,10 +46,6 @@ let eliminacionCompletada = ref(false); // Eliminación exitosa
 const guiaSeleccionado = ref(''); // Guardar el guia seleccionado en el select
 const instanciaModalAsignarGuia = ref(null);
 
-const mostrarFeedbackAsignacion = ref(false); //Mostral el modal de asignacion
-const mensajeFeedbackAsignacion = ref(""); //Mensaje de asignacion
-const asignacionExitosa = ref(false); //Asignacion exitosa
-
 const asignacionGuia = ref(null); //Guardar al guia asignado si existe
 
 // Añadir nueva ref para almacenar los guías con sus datos
@@ -166,7 +162,7 @@ onMounted(() => {
 
 // Función para duplicar la ruta
 async function duplicarRuta() {
-  const datosRuta = { // Preparar los datos de la nueva ruta
+  const datosRuta = {
     titulo: ruta.value.titulo,
     localidad: ruta.value.localidad,
     descripcion: ruta.value.descripcion,
@@ -177,11 +173,10 @@ async function duplicarRuta() {
     longitud: ruta.value.longitud,
     guia_id: nuevoGuia.value || null,
   };
-  console.log(datosRuta);
 
   try {
     if (datosRuta.hora == "" || datosRuta.fecha == "") {
-      throw new Error("Los campos de la fecha u hora están vacíos")
+      throw new Error("Los campos de la fecha u hora están vacíos");
     }
 
     const response = await fetch("http://localhost/freetours/api.php/rutas", {
@@ -192,35 +187,62 @@ async function duplicarRuta() {
       body: JSON.stringify(datosRuta),
     });
 
-    if (response.ok) { // Si la respuesta es exitosa
-      mensajeConfirmacion.value = "Ruta duplicada con éxito"; // Mensaje de éxito
-      confirmacionExitosa.value = true; // Marcar como exitosa
+    if (response.ok) {
+      // Cerrar el modal de duplicación y limpiar completamente
+      const modalDuplicar = document.getElementById('duplicarModal');
+      const modal = Modal.getInstance(modalDuplicar);
+      modal.hide();
+      
+      // Limpiar completamente todos los rastros del modal
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      
+      // Eliminar el backdrop si existe
+      const backdrop = document.querySelector('.modal-backdrop');
+      if (backdrop) {
+        backdrop.remove();
+      }
 
-      // Limpiar los campos del modal
-      nuevaFecha.value = "";
-      nuevaHora.value = "";
-      nuevoGuia.value = "";
+      // Mostrar feedback de duplicar
+      await Swal.fire({
+        title: '¡Duplicada!',
+        text: 'La ruta ha sido duplicada correctamente',
+        icon: 'success',
+        confirmButtonColor: '#ffc107', // Bootstrap warning color
+        timer: 2000,
+        timerProgressBar: true,
+        backdrop: false,
+        allowOutsideClick: true,
+        didClose: () => {
+          // Asegurarse de que el body esté limpio
+          document.body.classList.remove('modal-open');
+          document.body.style.overflow = '';
+          document.body.style.paddingRight = '';
+          // Limpiar los campos del modal
+          nuevaFecha.value = "";
+          nuevaHora.value = "";
+          nuevoGuia.value = "";
+        }
+      });
 
-      // Mostrar el modal de confirmación
-      mostrarConfirmacion.value = true;
-      // Cerrar solo el modal de confirmación después de 3 segundos
-      setTimeout(() => {
-        mostrarConfirmacion.value = false;
-      }, 3000);
     } else {
-      throw new Error("Error al duplicar la ruta"); // Si la respuesta no es exitosa, lanzar un error
+      throw new Error("Error al duplicar la ruta");
     }
-
-  } catch (error) { // Si ocurre un error al duplicar la ruta
-    mensajeConfirmacion.value = "Error al duplicar la ruta"; // Mensaje de error
-    confirmacionExitosa.value = false; // Marcar como no exitosa
-
-    // Mostrar el modal de error
-    mostrarConfirmacion.value = true;
-    // Cerrar solo el modal de error después de 3 segundos
-    setTimeout(() => {
-      mostrarConfirmacion.value = false;
-    }, 3000);
+  } catch (error) {
+    // Mostrar error 
+    Swal.fire({
+      title: 'Error',
+      text: error.message || 'Error al duplicar la ruta',
+      icon: 'error',
+      confirmButtonColor: '#232342',
+      confirmButtonText: 'Aceptar',
+      backdrop: false,
+      allowOutsideClick: true,
+      timer: 3000,
+      timerProgressBar: true,
+    });
+    console.error('Error:', error);
   }
 }
 
@@ -248,16 +270,15 @@ async function confirmarEliminacion() {
         backdrop.remove();
       }
 
-      // Mostrar el SweetAlert2
+      // Mostrar el fedback de eliminación
       await Swal.fire({
         title: 'Eliminada',
         html: '<strong>La ruta ha sido eliminada </strong>',
         icon: 'success',
         iconColor: 'red',
-        confirmButtonColor: '#232342',
+        confirmButtonColor: '#dc3545', // Bootstrap danger color
         timer: 2500,
         timerProgressBar: true,
-        color: "red",
         showConfirmButton: true,
         confirmButtonText: 'Aceptar',
         backdrop: false,
@@ -288,10 +309,11 @@ async function confirmarEliminacion() {
       text: 'Error al eliminar la ruta',
       icon: 'error',
       confirmButtonColor: '#232342',
-      showConfirmButton: true,
       confirmButtonText: 'Aceptar',
       backdrop: false, // Deshabilitar el backdrop también en el mensaje de error
-      allowOutsideClick: true
+      allowOutsideClick: true,
+      timer: 3000,
+      timerProgressBar: true,
     });
     console.error('Error:', error);
   }
@@ -396,31 +418,58 @@ async function asignarGuia() {
     });
 
     if (response.ok) {
-      // Mostrar feedback de éxito
-      mensajeFeedbackAsignacion.value = "Guía asignado exitosamente";
-      asignacionExitosa.value = true;
-      mostrarFeedbackAsignacion.value = true;
+      // Cerrar el modal de asignación y limpiar completamente
+      const modalAsignar = document.getElementById('asignarGuiaModal');
+      const modal = Modal.getInstance(modalAsignar);
+      modal.hide();
+      
+      // Limpiar completamente todos los rastros del modal
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      
+      // Eliminar el backdrop si existe
+      const backdrop = document.querySelector('.modal-backdrop');
+      if (backdrop) {
+        backdrop.remove();
+      }
 
-      // Recargar datos de la ruta para mostrar el nuevo guía
-      cargarDatos();
+      // Mostrar ferdback de asignación
+      await Swal.fire({
+        title: '¡Asignado!',
+        text: 'El guía ha sido asignado correctamente',
+        icon: 'success',
+        confirmButtonColor: '#0dcaf0', // Bootstrap info color
+        timer: 2000,
+        timerProgressBar: true,
+        backdrop: false,
+        allowOutsideClick: true,
+        didClose: () => {
+          // Asegurarse de que el body esté limpio
+          document.body.classList.remove('modal-open');
+          document.body.style.overflow = '';
+          document.body.style.paddingRight = '';
+          // Recargar datos
+          cargarDatos();
+        }
+      });
 
-      // Cerrar solo el feedback después de 3 segundos
-      setTimeout(() => {
-        mostrarFeedbackAsignacion.value = false;
-      }, 3000);
     } else {
       throw new Error("Error al asignar el guía");
     }
   } catch (error) {
-    // Mostrar feedback de error
-    mensajeFeedbackAsignacion.value = "Error al asignar el guía";
-    asignacionExitosa.value = false;
-    mostrarFeedbackAsignacion.value = true;
-
-    setTimeout(() => {
-      mostrarFeedbackAsignacion.value = false;
-    }, 3000);
-
+    // Mostrar error 
+    Swal.fire({
+      title: 'Error',
+      text: 'Error al asignar el guía',
+      icon: 'error',
+      confirmButtonColor: '#232342',
+      confirmButtonText: 'Aceptar',
+      backdrop: false,
+      allowOutsideClick: true,
+      timer: 3000,
+      timerProgressBar: true,
+    });
     console.error('Error:', error);
   }
 }
@@ -474,7 +523,7 @@ async function asignarGuia() {
             <p class="detalle">{{ ruta.asistentes || 2 }}</p>
           </div>
 
-          <!-- Botones - Solo visibles para administradores, usando el mismo estilo de comprobación que en Header.vue -->
+          <!-- Botones - Solo visibles para admin -->
           <div v-if="usuarioAutenticado && usuarioAutenticado.rol === 'admin'" class="btn-group mb-3 w-100"
             role="group">
             <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#duplicarModal">
@@ -601,19 +650,7 @@ async function asignarGuia() {
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-primary" @click="asignarGuia">Asignar</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Feedback de Asignación -->
-    <div v-if="mostrarFeedbackAsignacion" class="modal fade show" tabindex="-1" aria-hidden="true"
-      style="display: block;">
-      <div class="modal-dialog">
-        <div :class="['modal-content', asignacionExitosa ? 'bg-success' : 'bg-danger']">
-          <div class="modal-body">
-            <p class="text-white fs-5 text-center">{{ mensajeFeedbackAsignacion }}</p>
+            <button type="button" class="btn btn-info text-white" @click="asignarGuia">Asignar</button>
           </div>
         </div>
       </div>
