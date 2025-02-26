@@ -18,38 +18,57 @@ function cerrarSesion() {
 <template>
   <header class="bg-primary-dark text-light">
     <nav class="navbar navbar-expand-lg navbar-dark py-2">
-      <div class="container-fluid d-flex justify-content-between align-items-center">
+      <div class="container-fluid">
         <!-- Logo y Nombre -->
-        <div class="d-flex align-items-center">
-          <router-link to="/" class="me-2 d-flex align-items-center text-decoration-none">
-            <img src="../../img/olimpo.png" class="logo me-2" alt="Logo" />
-            <span class="text-gold fs-4 fw-bold text-shadow">Olímpo Tours</span>
-          </router-link>
-        </div>
+        <router-link to="/" class="navbar-brand d-flex align-items-center">
+          <img src="../../img/olimpo.png" class="logo me-2" alt="Logo" />
+          <span class="text-gold fs-4 fw-bold text-shadow">Olímpo Tours</span>
+        </router-link>
 
-        <!-- Menú de navegación -->
-        <ul v-if="usuarioAutenticado && usuarioAutenticado.rol === 'admin'" class="navbar-nav flex-row gap-3">
-          <li class="nav-item">
-            <router-link class="nav-link btn-custom" to="/">Home</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link class="nav-link btn-custom" to="/gestionusuarios">Gestionar Usuarios</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link class="nav-link btn-custom" to="/crearRuta">Crear Rutas</router-link>
-          </li>
-        </ul>
-
-        <!-- Botón de Sesión -->
-        <div class="nav-item">
-          <div v-if="usuarioAutenticado" class="d-flex align-items-center">
-            <span class="me-3">
-              <label class="fw-bold">{{ usuarioAutenticado.nombre }}</label>,
-              <label class="text-gold fw-bold"> {{ usuarioAutenticado.rol }} </label>
-            </span>
-            <button @click="cerrarSesion" class="btn btn-danger">Cerrar Sesión</button>
+        <!-- Contenido colapsable -->
+        <div class="collapse navbar-collapse justify-content-between" id="navbarContent">
+          <!-- Espacio a la izquierda para centrar el menú -->
+          <div class="invisible navbar-brand">
+            <span class="invisible">Espaciador</span>
           </div>
-          <router-link v-else to="/login" class="nav-link btn-login">Iniciar Sesión</router-link>
+
+          <!-- Menú de navegación -->
+          <ul v-if="usuarioAutenticado" class="navbar-nav">
+            <!-- Menú para administradores -->
+            <template v-if="usuarioAutenticado.rol === 'admin'">
+              <li class="nav-item">
+                <router-link class="nav-link btn-custom" to="/">Home</router-link>
+              </li>
+              <li class="nav-item">
+                <router-link class="nav-link btn-custom" to="/gestionusuarios">Gestionar Usuarios</router-link>
+              </li>
+              <li class="nav-item">
+                <router-link class="nav-link btn-custom" to="/crearRuta">Crear Rutas</router-link>
+              </li>
+            </template>
+            
+            <!-- Menú para guías -->
+            <template v-else-if="usuarioAutenticado.rol === 'guia'">
+              <li class="nav-item">
+                <router-link class="nav-link btn-custom" to="/">Home</router-link>
+              </li>
+              <li class="nav-item">
+                <router-link class="nav-link btn-custom" to="/rutasAsignadas">Rutas Asignadas</router-link>
+              </li>
+            </template>
+          </ul>
+
+          <!-- Botón de Sesión - Separado a la derecha -->
+          <div class="nav-item">
+            <div v-if="usuarioAutenticado" class="d-flex flex-column flex-lg-row align-items-center">
+              <span class="me-lg-3 mb-2 mb-lg-0 text-center">
+                <label class="fw-bold">{{ usuarioAutenticado.nombre }}</label>,
+                <label class="text-gold fw-bold"> {{ usuarioAutenticado.rol }} </label>
+              </span>
+              <button @click="cerrarSesion" class="btn btn-danger">Cerrar Sesión</button>
+            </div>
+            <router-link v-else to="/login" class="nav-link btn-login">Iniciar Sesión</router-link>
+          </div>
         </div>
       </div>
     </nav>
@@ -127,4 +146,32 @@ router-link {
 .btn-danger:hover {
   background-color: #d62828;
 }
+
+/* Update navbar styles */
+.navbar-nav {
+  gap: 2rem;
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 991.98px) {
+  .navbar-nav {
+    text-align: center;
+    margin: 1rem 0;
+  }
+  
+  .nav-item {
+    margin: 0.5rem 0;
+  }
+  
+  .navbar-collapse {
+    padding: 1rem 0;
+    text-align: center;
+  }
+
+  .invisible {
+    display: none;
+  }
+}
+
 </style>

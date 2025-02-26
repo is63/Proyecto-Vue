@@ -4,6 +4,7 @@ import Login from '../views/LoginView.vue';
 import GestionUsuarios from '@/views/GestionUsuariosView.vue';
 import VerRuta from "@/views/verRuta.vue";
 import crearRuta from "@/views/CrearRuta.vue";
+import rutasAsignadas from '@/views/rutasAsignadas.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -33,6 +34,12 @@ const router = createRouter({
       path: "/crearRuta",
       name: "crearRuta",
       component: crearRuta
+    },
+    {
+      path: "/rutasAsignadas",
+      name: "rutasAsignadas",
+      component: rutasAsignadas,
+      props: true,
     }
   ],
 })
