@@ -34,8 +34,9 @@ async function iniciarSesion() {
 
       // Emitir el evento con los datos del usuario autenticado
       emits("sesionIniciada", {
+        id: usuarioEncontrado.id, // Añadir ID
         nombre: usuarioEncontrado.nombre,
-        rol: usuarioEncontrado.rol,
+        rol: usuarioEncontrado.rol
       });
 
       error.value = '';

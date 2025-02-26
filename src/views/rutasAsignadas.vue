@@ -31,18 +31,42 @@ function cambiarPagina(pagina) {
   }
 }
 
-// Función para obtener todas las rutas
-async function obtenerRutas() {
+// Función para obtener las rutas asignadas al guía
+async function obtenerRutasAsignadas() {
   try {
-    const respuestaRutas = await fetch(`http://localhost/freetours/api.php/rutas`);
-    if (!respuestaRutas.ok) {
-      throw new Error("Error al cargar las rutas");
+    console.log("Usuario autenticado:", props.usuarioAutenticado); // Debug
+
+    if (!props.usuarioAutenticado?.id) {
+      throw new Error("No hay usuario autenticado");
     }
-    const todasRutas = await respuestaRutas.json();
-    rutas.value = todasRutas;
+
+    const respuestaAsignaciones = await fetch(`http://localhost/freetours/api.php/asignaciones`);
+    if (!respuestaAsignaciones.ok) {
+      throw new Error("Error al cargar las asignaciones");
+    }
+    const asignaciones = await respuestaAsignaciones.json();
+    
+    // Filtrar las asignaciones del guía actual
+    const asignacionesGuia = asignaciones.filter(asig => 
+      Number(asig.guia_id) === Number(props.usuarioAutenticado.id)
+    );
+
+    if (asignacionesGuia.length > 0) {
+      const respuestaRutas = await fetch(`http://localhost/freetours/api.php/rutas`);
+      if (!respuestaRutas.ok) {
+        throw new Error("Error al cargar las rutas");
+      }
+      const todasRutas = await respuestaRutas.json();
+      
+      rutas.value = todasRutas.filter(ruta => 
+        asignacionesGuia.some(asig => Number(asig.ruta_id) === Number(ruta.id))
+      );
+    } else {
+      rutas.value = [];
+    }
   } catch (err) {
     console.error("Error:", err);
-    error.value = "Error al cargar las rutas";
+    error.value = "Error al cargar las rutas asignadas";
   }
 }
 
@@ -56,7 +80,7 @@ onMounted(() => {
     router.push('/');
     return;
   }
-  obtenerRutas();
+  obtenerRutasAsignadas();
 });
 </script>
 
@@ -122,7 +146,7 @@ onMounted(() => {
         </nav>
       </div>
       <p v-else class="text-center text-muted">
-        No hay rutas disponibles.
+        No tienes rutas asignadas actualmente.
       </p>
     </div>
   </div>
