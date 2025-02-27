@@ -20,7 +20,7 @@ const props = defineProps({
 });
 
 const ruta = ref({
-  asistentes: 0 // Añadir esta propiedad
+  asistentes: 0 
 }); // Almacenar los datos de la ruta
 const guias = ref([]); // Guardar los guias disponibles
 const error = ref(""); // Mostrar mensajes de error
@@ -192,12 +192,12 @@ async function duplicarRuta() {
       const modalDuplicar = document.getElementById('duplicarModal');
       const modal = Modal.getInstance(modalDuplicar);
       modal.hide();
-      
+
       // Limpiar completamente todos los rastros del modal
       document.body.classList.remove('modal-open');
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
-      
+
       // Eliminar el backdrop si existe
       const backdrop = document.querySelector('.modal-backdrop');
       if (backdrop) {
@@ -258,12 +258,12 @@ async function confirmarEliminacion() {
       const modalEliminar = document.getElementById('eliminarModal');
       const modal = Modal.getInstance(modalEliminar);
       modal.hide();
-      
+
       // Limpiar completamente todos los rastros del modal
       document.body.classList.remove('modal-open');
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
-      
+
       // Eliminar el backdrop si existe
       const backdrop = document.querySelector('.modal-backdrop');
       if (backdrop) {
@@ -283,7 +283,7 @@ async function confirmarEliminacion() {
         confirmButtonText: 'Aceptar',
         backdrop: false,
         allowOutsideClick: true,
-        
+
         showClass: {
           popup: 'animate__animated animate__fadeInDown'
         },
@@ -346,7 +346,18 @@ async function obtenerGuiasConAsignaciones() {
         asignaciones: asignacionesGuia
       };
     });
+  
+    if(!nuevaFecha.value){
+      throw new Error("No hay fecha seleccionada");
+    }
 
+    /** Cambiar para mostrar los guias por l aapi y no por como me calente la kabesa */
+    fetch(`http://localhost/freetours/api.php/asignaciones?fecha=${nuevaFecha}`, {
+    method: 'GET',
+  })
+  .then(response => response.json())
+  .then(data => console.log('Guias disponibles en la fecha:', data))
+  .catch(error => console.error('Error:', error));
   } catch (error) {
     console.error("Error al obtener guías con asignaciones:", error);
     guiasConAsignaciones.value = [];
@@ -422,12 +433,12 @@ async function asignarGuia() {
       const modalAsignar = document.getElementById('asignarGuiaModal');
       const modal = Modal.getInstance(modalAsignar);
       modal.hide();
-      
+
       // Limpiar completamente todos los rastros del modal
       document.body.classList.remove('modal-open');
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
-      
+
       // Eliminar el backdrop si existe
       const backdrop = document.querySelector('.modal-backdrop');
       if (backdrop) {

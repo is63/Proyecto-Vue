@@ -22,7 +22,7 @@ function cerrarSesion() {
         <!-- Logo y Nombre -->
         <router-link to="/" class="navbar-brand d-flex align-items-center">
           <img src="../../img/olimpo.png" class="logo me-2" alt="Logo" />
-          <span class="text-gold fs-4 fw-bold text-shadow">Olímpo Tours</span>
+          <span class="text-gold fs-4 fw-bold text-shadow">Olé Tours</span>
         </router-link>
 
         <!-- Contenido colapsable -->

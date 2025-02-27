@@ -17,7 +17,7 @@ const flatpickInstance = ref(null);
 
 // Modificar las refs del video
 const medio = ref(null);
-const play = ref('/img/jugar.png'); // ▶️ (este cambia entre play y pause)
+const play = ref('/img/jugar.png'); // ▶️ (esto cambia entre play y pause)
 
 function accionPlay() {
   if (!medio.value.paused && !medio.value.ended) {
@@ -153,7 +153,7 @@ function filtrarRutas() {
       ruta.fecha === fechaFormateada
     );
   } else {
-    // Búsqueda por texto (título o localidad)
+    // Busqueda por texto (titulo o localidad)
     if (!busqueda.value) {
       return rutas.value;
     }
@@ -164,7 +164,7 @@ function filtrarRutas() {
   }
 }
 
-// Nueva función para cambiar el tipo de búsqueda
+// Nueva funcion para cambiar el tipo de búsqueda
 function cambiarTipoBusqueda() {
   // Destruir la instancia anterior de flatpickr si existe
   if (flatpickInstance.value) {
@@ -173,7 +173,7 @@ function cambiarTipoBusqueda() {
   }
 
   tipoBusqueda.value = tipoBusqueda.value === 'texto' ? 'fecha' : 'texto';
-  busqueda.value = ''; // Limpiar el campo de búsqueda al cambiar
+  busqueda.value = ''; // Limpiar el campo de busqueda al cambiar
 
   // Si cambiamos a fecha, inicializar flatpickr
   if (tipoBusqueda.value === 'fecha') {
@@ -188,7 +188,6 @@ function cambiarTipoBusqueda() {
   }
 }
 
-// Modificar la función onMounted
 onMounted(async () => {
   await obtenerRutas();
   await obtenerValoraciones();
@@ -197,10 +196,10 @@ onMounted(async () => {
 
 <template>
   <div class="container">
-    <!-- Barra de búsqueda con botón de alternar -->
+    <!-- Barra de busqueda  -->
     <div class="mb-4 mt-4">
       <form @submit.prevent="filtrarRutas" class="buscador-container">
-        <!-- Resto del formulario de búsqueda -->
+        <!-- Formulario de busqueda -->
         <div class="buscador ms-3">
           <input v-model="busqueda" :type="tipoBusqueda === 'fecha' ? 'text' : 'text'"
             class="form-control rounded-pill ps-5 search-input" :class="{ 'texto': tipoBusqueda === 'texto' }"
@@ -240,13 +239,11 @@ onMounted(async () => {
       </button>
     </div>
 
-    <h1 class="text-center text-primary mb-4">Lista de Rutas</h1>
-
     <!-- Mensaje de error y no hay rutas -->
-    <div v-if="error" class="alert alert-danger text-center">{{ error }}</div>
+    <div v-if="error" class="alert alert-danger text-center mt-5">{{ error }}</div>
     <div v-else>
       <!-- Tarjetas de rutas obtenidas desde la API -->
-      <div v-if="filtrarRutas().length > 0" class="row g-4 mb-4">
+      <div v-if="filtrarRutas().length > 0" class="row g-4 mb-4 mt-5">
         <div v-for="(ruta, index) in rutasPaginadas" :key="index" class="col-12">
           <div class="card h-100 shadow-sm mb-4">
             <div class="row g-0">
@@ -258,7 +255,7 @@ onMounted(async () => {
               <!-- Contenido de la tarjeta -->
               <div class="col-md-7">
                 <div class="card-body">
-                  <!-- Título como enlace -->
+                  <!-- Titulo como enlace -->
                   <a href="#" @click.prevent="verRuta(ruta.id)" class="text-decoration-none">
                     <h3 class="card-title text-primary">{{ ruta.titulo }}</h3>
                   </a>
@@ -273,7 +270,7 @@ onMounted(async () => {
               </div>
             </div>
 
-            <!-- Sección de valoraciones -->
+            <!-- Seccion de valoraciones -->
             <div class="card-footer bg-light">
               <h5 class="mb-3">Valoraciones:</h5>
               <div v-if="ruta.valoraciones.length > 0">
@@ -294,7 +291,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Add pagination controls -->
+        <!-- Paginación -->
         <nav aria-label="Navegación de páginas" class="mt-4">
           <ul class="pagination justify-content-center">
             <li class="page-item" :class="{ disabled: paginaActual === 1 }">
@@ -323,7 +320,7 @@ onMounted(async () => {
       </p>
     </div>
 
-    <!-- Video section -->
+    <!-- Video -->
     <div class="video-section mt-5 mb-4">
       <div class="video-container border rounded bg-white p-4">
         <video ref="medio" class="w-100" style="height: 450px; background-color: black;" controls>

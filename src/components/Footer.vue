@@ -6,7 +6,7 @@
   
 <style scoped>
 .footer {
-  background: #4f85bb;
+  background-color: #1a1a2e !important; /* Azul oscuro elegante */
   color: white;
   padding: 1rem;
   text-align: center;
