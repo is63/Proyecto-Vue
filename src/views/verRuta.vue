@@ -155,6 +155,7 @@ onMounted(() => {
     minDate: "today",
     onChange: (fechasSeleccionadas, fechaStr) => {
       nuevaFecha.value = fechaStr;
+      // No necesitamos llamar a cargarGuiasParaDuplicar aquí porque el watch lo hará
     },
     static: false,
     position: "bottom",
@@ -345,7 +346,7 @@ async function confirmarEliminacion() {
   }
 }
 
-// Update the cargarGuias function
+// Modificar la función cargarGuias original para que se use solo en el modal de asignar guía
 async function cargarGuias() {
   try {
     const fecha = ruta.value.fecha; // Usar la fecha de la ruta actual
@@ -368,8 +369,6 @@ async function cargarGuias() {
     guias.value = todosGuias.filter(guia => 
       guia.rol === "guia" && guiasDisponibles.some(g => Number(g.id) === Number(guia.id))
     );
-    
-    console.log("Guías disponibles para la fecha:", guias.value); // Debug
   } catch (error) {
     console.error("Error al cargar guías:", error);
     guias.value = [];
@@ -531,6 +530,52 @@ async function guardarAsistencias() {
     });
   }
 }
+
+// Añadir esta función específica para cargar guías al duplicar
+async function cargarGuiasParaDuplicar() {
+  try {
+    if (!nuevaFecha.value) {
+      guias.value = [];
+      return;
+    }
+    
+    // Obtener guías disponibles para la fecha seleccionada
+    const respuesta = await fetch(`http://localhost/freetours/api.php/asignaciones?fecha=${nuevaFecha.value}`);
+    if (!respuesta.ok) {
+      throw new Error(`Error al cargar los guías disponibles: ${respuesta.status}`);
+    }
+    const guiasDisponibles = await respuesta.json();
+    
+    // Obtener detalles de todos los guías
+    const respuestaGuias = await fetch("http://localhost/freetours/api.php/usuarios");
+    if (!respuestaGuias.ok) {
+      throw new Error(`Error al cargar los guías: ${respuestaGuias.status}`);
+    }
+    const todosGuias = await respuestaGuias.json();
+    
+    // Filtrar solo los guías disponibles para la nueva fecha
+    guias.value = todosGuias.filter(guia => 
+      guia.rol === "guia" && guiasDisponibles.some(g => Number(g.id) === Number(guia.id))
+    );
+    
+    console.log("Guías disponibles para duplicar:", guias.value);
+  } catch (error) {
+    console.error("Error al cargar guías para duplicar:", error);
+    guias.value = [];
+  }
+}
+
+// Añadir un watch para actualizar la lista de guías cuando cambia la fecha
+watch(() => nuevaFecha.value, (nuevaFecha) => {
+  if (nuevaFecha) {
+    // Cargar guías disponibles cuando se selecciona una fecha
+    cargarGuiasParaDuplicar();
+  } else {
+    // Limpiar la lista de guías si no hay fecha seleccionada
+    guias.value = [];
+    nuevoGuia.value = "";
+  }
+});
 </script>
 
 <template>
@@ -600,18 +645,15 @@ async function guardarAsistencias() {
             </button>
           </div>
 
-          <!-- Botones - Solo visibles para el guía asignado -->
+          <!-- Parte de los botones guía asignado - Corregir el error en el HTML -->
           <div v-else-if="esGuiaAsignado" class="btn-group mb-3 w-100" role="group">
-            <button type="button" class="btn btn-success">
-              Iniciar Ruta
-            </button>
-            <button type="button" class="btn btn-warning" @click="verAsistentes">
+            <button type="button" class="btn btn-warning w-100" @click="verAsistentes">
               Ver Asistentes
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </div>    
 
     <!-- Modal de Duplicar Ruta -->
     <div class="modal fade" id="duplicarModal" tabindex="-1" aria-hidden="true">
@@ -625,7 +667,7 @@ async function guardarAsistencias() {
             <!-- Fecha -->
             <div class="mb-3">
               <label class="form-label">Fecha</label> <br>
-              <input type="text" class="form-control" id="fechaPicker" v-model="nuevaFecha"
+              <input type="text" class="form-control" id="fechaPicker" v-model="nuevaFecha"    
                 placeholder="Seleccione una fecha" readonly>
             </div>
 
@@ -649,7 +691,7 @@ async function guardarAsistencias() {
                 No hay guías disponibles para esta fecha
               </small>
               <small class="text-muted" v-if="!nuevaFecha.value">
-                Seleccione una   para ver guías disponibles
+                Seleccione una fecha para ver guías disponibles
               </small>
             </div>
           </div>
