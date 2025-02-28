@@ -56,6 +56,16 @@ function cerrarSesion() {
                 <router-link class="nav-link btn-custom" to="/rutasAsignadas">Rutas Asignadas</router-link>
               </li>
             </template>
+            
+            <!-- Menú para clientes -->
+            <template v-else-if="usuarioAutenticado.rol === 'cliente'">
+              <li class="nav-item">
+                <router-link class="nav-link btn-custom" to="/">Home</router-link>
+              </li>
+              <li class="nav-item">
+                <router-link class="nav-link btn-custom" to="/misReservas">Mis Reservas</router-link>
+              </li>
+            </template>
           </ul>
 
           <!-- Botón de Sesión - Separado a la derecha -->
