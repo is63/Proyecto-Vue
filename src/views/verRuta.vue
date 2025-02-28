@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import router from '@/router';
 import "leaflet/dist/leaflet.css";
 import L from "leaflet"; // Mapa
@@ -19,39 +19,38 @@ const props = defineProps({
   }
 });
 
+// Variables ref
 const ruta = ref({
   asistentes: 0 
-}); // Almacenar los datos de la ruta
-const guias = ref([]); // Guardar los guias disponibles
-const error = ref(""); // Mostrar mensajes de error
-
-let mapa = null; //Guardar el mapa
-
-const nuevaFecha = ref(""); // Guardar la fecha seleccionada
-const nuevaHora = ref(""); // Guardar la hora seleccionada
-const nuevoGuia = ref(""); // Guardar el guía seleccionado
-
-const mostrarConfirmacion = ref(false); // Mostrar el modal de confirmación
-const mensajeConfirmacion = ref(""); // Guardar el mensaje de confirmación
-const confirmacionExitosa = ref(false); // Para saber si la duplicación fue exitosa
-
+}); 
+const guias = ref([]); 
+const error = ref(""); 
+let mapa = null;
+const nuevaFecha = ref(""); 
+const nuevaHora = ref(""); 
+const nuevoGuia = ref(""); 
+const mostrarConfirmacion = ref(false); 
+const mensajeConfirmacion = ref(""); 
+const confirmacionExitosa = ref(false); 
 const mostrarConfirmacionEliminacion = ref(false);
 const mensajeConfirmacionEliminacion = ref("");
 const eliminacionExitosa = ref(false);
-
-let instanciaModalDuplicar = null; // Instancia del modal de duplicar
-
-let eliminacionCompletada = ref(false); // Eliminación exitosa
-
-const guiaSeleccionado = ref(''); // Guardar el guia seleccionado en el select
+let instanciaModalDuplicar = null;
+let eliminacionCompletada = ref(false);
+const guiaSeleccionado = ref('');
 const instanciaModalAsignarGuia = ref(null);
+const asignacionGuia = ref(null);
+const rutas = ref([]);
 
-const asignacionGuia = ref(null); //Guardar al guia asignado si existe
+const urlImagen = computed(() => {
+  if (!ruta.value?.foto) return '';
+  return ruta.value.foto;
+});
 
-// Añadir nueva ref para almacenar los guías con sus datos
-const guiasConAsignaciones = ref([]);
-const rutas = ref([]); // Para almacenar todas las rutas
-
+function manejarErrorImagen(e) {
+  console.error('Error al cargar la imagen:', e);
+  e.target.src = 'https://placehold.co/600x400?text=Imagen+no+disponible';
+}
 
 async function cargarDatos() {
   try {
@@ -122,26 +121,30 @@ function inicializarMapa(latitud, longitud) {
 }
 
 onMounted(() => {
-  cargarDatos();
-
-  flatpickr("#fechaPicker", { // Calendario de fecha
-    dateFormat: "Y-m-d", // Formato de fecha Año-mes-dia
-    defaultDate: new Date(), // Fecha por defecto
-    minDate: "today", // Establecer la fecha mínima como hoy
-    onChange: (selectedDates, dateStr) => {
-      nuevaFecha.value = dateStr; // Asignar la fecha seleccionada
-    },
-    static: false, // Hacer que el calendario sea estático
-    position: "bottom", // Posicionar el calendario debajo del campo de entrada
+  cargarDatos().then(() => {
+    cargarGuias(); // Cargar guías después de tener los datos de la ruta
   });
 
-  flatpickr("#horaPicker", { // Selector de hora
-    enableTime: true, // Habilitar la selección de hora
-    noCalendar: true, // Deshabilitar el calendario
-    dateFormat: "H:i:S", // Formato de hora de Hora:minutos:segundos
-    time_24hr: true, // Usar formato de 24 horas
-    onChange: (selectedDates, dateStr) => {
-      nuevaHora.value = dateStr; // Asignar la hora seleccionada
+  // Configurar calendario de fecha
+  flatpickr("#fechaPicker", {
+    dateFormat: "Y-m-d",
+    defaultDate: new Date(),
+    minDate: "today",
+    onChange: (fechasSeleccionadas, fechaStr) => {
+      nuevaFecha.value = fechaStr;
+    },
+    static: false,
+    position: "bottom",
+  });
+
+  // Configurar selector de hora
+  flatpickr("#horaPicker", {
+    enableTime: true,
+    noCalendar: true,
+    dateFormat: "H:i:S",
+    time_24hr: true,
+    onChange: (horasSeleccionadas, horaStr) => {
+      nuevaHora.value = horaStr;
     },
   });
 
@@ -156,8 +159,6 @@ onMounted(() => {
   });
 
   instanciaModalAsignarGuia.value = new Modal(document.getElementById('asignarGuiaModal'));
-  obtenerGuiasConAsignaciones();
-  cargarGuias();
 });
 
 // Función para duplicar la ruta
@@ -166,7 +167,7 @@ async function duplicarRuta() {
     titulo: ruta.value.titulo,
     localidad: ruta.value.localidad,
     descripcion: ruta.value.descripcion,
-    foto: ruta.value.foto,
+    foto: ruta.value.foto, 
     fecha: nuevaFecha.value,
     hora: nuevaHora.value,
     latitud: ruta.value.latitud,
@@ -319,98 +320,36 @@ async function confirmarEliminacion() {
   }
 }
 
-// Nueva función para obtener los guías y sus asignaciones
-async function obtenerGuiasConAsignaciones() {
+// Update the cargarGuias function
+async function cargarGuias() {
   try {
-    // Obtener los guías
+    const fecha = ruta.value.fecha; // Usar la fecha de la ruta actual
+    
+    // Obtener guías disponibles para la fecha usando la API
+    const response = await fetch(`http://localhost/freetours/api.php/asignaciones?fecha=${fecha}`);
+    if (!response.ok) {
+      throw new Error(`Error al cargar los guías disponibles: ${response.status}`);
+    }
+    const guiasDisponibles = await response.json();
+    
+    // Obtener detalles de todos los guías
     const respuestaGuias = await fetch("http://localhost/freetours/api.php/usuarios");
     if (!respuestaGuias.ok) {
       throw new Error(`Error al cargar los guías: ${respuestaGuias.status}`);
     }
-    const usuarios = await respuestaGuias.json();
-    const guiasDisponibles = usuarios.filter(usuario => usuario.rol === "guia");
-
-    // Obtener las asignaciones
-    const respuestaAsignaciones = await fetch("http://localhost/freetours/api.php/asignaciones");
-    if (!respuestaAsignaciones.ok) {
-      throw new Error(`Error al cargar las asignaciones: ${respuestaAsignaciones.status}`);
-    }
-    const asignaciones = await respuestaAsignaciones.json();
-
-    // Procesar los datos de cada guía
-    guiasConAsignaciones.value = guiasDisponibles.map(guia => {
-      const asignacionesGuia = asignaciones.filter(asig => asig.guia_id === guia.id);
-      return {
-        id: guia.id,
-        nombre: guia.nombre,
-        asignaciones: asignacionesGuia
-      };
-    });
-  
-    if(!nuevaFecha.value){
-      throw new Error("No hay fecha seleccionada");
-    }
-
-    /** Cambiar para mostrar los guias por l aapi y no por como me calente la kabesa */
-    fetch(`http://localhost/freetours/api.php/asignaciones?fecha=${nuevaFecha}`, {
-    method: 'GET',
-  })
-  .then(response => response.json())
-  .then(data => console.log('Guias disponibles en la fecha:', data))
-  .catch(error => console.error('Error:', error));
-  } catch (error) {
-    console.error("Error al obtener guías con asignaciones:", error);
-    guiasConAsignaciones.value = [];
-  }
-}
-
-// Modificar la función cargarGuias en la sección del script
-async function cargarGuias() {
-  try {
-    // Si no hay fecha seleccionada, no mostrar guías
-    if (!nuevaFecha.value) {
-      guias.value = [];
-      return;
-    }
-
-    // Obtener las rutas si no están cargadas
-    if (rutas.value.length === 0) {
-      const respuestaRutas = await fetch("http://localhost/freetours/api.php/rutas");
-      if (!respuestaRutas.ok) {
-        throw new Error(`Error al cargar las rutas: ${respuestaRutas.status}`);
-      }
-      rutas.value = await respuestaRutas.json();
-    }
-
-    // Filtrar los guías basándonos en las asignaciones existentes
-    guias.value = guiasConAsignaciones.value.filter(guia => {
-      // Si el guía no tiene asignaciones, está disponible
-      if (guia.asignaciones.length == 0) {
-        return true;
-      }
-
-      // Contar las rutas del guía en la fecha seleccionada
-      const rutasEnFecha = guia.asignaciones.filter(asig => {
-        const rutaAsignada = rutas.value.find(r => r.id === asig.ruta_id);
-        return rutaAsignada && rutaAsignada.fecha == nuevaFecha.value;
-      });
-
-      // El guía está disponible si tiene menos de 2 rutas en esa fecha
-      return rutasEnFecha.length < 2;
-    });
-
+    const todosGuias = await respuestaGuias.json();
+    
+    // Filtrar solo los guías que están disponibles y son guías
+    guias.value = todosGuias.filter(guia => 
+      guia.rol === "guia" && guiasDisponibles.some(g => Number(g.id) === Number(guia.id))
+    );
+    
+    console.log("Guías disponibles para la fecha:", guias.value); // Debug
   } catch (error) {
     console.error("Error al cargar guías:", error);
     guias.value = [];
   }
 }
-
-// Añadir un watcher para la fecha
-watch(() => nuevaFecha.value, () => {
-  if (nuevaFecha.value) {
-    cargarGuias();
-  }
-});
 
 // Modificar la función asignarGuia en la sección del script
 async function asignarGuia() {
@@ -490,8 +429,11 @@ async function asignarGuia() {
   <div class="container-fluid mb-4 px-0">
     <!-- Imagen principal -->
     <div class="w-100">
-      <img :src="`/img/${ruta.foto}`" alt="Imagen de la ruta" class="img-fluid w-100 rounded"
-        style="height: 400px; object-fit: cover;">
+      <img :src="urlImagen" 
+           :alt="ruta.titulo" 
+           class="img-fluid w-100 rounded"
+           style="height: 400px; object-fit: cover"
+           @error="manejarErrorImagen">
     </div>
 
     <!-- Titulo -->
@@ -579,11 +521,17 @@ async function asignarGuia() {
             <div class="mb-3">
               <label class="form-label">Nuevo Guía</label>
               <select class="form-select" v-model="nuevoGuia">
-                <option value="" disabled>Seleccione un guía</option>
+                <option value="" disabled selected>Seleccione un guía</option>
                 <option v-for="guia in guias" :key="guia.id" :value="guia.id">
                   {{ guia.nombre }}
                 </option>
               </select>
+              <small class="text-muted" v-if="guias.length === 0 && nuevaFecha.value">
+                No hay guías disponibles para esta fecha
+              </small>
+              <small class="text-muted" v-if="!nuevaFecha.value">
+                Seleccione una   para ver guías disponibles
+              </small>
             </div>
           </div>
           <div class="modal-footer">
@@ -657,6 +605,9 @@ async function asignarGuia() {
                   {{ guia.nombre }}
                 </option>
               </select>
+              <small class="text-muted" v-if="guias.length === 0">
+                No hay guías disponibles para esta fecha
+              </small>
             </div>
           </div>
           <div class="modal-footer">

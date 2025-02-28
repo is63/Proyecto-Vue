@@ -4,58 +4,58 @@ import { useRouter } from "vue-router"; // Importamos useRouter para redirigir
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
-const API_BASE_URL = "http://localhost/freetours/api.php"; // URL base de la API
+const URL_BASE_API = "http://localhost/freetours/api.php"; // URL base de la API
 const rutas = ref([]); // Estado reactivo para almacenar las rutas
 const valoraciones = ref([]); // Estado reactivo para almacenar las valoraciones
 const error = ref(""); // Estado para manejar errores
-const router = useRouter(); // Instancia de Vue Router
+const enrutador = useRouter(); // Instancia de Vue Router
 const busqueda = ref(""); // Estado para almacenar el texto de búsqueda
 const tipoBusqueda = ref('texto'); // Nuevo estado para controlar el tipo de búsqueda (texto/fecha)
 
 // Variable para almacenar la instancia de flatpickr
-const flatpickInstance = ref(null);
+const instanciaCalendario = ref(null);
 
 // Modificar las refs del video
 const medio = ref(null);
-const play = ref('/img/jugar.png'); // ▶️ (esto cambia entre play y pause)
+const botonReproducir = ref('/img/jugar.png'); // ▶️ (esto cambia entre play y pause)
 
-function accionPlay() {
+function reproducirPausar() {
   if (!medio.value.paused && !medio.value.ended) {
     medio.value.pause();
-    play.value = '/img/jugar.png'; // ▶️
+    botonReproducir.value = '/img/jugar.png'; // ▶️
   } else {
     medio.value.play();
-    play.value = '/img/pausa.png'; // ⏸️
+    botonReproducir.value = '/img/pausa.png'; // ⏸️
   }
 }
 
-function accionReiniciar() {
+function reiniciar() {
   medio.value.currentTime = 0;
 }
 
-function accionRetrasar() {
+function retroceder() {
   if (medio.value.currentTime > 0) {
     medio.value.currentTime = medio.value.currentTime - 1;
   }
 }
 
-function accionAdelantar() {
+function avanzar() {
   if (medio.value.currentTime < medio.value.duration) {
     medio.value.currentTime = medio.value.currentTime + 1;
   }
 }
 
-function accionSilenciar() {
+function silenciar() {
   medio.value.muted = !medio.value.muted;
 }
 
-function accionMasVolumen() {
+function subirVolumen() {
   if (medio.value.volume < 1) {
     medio.value.volume = Math.min(1, medio.value.volume + 0.1);
   }
 }
 
-function accionMenosVolumen() {
+function bajarVolumen() {
   if (medio.value.volume > 0) {
     medio.value.volume = Math.max(0, medio.value.volume - 0.1);
   }
@@ -81,22 +81,28 @@ function cambiarPagina(pagina) {
   }
 }
 
-// Función para obtener las rutas desde la API
+// Add this function in the script section
+function manejarErrorImagen(e) {
+  console.error('Error al cargar la imagen:', e);
+  e.target.src = 'https://placehold.co/600x400?text=Imagen+no+disponible';
+}
+
+// Update the obtenerRutas function to use URLs directly
 async function obtenerRutas() {
   try {
-    const response = await fetch(`${API_BASE_URL}/rutas`);
-    if (!response.ok) throw new Error("Error al cargar las rutas");
+    const respuesta = await fetch(`${URL_BASE_API}/rutas`);
+    if (!respuesta.ok) throw new Error("Error al cargar las rutas");
 
-    const data = await response.json();
+    const datos = await respuesta.json();
 
-    if (Array.isArray(data)) {
-      rutas.value = data.map((ruta) => ({
+    if (Array.isArray(datos)) {
+      rutas.value = datos.map((ruta) => ({
         id: ruta.id,
         titulo: ruta.titulo,
         localidad: ruta.localidad,
         descripcion: ruta.descripcion,
-        foto: ruta.foto,
-        fecha: ruta.fecha, // Añadir la fecha
+        foto: ruta.foto, // Using the URL directly from the API
+        fecha: ruta.fecha,
         valoraciones: [],
       }));
     } else {
@@ -111,7 +117,7 @@ async function obtenerRutas() {
 // Función para obtener las valoraciones desde la API
 async function obtenerValoraciones() {
   try {
-    const response = await fetch(`${API_BASE_URL}/valoraciones`);
+    const response = await fetch(`${URL_BASE_API}/valoraciones`);
     if (!response.ok) throw new Error("Error al cargar las valoraciones");
 
     const data = await response.json();
@@ -137,7 +143,7 @@ async function obtenerValoraciones() {
 
 // Función para redirigir a la página de ver ruta
 function verRuta(id) {
-  router.push(`/ruta/${id}`); // Redirigimos a la ruta dinámica
+  enrutador.push(`/ruta/${id}`); // Redirigimos a la ruta dinámica
 }
 
 // Función modificada para filtrar rutas según la búsqueda
@@ -167,9 +173,9 @@ function filtrarRutas() {
 // Nueva funcion para cambiar el tipo de búsqueda
 function cambiarTipoBusqueda() {
   // Destruir la instancia anterior de flatpickr si existe
-  if (flatpickInstance.value) {
-    flatpickInstance.value.destroy();
-    flatpickInstance.value = null;
+  if (instanciaCalendario.value) {
+    instanciaCalendario.value.destroy();
+    instanciaCalendario.value = null;
   }
 
   tipoBusqueda.value = tipoBusqueda.value === 'texto' ? 'fecha' : 'texto';
@@ -178,7 +184,7 @@ function cambiarTipoBusqueda() {
   // Si cambiamos a fecha, inicializar flatpickr
   if (tipoBusqueda.value === 'fecha') {
     setTimeout(() => {
-      flatpickInstance.value = flatpickr("#fechaBusqueda", {
+      instanciaCalendario.value = flatpickr("#fechaBusqueda", {
         dateFormat: "Y-m-d",
         onChange: (selectedDates, dateStr) => {
           busqueda.value = dateStr;
@@ -249,8 +255,11 @@ onMounted(async () => {
             <div class="row g-0">
               <!-- Imagen de la API -->
               <div class="col-md-5 p-3">
-                <img :src="'/img/' + ruta.foto" class="img-fluid rounded-start w-100"
-                  style="height: 250px; object-fit: cover" alt="Imagen de la ruta" />
+                <img :src="ruta.foto" 
+                     class="img-fluid rounded-start w-100"
+                     style="height: 250px; object-fit: cover" 
+                     :alt="ruta.titulo"
+                     @error="manejarErrorImagen">
               </div>
               <!-- Contenido de la tarjeta -->
               <div class="col-md-7">
@@ -329,26 +338,26 @@ onMounted(async () => {
 
         <!-- Controles de video -->
         <nav class="d-flex justify-content-center gap-2 mt-4">
-          <button class="btn btn-outline-primary" @click="accionReiniciar">
+          <button class="btn btn-outline-primary" @click="reiniciar">
             <span><img src="/img/atrasdoble.png"></span>
           </button>
-          <button class="btn btn-outline-primary" @click="accionRetrasar">
+          <button class="btn btn-outline-primary" @click="retroceder">
             <span><img src='/img/atras.png'></span>
           </button>
-          <button class="btn btn-outline-primary" @click="accionPlay">
-            <span><img :src="play"></span>
+          <button class="btn btn-outline-primary" @click="reproducirPausar">
+            <span><img :src="botonReproducir"></span>
           </button>
-          <button class="btn btn-outline-primary" @click="accionAdelantar">
+          <button class="btn btn-outline-primary" @click="avanzar">
             <span><img src='/img/alante.png'></span>
           </button>
-          <button class="btn btn-outline-primary" @click="accionSilenciar">
+          <button class="btn btn-outline-primary" @click="silenciar">
             <span><img src="/img/sin-sonido.png"></span>
           </button>
           <span class="d-flex align-items-center text-dark">Volumen</span>
-          <button class="btn btn-outline-primary" @click="accionMenosVolumen">
+          <button class="btn btn-outline-primary" @click="bajarVolumen">
             <span><img src="/img/altavoz-bajo.png"></span>
           </button>
-          <button class="btn btn-outline-primary" @click="accionMasVolumen">
+          <button class="btn btn-outline-primary" @click="subirVolumen">
             <span><img src="/img/altavoz-alto.png"></span>
           </button>
         </nav>
