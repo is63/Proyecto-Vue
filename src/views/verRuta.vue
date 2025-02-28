@@ -47,6 +47,11 @@ const urlImagen = computed(() => {
   return ruta.value.foto;
 });
 
+const esGuiaAsignado = computed(() => {
+  return props.usuarioAutenticado?.rol === 'guia' && 
+         asignacionGuia.value === props.usuarioAutenticado.nombre;
+});
+
 function manejarErrorImagen(e) {
   console.error('Error al cargar la imagen:', e);
   e.target.src = 'https://placehold.co/600x400?text=Imagen+no+disponible';
@@ -477,8 +482,9 @@ async function asignarGuia() {
           </div>
 
           <!-- Botones - Solo visibles para admin -->
-          <div v-if="usuarioAutenticado && usuarioAutenticado.rol === 'admin'" class="btn-group mb-3 w-100"
-            role="group">
+          <div v-if="props.usuarioAutenticado && props.usuarioAutenticado.rol === 'admin'" 
+               class="btn-group mb-3 w-100"
+               role="group">
             <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#duplicarModal">
               Duplicar
             </button>
@@ -488,6 +494,16 @@ async function asignarGuia() {
             </button>
             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal">
               Borrar
+            </button>
+          </div>
+
+          <!-- Botones - Solo visibles para el guía asignado -->
+          <div v-else-if="esGuiaAsignado" class="btn-group mb-3 w-100" role="group">
+            <button type="button" class="btn btn-success">
+              Iniciar Ruta
+            </button>
+            <button type="button" class="btn btn-warning">
+              Ver Asistentes
             </button>
           </div>
         </div>

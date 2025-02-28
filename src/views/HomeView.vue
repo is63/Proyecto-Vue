@@ -362,7 +362,7 @@ onMounted(async () => {
           </button>
         </nav>
       </div>
-    </div>
+    </div>  
   </div>
 </template>
 
