@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import Swal from 'sweetalert2';
 
 const props = defineProps({
   usuarioAutenticado: Object
@@ -119,10 +120,13 @@ async function cancelarReserva(reservaId) {
       return;
     }
     
-    // Enviar solicitud para cancelar reserva
-    const response = await fetch(`http://localhost/freetours/api.php/reservas/${reservaId}`, {
+    // Enviar solicitud para cancelar reserva según la documentación de la API
+    const response = await fetch(`http://localhost/freetours/api.php/reservas?id=${reservaId}`, {
       method: 'DELETE'
     });
+    
+    const responseText = await response.text();
+    console.log("Respuesta al cancelar reserva:", responseText);
     
     if (!response.ok) {
       throw new Error(`Error al cancelar la reserva: ${response.status}`);
@@ -223,9 +227,10 @@ onMounted(() => {
             style="height: 180px; object-fit: cover;" 
             @error="$event.target.src = 'https://placehold.co/600x400?text=Imagen+no+disponible'">
             
-          <!-- Fecha de la reserva como badge -->
+          <!-- Fecha de la reserva como badge con colores distintos según el estado -->
           <div class="position-absolute top-0 end-0 m-2">
-            <span class="badge bg-primary rounded-pill">
+            <span class="badge rounded-pill"
+              :class="new Date(reserva.ruta_fecha) > new Date() ? 'bg-success' : 'bg-danger'">
               {{ new Date(reserva.ruta_fecha) > new Date() ? 'Próxima' : 'Pasada' }}
             </span>
           </div>

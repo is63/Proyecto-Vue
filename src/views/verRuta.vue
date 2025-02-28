@@ -73,6 +73,22 @@ const esHoyLaRuta = computed(() => {
          fechaRuta.getDate() === hoy.getDate();
 });
 
+// Nueva propiedad computada para verificar si el usuario ya tiene una reserva para esta ruta
+const yaHaReservado = computed(() => {
+  if (!props.usuarioAutenticado || !reservas.value.length) {
+    return false;
+  }
+  
+  const clienteId = props.usuarioAutenticado.id;
+  const email = props.usuarioAutenticado.email?.toLowerCase();
+  
+  return reservas.value.some(reserva => 
+    (Number(reserva.cliente_id) === Number(clienteId) || 
+    String(reserva.usuario_email).toLowerCase() === email) &&
+    Number(reserva.ruta_id) === Number(props.id)
+  );
+});
+
 function manejarErrorImagen(e) {
   console.error('Error al cargar la imagen:', e);
   e.target.src = 'https://placehold.co/600x400?text=Imagen+no+disponible';
@@ -460,7 +476,7 @@ async function cargarReservas() {
       throw new Error(`Error al cargar las reservas: ${response.status}`);
     }
     reservas.value = await response.json();
-    console.log("Reservas cargadas:", reservas.value);
+    console.log("Reservas cargadas para ruta ID", props.id, ":", reservas.value);
   } catch (error) {
     console.error("Error al cargar reservas:", error);
   }
@@ -619,6 +635,20 @@ async function realizarReserva() {
       throw new Error('No se pudo obtener el email del usuario');
     }
     
+    // Verificar si el cliente ya ha reservado esta ruta
+    const clienteId = props.usuarioAutenticado.id;
+    
+    // Comprobar si ya existe una reserva para este cliente en esta ruta
+    const yaReservada = reservas.value.some(reserva => 
+      (Number(reserva.cliente_id) === Number(clienteId) || 
+      reserva.usuario_email.toLowerCase() === email.toLowerCase()) &&
+      Number(reserva.ruta_id) === Number(props.id)
+    );
+    
+    if (yaReservada) {
+      throw new Error('Ya tienes una reserva para esta ruta. No puedes reservar dos veces.');
+    }
+    
     // Preparar datos de la reserva
     const datosReserva = {
       email: email,                   // Email del cliente
@@ -672,14 +702,19 @@ async function realizarReserva() {
       backdrop.remove();
     }
 
-    // Mostrar confirmación
+    // Mostrar confirmación y redirigir a misReservas al cerrar
     await Swal.fire({
       title: '¡Reserva realizada!',
       text: `Has reservado para ${numPersonas.value} ${numPersonas.value === 1 ? 'persona' : 'personas'}`,
       icon: 'success',
       confirmButtonColor: '#28a745',
-      confirmButtonText: 'Aceptar',
-      backdrop: false
+      confirmButtonText: 'Ver mis reservas',
+      backdrop: false,
+      allowOutsideClick: true, // Evitar que se cierre haciendo clic fuera
+      didClose: () => {
+        // Redirigir a la página de misReservas
+        router.push('/misReservas');
+      }
     });
     
     // Actualizar contador de asistentes
@@ -704,6 +739,59 @@ async function realizarReserva() {
     });
   } finally {
     cargandoReserva.value = false;
+  }
+}
+
+// Función para cancelar una reserva
+async function cancelarReserva(reservaId) {
+  try {
+    // Mostrar confirmación antes de cancelar
+    const confirmar = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: "No podrás revertir esta acción",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, cancelar reserva',
+      cancelButtonText: 'No, mantener reserva'
+    });
+    
+    if (!confirmar.isConfirmed) {
+      return;
+    }
+    
+    // Enviar solicitud para cancelar reserva según la documentación de la API
+    const response = await fetch(`http://localhost/freetours/api.php/reservas?id=${reservaId}`, {
+      method: 'DELETE'
+    });
+    
+    const responseText = await response.text();
+    console.log("Respuesta al cancelar reserva:", responseText);
+    
+    if (!response.ok) {
+      throw new Error(`Error al cancelar la reserva: ${response.status}`);
+    }
+    
+    // Mostrar mensaje de éxito
+    await Swal.fire({
+      title: '¡Cancelada!',
+      text: 'Tu reserva ha sido cancelada correctamente',
+      icon: 'success',
+      confirmButtonColor: '#28a745'
+    });
+    
+    // Recargar las reservas
+    cargarReservas();
+    
+  } catch (err) {
+    console.error("Error:", err);
+    await Swal.fire({
+      title: 'Error',
+      text: 'No se pudo cancelar la reserva. Inténtalo más tarde.',
+      icon: 'error',
+      confirmButtonColor: '#dc3545'
+    });
   }
 }
 </script>
@@ -784,8 +872,14 @@ async function realizarReserva() {
 
           <!-- Agregar al final de la parte derecha de los detalles, después de los botones del admin y guía -->
           <div v-else-if="props.usuarioAutenticado && props.usuarioAutenticado.rol === 'cliente'" class="btn-group mb-3 w-100" role="group">
-            <button type="button" class="btn btn-primary w-100" @click="abrirModalReserva">
-              Reservar
+            <button 
+              type="button" 
+              class="btn btn-primary w-100" 
+              @click="abrirModalReserva" 
+              :disabled="yaHaReservado"
+              :title="yaHaReservado ? 'Ya tienes una reserva para esta ruta' : 'Reservar plaza para esta ruta'"
+            >
+              {{ yaHaReservado ? 'Ya reservada' : 'Reservar' }}
             </button>
           </div>
         </div>
