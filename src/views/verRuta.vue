@@ -41,6 +41,11 @@ const guiaSeleccionado = ref('');
 const instanciaModalAsignarGuia = ref(null);
 const asignacionGuia = ref(null);
 const rutas = ref([]);
+const reservas = ref([]);
+const modalAsistentes = ref(null);
+const modalPasarLista = ref(null);
+const asistencias = ref({});
+const asistentesReales = ref({});
 
 const urlImagen = computed(() => {
   if (!ruta.value?.foto) return '';
@@ -50,6 +55,18 @@ const urlImagen = computed(() => {
 const esGuiaAsignado = computed(() => {
   return props.usuarioAutenticado?.rol === 'guia' && 
          asignacionGuia.value === props.usuarioAutenticado.nombre;
+});
+
+const esHoyLaRuta = computed(() => {
+  if (!ruta.value?.fecha) return false;
+  
+  const fechaRuta = new Date(ruta.value.fecha);
+  const hoy = new Date();
+  
+  // Comparar año, mes y día
+  return fechaRuta.getFullYear() === hoy.getFullYear() &&
+         fechaRuta.getMonth() === hoy.getMonth() &&
+         fechaRuta.getDate() === hoy.getDate();
 });
 
 function manejarErrorImagen(e) {
@@ -128,6 +145,7 @@ function inicializarMapa(latitud, longitud) {
 onMounted(() => {
   cargarDatos().then(() => {
     cargarGuias(); // Cargar guías después de tener los datos de la ruta
+    cargarReservas();
   });
 
   // Configurar calendario de fecha
@@ -164,6 +182,8 @@ onMounted(() => {
   });
 
   instanciaModalAsignarGuia.value = new Modal(document.getElementById('asignarGuiaModal'));
+  modalAsistentes.value = new Modal(document.getElementById('asistentesModal'));
+  modalPasarLista.value = new Modal(document.getElementById('pasarListaModal'));
 });
 
 // Función para duplicar la ruta
@@ -428,6 +448,89 @@ async function asignarGuia() {
     console.error('Error:', error);
   }
 }
+
+async function cargarReservas() {
+  try {
+    const response = await fetch(`http://localhost/freetours/api.php/reservas?ruta_id=${props.id}`);
+    if (!response.ok) {
+      throw new Error(`Error al cargar las reservas: ${response.status}`);
+    }
+    reservas.value = await response.json();
+    console.log("Reservas cargadas:", reservas.value);
+  } catch (error) {
+    console.error("Error al cargar reservas:", error);
+  }
+}
+
+function verAsistentes() {
+  modalAsistentes.value.show();
+}
+
+function abrirPasarLista() {
+  // Cerrar el modal de asistentes
+  modalAsistentes.value.hide();
+  
+  // Inicializar el objeto de asistencias si es necesario
+  if (Object.keys(asistencias.value).length === 0) {
+    reservas.value.forEach(reserva => {
+      asistencias.value[reserva.reserva_id] = null;  // null = sin marcar
+    });
+  }
+  
+  // Abrir el nuevo modal después de un breve retraso para permitir que se cierre el anterior
+  setTimeout(() => {
+    modalPasarLista.value.show();
+  }, 500);
+}
+
+function marcarAsistencia(reservaId, presente) {
+  asistencias.value[reservaId] = presente;
+  
+  // Si está marcado como presente y no tiene valor de acompañantes, inicializar
+  if (presente && !asistentesReales.value[reservaId]) {
+    // Inicializar con el número de personas reservadas
+    const reserva = reservas.value.find(r => r.reserva_id == reservaId);
+    asistentesReales.value[reservaId] = reserva ? reserva.num_personas : 0;
+  }
+}
+
+// Modificar la función guardarAsistencias para incluir los asistentes reales
+async function guardarAsistencias() {
+  try {
+    // Preparar los datos a enviar
+    const datosAsistencia = {
+      asistencias: asistencias.value,
+      asistentesReales: asistentesReales.value
+    };
+    
+    console.log('Datos a guardar:', datosAsistencia);
+    
+    // Aquí iría el código para enviar al servidor
+    
+    // Mostrar confirmación
+    Swal.fire({
+      title: '¡Lista pasada!',
+      text: 'Se ha registrado la asistencia correctamente',
+      icon: 'success',
+      confirmButtonColor: '#28a745',
+      confirmButtonText: 'Aceptar',
+      backdrop: false
+    });
+    
+    // Cerrar el modal
+    modalPasarLista.value.hide();
+  } catch (error) {
+    console.error('Error al guardar asistencias:', error);
+    Swal.fire({
+      title: 'Error',
+      text: 'No se pudo guardar la asistencia',
+      icon: 'error',
+      confirmButtonColor: '#dc3545',
+      confirmButtonText: 'Aceptar',
+      backdrop: false
+    });
+  }
+}
 </script>
 
 <template>
@@ -502,7 +605,7 @@ async function asignarGuia() {
             <button type="button" class="btn btn-success">
               Iniciar Ruta
             </button>
-            <button type="button" class="btn btn-warning">
+            <button type="button" class="btn btn-warning" @click="verAsistentes">
               Ver Asistentes
             </button>
           </div>
@@ -629,6 +732,121 @@ async function asignarGuia() {
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
             <button type="button" class="btn btn-info text-white" @click="asignarGuia">Asignar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Asistentes -->
+    <div class="modal fade" id="asistentesModal" tabindex="-1" aria-labelledby="asistentesModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="asistentesModalLabel">Asistentes para la ruta: {{ ruta.titulo }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Lista de asistentes -->
+            <div v-if="reservas.length > 0" class="list-group">
+              <div v-for="reserva in reservas" :key="reserva.reserva_id" class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="mb-0">{{ reserva.usuario_nombre }}</h6>
+                    <p class="mb-0 text-muted small">{{ reserva.usuario_email }}</p>
+                  </div>
+                  <span class="badge bg-primary rounded-pill">
+                    {{ reserva.num_personas }} personas
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-center p-4">
+              <p class="text-muted mb-0">No hay reservas para esta ruta.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button 
+              type="button" 
+              class="btn btn-success" 
+              @click="abrirPasarLista"
+              v-if="esHoyLaRuta"
+            >
+              Pasar Lista
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-secondary" 
+              disabled
+              v-else
+              title="Solo se puede pasar lista el día de la ruta"
+            >
+              Pasar Lista
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nuevo Modal para pasar lista -->
+    <div class="modal fade" id="pasarListaModal" tabindex="-1" aria-labelledby="pasarListaModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="pasarListaModalLabel">Pasar Lista: {{ ruta.titulo }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+            <!-- Lista de asistentes con botones de asistencia -->
+            <div v-if="reservas.length > 0" class="list-group">
+              <div v-for="reserva in reservas" :key="reserva.reserva_id" class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="mb-0" :class="{ 'text-danger text-decoration-line-through': asistencias[reserva.reserva_id] === false }">
+                      {{ reserva.usuario_nombre }}
+                    </h6>
+                    <p class="mb-0 text-muted small">{{ reserva.usuario_email }}</p>
+                    <div v-if="asistencias[reserva.reserva_id] === true" class="mt-2">
+                      <label class="form-label small">Acompañantes reales:</label>
+                      <input 
+                        type="number" 
+                        class="form-control form-control-sm" 
+                        v-model="asistentesReales[reserva.reserva_id]" 
+                        min="0" 
+                        :max="reserva.num_personas"
+                        style="width: 70px; display: inline-block;"
+                      >
+                      <span class="ms-2 small text-muted">de {{ reserva.num_personas }} previstos</span>
+                    </div>
+                  </div>
+                  <div class="btn-group" role="group">
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-danger text-white" 
+                      :class="{ 'btn-outline-danger': asistencias[reserva.reserva_id] !== false }"
+                      @click="marcarAsistencia(reserva.reserva_id, false)"
+                    >
+                      Ausente
+                    </button>
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-success text-white" 
+                      :class="{ 'btn-outline-success': asistencias[reserva.reserva_id] !== true }"
+                      @click="marcarAsistencia(reserva.reserva_id, true)"
+                    >
+                      Presente
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-center p-4">
+              <p class="text-muted mb-0">No hay reservas para esta ruta.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary text-white" data-bs-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-primary text-white" @click="guardarAsistencias">Guardar</button>
           </div>
         </div>
       </div>
