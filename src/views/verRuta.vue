@@ -647,7 +647,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
 
           <!-- Parte de los botones guía asignado - Corregir el error en el HTML -->
           <div v-else-if="esGuiaAsignado" class="btn-group mb-3 w-100" role="group">
-            <button type="button" class="btn btn-warning w-100" @click="verAsistentes">
+            <button type="button" class="btn btn-info text-white w-100" @click="verAsistentes">
               Ver Asistentes
             </button>
           </div>
