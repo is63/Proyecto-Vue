@@ -31,11 +31,11 @@ async function iniciarSesion() {
     );
     if (usuarioEncontrado) {
       
-
       // Emitir el evento con los datos del usuario autenticado
       emits("sesionIniciada", {
-        id: usuarioEncontrado.id, // Añadir ID
+        id: usuarioEncontrado.id,
         nombre: usuarioEncontrado.nombre,
+        email: usuarioEncontrado.email, // Nuevo campo añadido
         rol: usuarioEncontrado.rol
       });
 

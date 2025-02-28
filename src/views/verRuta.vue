@@ -46,6 +46,10 @@ const modalAsistentes = ref(null);
 const modalPasarLista = ref(null);
 const asistencias = ref({});
 const asistentesReales = ref({});
+const numPersonas = ref(1);
+const errorReserva = ref("");
+const cargandoReserva = ref(false);
+const modalReserva = ref(null);
 
 const urlImagen = computed(() => {
   if (!ruta.value?.foto) return '';
@@ -185,6 +189,7 @@ onMounted(() => {
   instanciaModalAsignarGuia.value = new Modal(document.getElementById('asignarGuiaModal'));
   modalAsistentes.value = new Modal(document.getElementById('asistentesModal'));
   modalPasarLista.value = new Modal(document.getElementById('pasarListaModal'));
+  modalReserva.value = new Modal(document.getElementById('reservaModal'));
 });
 
 // Función para duplicar la ruta
@@ -197,7 +202,7 @@ async function duplicarRuta() {
     fecha: nuevaFecha.value,
     hora: nuevaHora.value,
     latitud: ruta.value.latitud,
-    longitud: ruta.value.longitud,
+    longitud: ruta.value.long,
     guia_id: nuevoGuia.value || null,
   };
 
@@ -576,6 +581,131 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
     nuevoGuia.value = "";
   }
 });
+
+function abrirModalReserva() {
+  const modalReserva = new Modal(document.getElementById('reservaModal'));
+  modalReserva.show();
+}
+
+// Actualizar el límite máximo a 8 personas
+function incrementarPersonas() {
+  if (numPersonas.value < 8) {  // Cambiado de 10 a 8
+    numPersonas.value++;
+  }
+}
+
+function decrementarPersonas() {
+  if (numPersonas.value > 1) {
+    numPersonas.value--;
+  }
+}
+
+async function realizarReserva() {
+  try {
+    cargandoReserva.value = true;
+    errorReserva.value = "";
+
+    // Verificar que el usuario está autenticado
+    if (!props.usuarioAutenticado) {
+      throw new Error('Debe iniciar sesión para realizar una reserva');
+    }
+
+    console.log("Datos del usuario autenticado:", props.usuarioAutenticado);
+    
+    // Obtener el email del usuario autenticado
+    const email = props.usuarioAutenticado.email;
+    
+    if (!email) {
+      throw new Error('No se pudo obtener el email del usuario');
+    }
+    
+    // Preparar datos de la reserva
+    const datosReserva = {
+      email: email,                   // Email del cliente
+      ruta_id: parseInt(props.id),    // ID de la ruta
+      num_personas: numPersonas.value // Número de personas
+    };
+    
+    console.log("Datos a enviar para la reserva:", datosReserva);
+
+    // Realizar la petición a la API
+    const response = await fetch('http://localhost/freetours/api.php/reservas', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(datosReserva)
+    });
+
+    // Para depuración
+    const responseText = await response.text();
+    console.log("Respuesta de la API:", responseText);
+    
+    // Si hay error en la respuesta
+    if (!response.ok) {
+      try {
+        // Intentar analizar la respuesta como JSON
+        const errorData = JSON.parse(responseText);
+        throw new Error(errorData.message || `Error del servidor: ${response.status}`);
+      } catch (parseError) {
+        // Si no se puede analizar como JSON, usar el texto directamente
+        throw new Error(`Error al realizar la reserva: ${response.status} - ${responseText}`);
+      }
+    }
+
+    // Cerrar el modal y mostrar confirmación
+    const modalReservaEl = document.getElementById('reservaModal');
+    if (modalReservaEl) {
+      const modalInstance = Modal.getInstance(modalReservaEl);
+      if (modalInstance) {
+        modalInstance.hide();
+      }
+    }
+
+    // Limpiar elementos del modal
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) {
+      backdrop.remove();
+    }
+
+    // Mostrar confirmación
+    await Swal.fire({
+      title: '¡Reserva realizada!',
+      text: `Has reservado para ${numPersonas.value} ${numPersonas.value === 1 ? 'persona' : 'personas'}`,
+      icon: 'success',
+      confirmButtonColor: '#28a745',
+      confirmButtonText: 'Aceptar',
+      backdrop: false
+    });
+    
+    // Actualizar contador de asistentes
+    if (ruta.value) {
+      ruta.value.asistentes = (parseInt(ruta.value.asistentes || 0) + parseInt(numPersonas.value));
+    }
+    
+    // Recargar las reservas
+    await cargarReservas();
+
+  } catch (error) {
+    console.error("Error al realizar la reserva:", error);
+    errorReserva.value = error.message || "No se pudo completar la reserva";
+    
+    // Mostrar el error en el modal y con SweetAlert
+    Swal.fire({
+      title: 'Error',
+      text: errorReserva.value,
+      icon: 'error',
+      confirmButtonColor: '#dc3545',
+      backdrop: false
+    });
+  } finally {
+    cargandoReserva.value = false;
+  }
+}
 </script>
 
 <template>
@@ -649,6 +779,13 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
           <div v-else-if="esGuiaAsignado" class="btn-group mb-3 w-100" role="group">
             <button type="button" class="btn btn-info text-white w-100" @click="verAsistentes">
               Ver Asistentes
+            </button>
+          </div>
+
+          <!-- Agregar al final de la parte derecha de los detalles, después de los botones del admin y guía -->
+          <div v-else-if="props.usuarioAutenticado && props.usuarioAutenticado.rol === 'cliente'" class="btn-group mb-3 w-100" role="group">
+            <button type="button" class="btn btn-primary w-100" @click="abrirModalReserva">
+              Reservar
             </button>
           </div>
         </div>
@@ -893,6 +1030,56 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
         </div>
       </div>
     </div>
+
+    <!-- Modal de Reserva con estilo actualizado -->
+    <div class="modal fade" id="reservaModal" tabindex="-1" aria-labelledby="reservaModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="reservaModalLabel">Reservar: {{ ruta.titulo }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>Por favor, indique cuántas personas asistirán a la ruta:</p>
+            
+            <div class="alert alert-info" role="alert">
+              <i class="bi bi-info-circle-fill me-2"></i>
+              La reserva se realizará para el día {{ ruta.fecha }} a las {{ ruta.hora }}.
+            </div>
+            
+            <div class="mb-3">
+              <label for="numPersonas" class="form-label">Número de personas</label>
+              <div class="d-flex justify-content-center align-items-center mb-3">
+                <div class="btn-group selector-personas">
+                  <button v-for="num in 8" :key="num" type="button" 
+                    :class="['btn', numPersonas === num ? 'btn-primary' : 'btn-outline-primary']"
+                    @click="numPersonas = num">
+                    {{ num }}
+                  </button>
+                </div>
+              </div>
+              <small class="form-text text-muted d-block text-center">Máximo 8 personas por reserva</small>
+            </div>
+            
+            <div class="alert alert-warning" v-if="errorReserva">
+              {{ errorReserva }}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button 
+              type="button" 
+              class="btn btn-success" 
+              @click="realizarReserva"
+              :disabled="cargandoReserva"
+            >
+              <span v-if="cargandoReserva" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Confirmar Reserva
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -934,5 +1121,31 @@ h1 {
 
 .text-center {
   text-align: center !important;
+}
+
+/* Nuevos estilos para el selector de personas */
+.selector-personas .btn {
+  min-width: 40px;
+  border-radius: 0;
+}
+
+.selector-personas .btn:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.selector-personas .btn:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+/* Efecto hover mejorado */
+.selector-personas .btn:hover {
+  background-color: #e9ecef;
+  z-index: 1;
+}
+
+.selector-personas .btn-primary {
+  z-index: 2;
 }
 </style>
