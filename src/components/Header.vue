@@ -22,8 +22,7 @@ function cerrarSesion() {
         <!-- Logo y Nombre -->
         <router-link to="/" class="navbar-brand d-flex align-items-center">
           <img src="../../img/olimpo.png" class="logo me-2" alt="Logo" />
-          <span class="text-gold fs-4 fw-bold text-shadow d-none d-sm-inline">Olé Tours</span>
-          <span class="text-gold fs-4 fw-bold text-shadow d-inline d-sm-none">OT</span>
+          <span class="text-gold fw-bold text-shadow title-responsive">Olé Tours</span>
         </router-link>
 
         <!-- Menú de navegación siempre visible -->
@@ -236,6 +235,22 @@ function cerrarSesion() {
   
   .text-gold.fs-4 {
     font-size: 1.1rem !important;
+  }
+}
+
+.title-responsive {
+  font-size: 1.5rem;
+}
+
+@media (max-width: 575.98px) {
+  .title-responsive {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 370px) {
+  .title-responsive {
+    font-size: 1rem;
   }
 }
 </style>
