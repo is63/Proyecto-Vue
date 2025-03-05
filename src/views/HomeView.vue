@@ -208,7 +208,7 @@ onMounted(async () => {
         <!-- Formulario de busqueda -->
         <div class="buscador ms-3">
           <input v-model="busqueda" :type="tipoBusqueda === 'fecha' ? 'text' : 'text'"
-            class="form-control rounded-pill ps-5 search-input" :class="{ 'texto': tipoBusqueda === 'texto' }"
+            class="form-control rounded-pill ps-5 input-busqueda" :class="{ 'texto': tipoBusqueda === 'texto' }"
             :placeholder="tipoBusqueda === 'fecha' ? 'Buscar por fecha' : 'Buscar por título o localidad'"
             :id="tipoBusqueda === 'fecha' ? 'fechaBusqueda' : ''" aria-label="Buscar" />
           <i class="bi bi-search icono-busqueda"></i>
@@ -332,42 +332,54 @@ onMounted(async () => {
     <!-- Video -->
     <div class="video-section mt-5 mb-4">
       <div class="video-container border rounded bg-white p-4">
-        <video ref="medio" class="w-100" style="height: 450px; background-color: black;" controls>
+        <video ref="medio" class="w-100 video-player" controls>
           <source src="/video/crush.mp4" type="video/mp4">
         </video>
 
-        <!-- Controles de video -->
-        <nav class="d-flex justify-content-center gap-2 mt-4">
-          <button class="btn btn-outline-primary" @click="reiniciar">
-            <span><img src="/img/atrasdoble.png"></span>
-          </button>
-          <button class="btn btn-outline-primary" @click="retroceder">
-            <span><img src='/img/atras.png'></span>
-          </button>
-          <button class="btn btn-outline-primary" @click="reproducirPausar">
-            <span><img :src="botonReproducir"></span>
-          </button>
-          <button class="btn btn-outline-primary" @click="avanzar">
-            <span><img src='/img/alante.png'></span>
-          </button>
-          <button class="btn btn-outline-primary" @click="silenciar">
-            <span><img src="/img/sin-sonido.png"></span>
-          </button>
-          <span class="d-flex align-items-center text-dark">Volumen</span>
-          <button class="btn btn-outline-primary" @click="bajarVolumen">
-            <span><img src="/img/altavoz-bajo.png"></span>
-          </button>
-          <button class="btn btn-outline-primary" @click="subirVolumen">
-            <span><img src="/img/altavoz-alto.png"></span>
-          </button>
-        </nav>
+        <!-- Controles de video reorganizados -->
+        <div class="video-controls mt-4">
+          <!-- Contenedor flexible que cambia dirección en móvil -->
+          <div class="d-flex flex-column flex-md-row justify-content-center gap-md-3">
+            
+            <!-- Grupo 1: Controles principales de reproducción -->
+            <div class="d-flex justify-content-center gap-2 mb-3 mb-md-0">
+              <button class="btn btn-outline-primary control-btn" @click="reiniciar" title="Reiniciar">
+                <img src="/img/atrasdoble.png" alt="Reiniciar">
+              </button>
+              <button class="btn btn-outline-primary control-btn" @click="retroceder" title="Retroceder">
+                <img src='/img/atras.png' alt="Retroceder">
+              </button>
+              <button class="btn btn-outline-primary control-btn" @click="reproducirPausar" title="Reproducir/Pausar">
+                <img :src="botonReproducir" alt="Reproducir/Pausar">
+              </button>
+              <button class="btn btn-outline-primary control-btn" @click="avanzar" title="Avanzar">
+                <img src='/img/alante.png' alt="Avanzar">
+              </button>
+              <button class="btn btn-outline-primary control-btn" @click="silenciar" title="Silenciar">
+                <img src="/img/sin-sonido.png" alt="Silenciar">
+              </button>
+            </div>
+            
+            <!-- Grupo 2: Controles de volumen -->
+            <div class="d-flex justify-content-center align-items-center gap-2">
+              <span class="text-dark volume-label">Volumen</span>
+              <button class="btn btn-outline-primary control-btn" @click="bajarVolumen" title="Bajar volumen">
+                <img src="/img/altavoz-bajo.png" alt="Bajar volumen">
+              </button>
+              <button class="btn btn-outline-primary control-btn" @click="subirVolumen" title="Subir volumen">
+                <img src="/img/altavoz-alto.png" alt="Subir volumen">
+              </button>
+            </div>
+            
+          </div>
+        </div>
       </div>
     </div>  
   </div>
 </template>
 
 <style scoped>
-/* Estilos actualizados */
+
 .buscador-container {
   max-width: 800px;
   margin: 0 auto;
@@ -413,7 +425,7 @@ input[type="date"] {
 }
 
 /* Añadir estilo para el input de fecha */
-.search-input {
+.input-busqueda {
   background-color: white;
 }
 
@@ -467,7 +479,7 @@ video {
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 
-/* Añadir estilo para la imagen del carrusel */
+/* Estilos para el carrusel*/
 .carousel-img {
   height: 450px;
   object-fit: cover;
@@ -482,6 +494,55 @@ video {
 @media (max-width: 576px) {
   .carousel-img {
     height: 200px;
+  }
+}
+
+/* Estilo para los controles de video */
+.video-player {
+  height: 450px; 
+  background-color: black;
+  object-fit: contain;
+}
+
+.control-btn {
+  min-width: 42px;
+  height: 42px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-btn img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.volume-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Estilo para el menu de video ahora responsive */
+@media (max-width: 768px) {
+  .video-player {
+    height: 350px;
+  }
+  
+  .control-btn {
+    min-width: 46px;
+    height: 46px;
+  }
+}
+
+@media (max-width: 576px) {
+  .video-player {
+    height: 250px;
+  }
+  
+  .video-container {
+    padding: 15px !important;
   }
 }
 </style>
