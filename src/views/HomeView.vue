@@ -61,11 +61,11 @@ function bajarVolumen() {
   }
 }
 
-// Add after other ref declarations
+
 const paginaActual = ref(1);
 const rutasPorPagina = ref(5);
 
-// Add this computed property
+
 const rutasPaginadas = computed(() => {
   const inicio = (paginaActual.value - 1) * rutasPorPagina.value;
   const fin = inicio + rutasPorPagina.value;
@@ -74,16 +74,16 @@ const rutasPaginadas = computed(() => {
 
 const totalPaginas = computed(() => Math.ceil(filtrarRutas().length / rutasPorPagina.value));
 
-// Add this function to handle page changes
+
 function cambiarPagina(pagina) {
   if (pagina >= 1 && pagina <= totalPaginas.value) {
     paginaActual.value = pagina;
   }
 }
 
-// Add this function in the script section
+
 function manejarErrorImagen(e) {
-  console.error('Error al cargar la imagen:', e);
+  //Mostras una imagen de reemplazo si la imagen no se puede cargar
   e.target.src = 'https://placehold.co/600x400?text=Imagen+no+disponible';
 }
 
