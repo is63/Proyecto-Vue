@@ -90,21 +90,21 @@ const urlImagen = computed(() => {
 
 // Determina si el usuario autenticado es el guía asignado a esta ruta
 const esGuiaAsignado = computed(() => {
-  return props.usuarioAutenticado?.rol === 'guia' && 
-         asignacionGuia.value === props.usuarioAutenticado.nombre;
+  return props.usuarioAutenticado?.rol === 'guia' &&
+    asignacionGuia.value === props.usuarioAutenticado.nombre;
 });
 
 // Verifica si la ruta es el día actual para habilitar control de asistencia
 const esHoyLaRuta = computed(() => {
   if (!ruta.value?.fecha) return false;
-  
+
   const fechaRuta = new Date(ruta.value.fecha);
   const hoy = new Date();
-  
+
   // Comparar año, mes y día para determinar si es hoy
   return fechaRuta.getFullYear() === hoy.getFullYear() &&
-         fechaRuta.getMonth() === hoy.getMonth() &&
-         fechaRuta.getDate() === hoy.getDate();
+    fechaRuta.getMonth() === hoy.getMonth() &&
+    fechaRuta.getDate() === hoy.getDate();
 });
 
 // Comprueba si el cliente ya ha reservado esta ruta para evitar duplicados
@@ -112,14 +112,14 @@ const yaHaReservado = computed(() => {
   if (!props.usuarioAutenticado || !reservas.value.length) {
     return false;
   }
-  
+
   const clienteId = props.usuarioAutenticado.id;
   const email = props.usuarioAutenticado.email?.toLowerCase();
-  
+
   // Verifica tanto por ID como por email para mayor seguridad
-  return reservas.value.some(reserva => 
-    (Number(reserva.cliente_id) === Number(clienteId) || 
-    String(reserva.usuario_email).toLowerCase() === email) &&
+  return reservas.value.some(reserva =>
+    (Number(reserva.cliente_id) === Number(clienteId) ||
+      String(reserva.usuario_email).toLowerCase() === email) &&
     Number(reserva.ruta_id) === Number(props.id)
   );
 });
@@ -196,23 +196,23 @@ async function cargarReservas() {
 async function cargarGuias() {
   try {
     const fecha = ruta.value.fecha; // Usar la fecha de la ruta actual
-    
+
     // 1. Obtener disponibilidad de guías para la fecha
     const response = await fetch(`http://localhost/freetours/api.php/asignaciones?fecha=${fecha}`);
     if (!response.ok) {
       throw new Error(`Error al cargar los guías disponibles: ${response.status}`);
     }
     const guiasDisponibles = await response.json();
-    
+
     // 2. Obtener información completa de todos los guías
     const respuestaGuias = await fetch("http://localhost/freetours/api.php/usuarios");
     if (!respuestaGuias.ok) {
       throw new Error(`Error al cargar los guías: ${respuestaGuias.status}`);
     }
     const todosGuias = await respuestaGuias.json();
-    
+
     // 3. Filtrar solo los guías disponibles para esta fecha
-    guias.value = todosGuias.filter(guia => 
+    guias.value = todosGuias.filter(guia =>
       guia.rol === "guia" && guiasDisponibles.some(g => Number(g.id) === Number(guia.id))
     );
   } catch (error) {
@@ -228,26 +228,26 @@ async function cargarGuiasParaDuplicar() {
       guias.value = [];
       return;
     }
-    
+
     // 1. Obtener guías disponibles para la nueva fecha
     const respuesta = await fetch(`http://localhost/freetours/api.php/asignaciones?fecha=${nuevaFecha.value}`);
     if (!respuesta.ok) {
       throw new Error(`Error al cargar los guías disponibles: ${respuesta.status}`);
     }
     const guiasDisponibles = await respuesta.json();
-    
+
     // 2. Obtener información completa de todos los guías
     const respuestaGuias = await fetch("http://localhost/freetours/api.php/usuarios");
     if (!respuestaGuias.ok) {
       throw new Error(`Error al cargar los guías: ${respuestaGuias.status}`);
     }
     const todosGuias = await respuestaGuias.json();
-    
+
     // 3. Filtrar solo los guías disponibles para la nueva fecha
-    guias.value = todosGuias.filter(guia => 
+    guias.value = todosGuias.filter(guia =>
       guia.rol === "guia" && guiasDisponibles.some(g => Number(g.id) === Number(guia.id))
     );
-    
+
     console.log("Guías disponibles para duplicar:", guias.value);
   } catch (error) {
     console.error("Error al cargar guías para duplicar:", error);
@@ -319,34 +319,34 @@ async function realizarReserva() {
     }
 
     console.log("Datos del usuario autenticado:", props.usuarioAutenticado);
-    
+
     // 2. Obtener el email del usuario autenticado
     const email = props.usuarioAutenticado.email;
-    
+
     if (!email) {
       throw new Error('No se pudo obtener el email del usuario');
     }
-    
+
     // 3. Verificar que no exista ya una reserva para este cliente
     const clienteId = props.usuarioAutenticado.id;
-    
-    const yaReservada = reservas.value.some(reserva => 
-      (Number(reserva.cliente_id) === Number(clienteId) || 
-      reserva.usuario_email.toLowerCase() === email.toLowerCase()) &&
+
+    const yaReservada = reservas.value.some(reserva =>
+      (Number(reserva.cliente_id) === Number(clienteId) ||
+        reserva.usuario_email.toLowerCase() === email.toLowerCase()) &&
       Number(reserva.ruta_id) === Number(props.id)
     );
-    
+
     if (yaReservada) {
       throw new Error('Ya tienes una reserva para esta ruta. No puedes reservar dos veces.');
     }
-    
+
     // 4. Preparar datos de la reserva para enviar a la API
     const datosReserva = {
       email: email,
       ruta_id: parseInt(props.id),
       num_personas: numPersonas.value
     };
-    
+
     console.log("Datos a enviar para la reserva:", datosReserva);
 
     // 5. Realizar la petición a la API
@@ -361,7 +361,7 @@ async function realizarReserva() {
     // Para depuración
     const responseText = await response.text();
     console.log("Respuesta de la API:", responseText);
-    
+
     // 6. Verificar respuesta del servidor
     if (!response.ok) {
       try {
@@ -387,7 +387,7 @@ async function realizarReserva() {
     document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
     document.body.style.paddingRight = '';
-    
+
     const backdrop = document.querySelector('.modal-backdrop');
     if (backdrop) {
       backdrop.remove();
@@ -407,19 +407,19 @@ async function realizarReserva() {
         router.push('/misReservas');
       }
     });
-    
+
     // 9. Actualizar contador de asistentes en la vista
     if (ruta.value) {
       ruta.value.asistentes = (parseInt(ruta.value.asistentes || 0) + parseInt(numPersonas.value));
     }
-    
+
     // 10. Recargar las reservas
     await cargarReservas();
 
   } catch (error) {
     console.error("Error al realizar la reserva:", error);
     errorReserva.value = error.message || "No se pudo completar la reserva";
-    
+
     // Mostrar el error en el modal y con SweetAlert
     Swal.fire({
       title: 'Error',
@@ -447,23 +447,23 @@ async function cancelarReserva(reservaId) {
       confirmButtonText: 'Sí, cancelar reserva',
       cancelButtonText: 'No, mantener reserva'
     });
-    
+
     if (!confirmar.isConfirmed) {
       return;
     }
-    
+
     // 2. Enviar solicitud de cancelación a la API
     const response = await fetch(`http://localhost/freetours/api.php/reservas?id=${reservaId}`, {
       method: 'DELETE'
     });
-    
+
     const responseText = await response.text();
     console.log("Respuesta al cancelar reserva:", responseText);
-    
+
     if (!response.ok) {
       throw new Error(`Error al cancelar la reserva: ${response.status}`);
     }
-    
+
     // 3. Mostrar mensaje de éxito
     await Swal.fire({
       title: '¡Cancelada!',
@@ -471,10 +471,10 @@ async function cancelarReserva(reservaId) {
       icon: 'success',
       confirmButtonColor: '#28a745'
     });
-    
+
     // 4. Recargar las reservas para actualizar la vista
     cargarReservas();
-    
+
   } catch (err) {
     console.error("Error:", err);
     await Swal.fire({
@@ -499,14 +499,14 @@ function verAsistentes() {
 function abrirPasarLista() {
   // Cerrar el modal de asistentes
   modalAsistentes.value.hide();
-  
+
   // Inicializar el objeto de asistencias si es necesario
   if (Object.keys(asistencias.value).length === 0) {
     reservas.value.forEach(reserva => {
       asistencias.value[reserva.reserva_id] = null;  // null = sin marcar
     });
   }
-  
+
   // Abrir el nuevo modal después de un breve retraso
   setTimeout(() => {
     modalPasarLista.value.show();
@@ -516,7 +516,7 @@ function abrirPasarLista() {
 // Registra la asistencia de los participantes (presente/ausente)
 function marcarAsistencia(reservaId, presente) {
   asistencias.value[reservaId] = presente;
-  
+
   // Si está presente, inicializar el contador de acompañantes
   if (presente && !asistentesReales.value[reservaId]) {
     // Inicializar con el número de personas reservadas
@@ -533,11 +533,11 @@ async function guardarAsistencias() {
       asistencias: asistencias.value,
       asistentesReales: asistentesReales.value
     };
-    
+
     console.log('Datos a guardar:', datosAsistencia);
-    
+
     // Aquí iría el código para enviar al servidor
-    
+
     // 2. Mostrar confirmación
     Swal.fire({
       title: '¡Lista pasada!',
@@ -547,7 +547,7 @@ async function guardarAsistencias() {
       confirmButtonText: 'Aceptar',
       backdrop: false
     });
-    
+
     // 3. Cerrar el modal
     modalPasarLista.value.hide();
   } catch (error) {
@@ -573,7 +573,7 @@ async function duplicarRuta() {
     titulo: ruta.value.titulo,
     localidad: ruta.value.localidad,
     descripcion: ruta.value.descripcion,
-    foto: ruta.value.foto, 
+    foto: ruta.value.foto,
     fecha: nuevaFecha.value,
     hora: nuevaHora.value,
     latitud: ruta.value.latitud,
@@ -719,7 +719,7 @@ async function confirmarEliminacion() {
       icon: 'error',
       confirmButtonColor: '#232342',
       confirmButtonText: 'Aceptar',
-      backdrop: false, 
+      backdrop: false,
       allowOutsideClick: true,
       timer: 3000,
       timerProgressBar: true,
@@ -815,18 +815,18 @@ function irALogin() {
   // Cerrar el modal antes de redirigir
   if (modalLoginRequerido.value) {
     modalLoginRequerido.value.hide();
-    
+
     // Limpiar elementos del modal
     document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
     document.body.style.paddingRight = '';
-    
+
     const backdrop = document.querySelector('.modal-backdrop');
     if (backdrop) {
       backdrop.remove();
     }
   }
-  
+
   // Redirigir al inicio de sesión
   router.push('/login');
 }
@@ -864,7 +864,7 @@ onMounted(() => {
   // Inicializar todos los modales
   instanciaModalDuplicar = new Modal(document.getElementById('duplicarModal'));
   new Modal(document.getElementById('eliminarModal'));
-  
+
   // Añadir event listener para cuando el modal de eliminación se oculta/cierra
   document.getElementById('eliminarModal').addEventListener('hidden.bs.modal', () => {
     if (eliminacionCompletada.value) { //Si se ha eliminado correctamente hace la redireccion
@@ -899,11 +899,8 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
     ========================================== -->
     <!-- Imagen principal -->
     <div class="w-100">
-      <img :src="urlImagen" 
-           :alt="ruta.titulo" 
-           class="img-fluid w-100 rounded"
-           style="height: 400px; object-fit: cover"
-           @error="manejarErrorImagen">
+      <img :src="urlImagen" :alt="ruta.titulo" class="img-fluid w-100 rounded" style="height: 400px; object-fit: cover"
+        @error="manejarErrorImagen">
     </div>
 
     <!-- Titulo -->
@@ -950,9 +947,8 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
           <!-- ==========================================
           SECCIÓN DE ADMINISTRADOR
           ========================================== -->
-          <div v-if="props.usuarioAutenticado && props.usuarioAutenticado.rol === 'admin'" 
-               class="btn-group mb-3 w-100"
-               role="group">
+          <div v-if="props.usuarioAutenticado && props.usuarioAutenticado.rol === 'admin'" class="btn-group mb-3 w-100"
+            role="group">
             <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#duplicarModal">
               Duplicar
             </button>
@@ -977,14 +973,10 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
           <!-- ==========================================
           SECCIÓN DE CLIENTE
           ========================================== -->
-          <div v-else-if="props.usuarioAutenticado && props.usuarioAutenticado.rol === 'cliente'" class="btn-group mb-3 w-100" role="group">
-            <button 
-              type="button" 
-              class="btn btn-primary w-100" 
-              @click="abrirModalReserva" 
-              :disabled="yaHaReservado"
-              :title="yaHaReservado ? 'Ya tienes una reserva para esta ruta' : 'Reservar plaza para esta ruta'"
-            >
+          <div v-else-if="props.usuarioAutenticado && props.usuarioAutenticado.rol === 'cliente'"
+            class="btn-group mb-3 w-100" role="group">
+            <button type="button" class="btn btn-primary w-100" @click="abrirModalReserva" :disabled="yaHaReservado"
+              :title="yaHaReservado ? 'Ya tienes una reserva para esta ruta' : 'Reservar plaza para esta ruta'">
               {{ yaHaReservado ? 'Ya reservada' : 'Reservar' }}
             </button>
           </div>
@@ -993,11 +985,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
           SECCIÓN DE USUARIO NO AUTENTICADO
           ========================================== -->
           <div v-else class="btn-group mb-3 w-100" role="group">
-            <button 
-              type="button" 
-              class="btn btn-outline-primary w-100" 
-              @click="mostrarModalLogin"
-            >
+            <button type="button" class="btn btn-outline-primary w-100" @click="mostrarModalLogin">
               Reservar
             </button>
           </div>
@@ -1020,7 +1008,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
             <!-- Fecha -->
             <div class="mb-3">
               <label class="form-label">Fecha</label> <br>
-              <input type="text" class="form-control" id="fechaPicker" v-model="nuevaFecha"    
+              <input type="text" class="form-control" id="fechaPicker" v-model="nuevaFecha"
                 placeholder="Seleccione una fecha" readonly>
             </div>
 
@@ -1055,7 +1043,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
         </div>
       </div>
     </div>
-    
+
     <!-- Modal de Asignar Guía -->
     <div class="modal fade" id="asignarGuiaModal" tabindex="-1" aria-labelledby="asignarGuiaModalLabel">
       <div class="modal-dialog">
@@ -1085,7 +1073,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
         </div>
       </div>
     </div>
-    
+
     <!-- Modal de Confirmación de Eliminación -->
     <div class="modal fade" id="eliminarModal" tabindex="-1" aria-labelledby="eliminarModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
@@ -1109,7 +1097,8 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
     MODALES PARA GUÍAS
     ========================================== -->
     <!-- Modal de Asistentes -->
-    <div class="modal fade" id="asistentesModal" tabindex="-1" aria-labelledby="asistentesModalLabel" aria-hidden="true">
+    <div class="modal fade" id="asistentesModal" tabindex="-1" aria-labelledby="asistentesModalLabel"
+      aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -1137,21 +1126,11 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            <button 
-              type="button" 
-              class="btn btn-success" 
-              @click="abrirPasarLista"
-              v-if="esHoyLaRuta"
-            >
+            <button type="button" class="btn btn-success" @click="abrirPasarLista" v-if="esHoyLaRuta">
               Pasar Lista
             </button>
-            <button 
-              type="button" 
-              class="btn btn-secondary" 
-              disabled
-              v-else
-              title="Solo se puede pasar lista el día de la ruta"
-            >
+            <button type="button" class="btn btn-secondary" disabled v-else
+              title="Solo se puede pasar lista el día de la ruta">
               Pasar Lista
             </button>
           </div>
@@ -1160,7 +1139,8 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
     </div>
 
     <!-- Modal para pasar lista -->
-    <div class="modal fade" id="pasarListaModal" tabindex="-1" aria-labelledby="pasarListaModalLabel" aria-hidden="true">
+    <div class="modal fade" id="pasarListaModal" tabindex="-1" aria-labelledby="pasarListaModalLabel"
+      aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -1173,38 +1153,28 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
               <div v-for="reserva in reservas" :key="reserva.reserva_id" class="list-group-item">
                 <div class="d-flex justify-content-between align-items-center">
                   <div>
-                    <h6 class="mb-0" :class="{ 'text-danger text-decoration-line-through': asistencias[reserva.reserva_id] === false }">
+                    <h6 class="mb-0"
+                      :class="{ 'text-danger text-decoration-line-through': asistencias[reserva.reserva_id] === false }">
                       {{ reserva.usuario_nombre }}
                     </h6>
                     <p class="mb-0 text-muted small">{{ reserva.usuario_email }}</p>
                     <div v-if="asistencias[reserva.reserva_id] === true" class="mt-2">
                       <label class="form-label small">Acompañantes reales:</label>
-                      <input 
-                        type="number" 
-                        class="form-control form-control-sm" 
-                        v-model="asistentesReales[reserva.reserva_id]" 
-                        min="0" 
-                        :max="reserva.num_personas"
-                        style="width: 70px; display: inline-block;"
-                      >
+                      <input type="number" class="form-control form-control-sm"
+                        v-model="asistentesReales[reserva.reserva_id]" min="0" :max="reserva.num_personas"
+                        style="width: 70px; display: inline-block;">
                       <span class="ms-2 small text-muted">de {{ reserva.num_personas }} previstos</span>
                     </div>
                   </div>
                   <div class="btn-group" role="group">
-                    <button 
-                      type="button" 
-                      class="btn btn-sm btn-danger text-white" 
+                    <button type="button" class="btn btn-sm btn-danger text-white"
                       :class="{ 'btn-outline-danger': asistencias[reserva.reserva_id] !== false }"
-                      @click="marcarAsistencia(reserva.reserva_id, false)"
-                    >
+                      @click="marcarAsistencia(reserva.reserva_id, false)">
                       Ausente
                     </button>
-                    <button 
-                      type="button" 
-                      class="btn btn-sm btn-success text-white" 
+                    <button type="button" class="btn btn-sm btn-success text-white"
                       :class="{ 'btn-outline-success': asistencias[reserva.reserva_id] !== true }"
-                      @click="marcarAsistencia(reserva.reserva_id, true)"
-                    >
+                      @click="marcarAsistencia(reserva.reserva_id, true)">
                       Presente
                     </button>
                   </div>
@@ -1236,17 +1206,17 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
           </div>
           <div class="modal-body">
             <p>Por favor, indique cuántas personas asistirán a la ruta:</p>
-            
+
             <div class="alert alert-info" role="alert">
               <i class="bi bi-info-circle-fill me-2"></i>
               La reserva se realizará para el día {{ ruta.fecha }} a las {{ ruta.hora }}.
             </div>
-            
+
             <div class="mb-3">
               <label for="numPersonas" class="form-label">Número de personas</label>
               <div class="d-flex justify-content-center align-items-center mb-3">
                 <div class="btn-group selector-personas">
-                  <button v-for="num in 8" :key="num" type="button" 
+                  <button v-for="num in 8" :key="num" type="button"
                     :class="['btn', numPersonas === num ? 'btn-primary' : 'btn-outline-primary']"
                     @click="numPersonas = num">
                     {{ num }}
@@ -1255,20 +1225,16 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
               </div>
               <small class="form-text text-muted d-block text-center">Máximo 8 personas por reserva</small>
             </div>
-            
+
             <div class="alert alert-warning" v-if="errorReserva">
               {{ errorReserva }}
             </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button 
-              type="button" 
-              class="btn btn-success" 
-              @click="realizarReserva"
-              :disabled="cargandoReserva"
-            >
-              <span v-if="cargandoReserva" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            <button type="button" class="btn btn-success" @click="realizarReserva" :disabled="cargandoReserva">
+              <span v-if="cargandoReserva" class="spinner-border spinner-border-sm me-2" role="status"
+                aria-hidden="true"></span>
               Confirmar Reserva
             </button>
           </div>
@@ -1280,7 +1246,8 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
     MODALES PARA USUARIOS NO AUTENTICADOS
     ========================================== -->
     <!-- Modal de Login Requerido -->
-    <div class="modal fade" id="loginRequeridoModal" tabindex="-1" aria-labelledby="loginRequeridoModalLabel" aria-hidden="true">
+    <div class="modal fade" id="loginRequeridoModal" tabindex="-1" aria-labelledby="loginRequeridoModalLabel"
+      aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">

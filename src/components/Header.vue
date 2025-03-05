@@ -112,7 +112,7 @@ function cerrarSesion() {
 </template>
 
 <style scoped>
-/* Asegúrate de incluir Bootstrap Icons en tu proyecto */
+/* Importar iconos de Bootstraop */
 @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css");
 
 .bg-primary-dark {
