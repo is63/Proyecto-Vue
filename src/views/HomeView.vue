@@ -214,7 +214,7 @@ onMounted(async () => {
           <i class="bi bi-search icono-busqueda"></i>
         </div>
         <button type="button" @click="cambiarTipoBusqueda" class="btn btn-outline-primary rounded-pill ms-3 btn-toggle">
-          <i class="bi" :class="tipoBusqueda === 'fecha' ? 'bi-text-left' : 'bi-calendar3'"></i>
+          <i class="bi" :class="tipoBusqueda === 'fecha' ? 'bi-calendar3' : 'bi-text-left'"></i>
           {{ tipoBusqueda === 'fecha' ? 'Fecha' : 'Nombre/Localidad' }}
         </button>
       </form>

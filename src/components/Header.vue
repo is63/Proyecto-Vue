@@ -19,21 +19,17 @@ function cerrarSesion() {
   <header class="bg-primary-dark text-light sticky-top">
     <nav class="navbar navbar-expand navbar-dark py-2">
       <div class="container-fluid">
-        <!-- Logo y Nombre -->
-        <router-link to="/" class="navbar-brand d-flex align-items-center">
-          <img src="../../img/olimpo.png" class="logo me-2" alt="Logo" />
-          <span class="text-gold fw-bold text-shadow title-responsive">Olé Tours</span>
-        </router-link>
+        <!-- Logo y Nombre (izquierda) -->
+        <div class="navbar-brand-container">
+          <router-link to="/" class="navbar-brand d-flex align-items-center">
+            <img src="../../img/olimpo.png" class="logo me-2" alt="Logo" />
+            <span class="text-gold fw-bold text-shadow title-responsive">Olé Tours</span>
+          </router-link>
+        </div>
 
-        <!-- Menú de navegación siempre visible -->
-        <div class="nav-container ms-auto">
-          <div v-if="usuarioAutenticado" class="d-flex align-items-center">
-            <!-- Nombre de usuario - visible solo en pantallas medianas y grandes -->
-            <span class="me-3 d-none d-md-inline">
-              <span class="fw-bold">{{ usuarioAutenticado.nombre }}</span>
-              <span class="text-gold fw-bold">, {{ usuarioAutenticado.rol }}</span>
-            </span>
-            
+        <!-- Menú de navegación (centro) -->
+        <div class="navigation-container flex-grow-1 d-flex justify-content-center">
+          <div v-if="usuarioAutenticado" class="nav-menu-container">
             <!-- Menú Principal - Adaptativo -->
             <ul class="navbar-nav flex-row">
               <!-- Menú para administradores -->
@@ -89,15 +85,24 @@ function cerrarSesion() {
                   </router-link>
                 </li>
               </template>
-              
-              <!-- Botón de cerrar sesión -->
-              <li class="nav-item mx-1">
-                <button @click="cerrarSesion" class="btn btn-danger btn-sm py-1 logout-btn" title="Cerrar Sesión">
-                  <i class="bi bi-box-arrow-right d-block d-lg-none"></i>
-                  <span class="d-none d-lg-block">Cerrar Sesión</span>
-                </button>
-              </li>
             </ul>
+          </div>
+        </div>
+
+        <!-- Parte derecha: usuario y cerrar sesión o login -->
+        <div class="user-container">
+          <div v-if="usuarioAutenticado" class="d-flex align-items-center">
+            <!-- Nombre de usuario - visible solo en pantallas medianas y grandes -->
+            <span class="me-3 d-none d-md-inline">
+              <span class="fw-bold">{{ usuarioAutenticado.nombre }}</span>
+              <span class="text-gold fw-bold">, {{ usuarioAutenticado.rol }}</span>
+            </span>
+            
+            <!-- Botón de cerrar sesión -->
+            <button @click="cerrarSesion" class="btn btn-danger btn-sm py-1 logout-btn" title="Cerrar Sesión">
+              <i class="bi bi-box-arrow-right d-block d-lg-none"></i>
+              <span class="d-none d-lg-block">Cerrar Sesión</span>
+            </button>
           </div>
           
           <!-- Si no hay usuario autenticado -->
@@ -251,6 +256,84 @@ function cerrarSesion() {
 @media (max-width: 370px) {
   .title-responsive {
     font-size: 1rem;
+  }
+}
+
+/* Ajustes para centrar el menú de navegación */
+.container-fluid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-brand-container, .user-container {
+  min-width: 200px; /* Ancho mínimo para asegurar espacio igual */
+}
+
+.navigation-container {
+  display: flex;
+  justify-content: center !important;
+  width: 100%;
+}
+
+.nav-menu-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.navbar-nav {
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 991.98px) {
+  .navbar-brand-container, .user-container {
+    min-width: 150px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .navbar-brand-container, .user-container {
+    min-width: 100px;
+  }
+}
+
+/* Nuevo estilo para el contenedor de usuario */
+.user-container {
+  min-width: 280px; /* Aumentado de 200px a 280px */
+  display: flex;
+  justify-content: flex-end;
+}
+
+.user-info {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Media queries actualizados */
+@media (max-width: 991.98px) {
+  .navbar-brand-container {
+    min-width: 150px;
+  }
+  .user-container {
+    min-width: 220px; /* Ajustado para pantallas medianas */
+  }
+}
+
+@media (max-width: 767.98px) {
+  .navbar-brand-container {
+    min-width: 100px;
+  }
+  .user-container {
+    min-width: 120px; /* Ajustado para móviles */
+  }
+  
+  /* En móvil, el botón ocupa todo el espacio */
+  .logout-btn i {
+    margin: 0 auto;
   }
 }
 </style>
