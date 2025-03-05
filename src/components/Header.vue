@@ -16,69 +16,96 @@ function cerrarSesion() {
 </script>
 
 <template>
-  <header class="bg-primary-dark text-light">
-    <nav class="navbar navbar-expand-lg navbar-dark py-2">
+  <header class="bg-primary-dark text-light sticky-top">
+    <nav class="navbar navbar-expand navbar-dark py-2">
       <div class="container-fluid">
         <!-- Logo y Nombre -->
         <router-link to="/" class="navbar-brand d-flex align-items-center">
           <img src="../../img/olimpo.png" class="logo me-2" alt="Logo" />
-          <span class="text-gold fs-4 fw-bold text-shadow">Olé Tours</span>
+          <span class="text-gold fs-4 fw-bold text-shadow d-none d-sm-inline">Olé Tours</span>
+          <span class="text-gold fs-4 fw-bold text-shadow d-inline d-sm-none">OT</span>
         </router-link>
 
-        <!-- Contenido colapsable -->
-        <div class="collapse navbar-collapse justify-content-between" id="navbarContent">
-          <!-- Espacio a la izquierda para centrar el menú -->
-          <div class="invisible navbar-brand">
-            <span class="invisible">Espaciador</span>
-          </div>
-
-          <!-- Menú de navegación -->
-          <ul v-if="usuarioAutenticado" class="navbar-nav">
-            <!-- Menú para administradores -->
-            <template v-if="usuarioAutenticado.rol === 'admin'">
-              <li class="nav-item">
-                <router-link class="nav-link btn-custom" to="/">Home</router-link>
-              </li>
-              <li class="nav-item">
-                <router-link class="nav-link btn-custom" to="/gestionusuarios">Gestionar Usuarios</router-link>
-              </li>
-              <li class="nav-item">
-                <router-link class="nav-link btn-custom" to="/crearRuta">Crear Rutas</router-link>
-              </li>
-            </template>
+        <!-- Menú de navegación siempre visible -->
+        <div class="nav-container ms-auto">
+          <div v-if="usuarioAutenticado" class="d-flex align-items-center">
+            <!-- Nombre de usuario - visible solo en pantallas medianas y grandes -->
+            <span class="me-3 d-none d-md-inline">
+              <span class="fw-bold">{{ usuarioAutenticado.nombre }}</span>
+              <span class="text-gold fw-bold">, {{ usuarioAutenticado.rol }}</span>
+            </span>
             
-            <!-- Menú para guías -->
-            <template v-else-if="usuarioAutenticado.rol === 'guia'">
-              <li class="nav-item">
-                <router-link class="nav-link btn-custom" to="/">Home</router-link>
+            <!-- Menú Principal - Adaptativo -->
+            <ul class="navbar-nav flex-row">
+              <!-- Menú para administradores -->
+              <template v-if="usuarioAutenticado.rol === 'admin'">
+                <li class="nav-item mx-1">
+                  <router-link class="nav-link btn-nav-icon" to="/" title="Home">
+                    <i class="bi bi-house-door-fill d-block d-lg-none"></i>
+                    <span class="d-none d-lg-block">Home</span>
+                  </router-link>
+                </li>
+                <li class="nav-item mx-1">
+                  <router-link class="nav-link btn-nav-icon" to="/gestionusuarios" title="Gestionar Usuarios">
+                    <i class="bi bi-people-fill d-block d-lg-none"></i>
+                    <span class="d-none d-lg-block">Gestionar Usuarios</span>
+                  </router-link>
+                </li>
+                <li class="nav-item mx-1">
+                  <router-link class="nav-link btn-nav-icon" to="/crearRuta" title="Crear Rutas">
+                    <i class="bi bi-plus-circle-fill d-block d-lg-none"></i>
+                    <span class="d-none d-lg-block">Crear Rutas</span>
+                  </router-link>
+                </li>
+              </template>
+              
+              <!-- Menú para guías -->
+              <template v-else-if="usuarioAutenticado.rol === 'guia'">
+                <li class="nav-item mx-1">
+                  <router-link class="nav-link btn-nav-icon" to="/" title="Home">
+                    <i class="bi bi-house-door-fill d-block d-lg-none"></i>
+                    <span class="d-none d-lg-block">Home</span>
+                  </router-link>
+                </li>
+                <li class="nav-item mx-1">
+                  <router-link class="nav-link btn-nav-icon" to="/rutasAsignadas" title="Rutas Asignadas">
+                    <i class="bi bi-map-fill d-block d-lg-none"></i>
+                    <span class="d-none d-lg-block">Rutas Asignadas</span>
+                  </router-link>
+                </li>
+              </template>
+              
+              <!-- Menú para clientes -->
+              <template v-else-if="usuarioAutenticado.rol === 'cliente'">
+                <li class="nav-item mx-1">
+                  <router-link class="nav-link btn-nav-icon" to="/" title="Home">
+                    <i class="bi bi-house-door-fill d-block d-lg-none"></i>
+                    <span class="d-none d-lg-block">Home</span>
+                  </router-link>
+                </li>
+                <li class="nav-item mx-1">
+                  <router-link class="nav-link btn-nav-icon" to="/misReservas" title="Mis Reservas">
+                    <i class="bi bi-bookmark-fill d-block d-lg-none"></i>
+                    <span class="d-none d-lg-block">Mis Reservas</span>
+                  </router-link>
+                </li>
+              </template>
+              
+              <!-- Botón de cerrar sesión -->
+              <li class="nav-item mx-1">
+                <button @click="cerrarSesion" class="btn btn-danger btn-sm py-1 logout-btn" title="Cerrar Sesión">
+                  <i class="bi bi-box-arrow-right d-block d-lg-none"></i>
+                  <span class="d-none d-lg-block">Cerrar Sesión</span>
+                </button>
               </li>
-              <li class="nav-item">
-                <router-link class="nav-link btn-custom" to="/rutasAsignadas">Rutas Asignadas</router-link>
-              </li>
-            </template>
-            
-            <!-- Menú para clientes -->
-            <template v-else-if="usuarioAutenticado.rol === 'cliente'">
-              <li class="nav-item">
-                <router-link class="nav-link btn-custom" to="/">Home</router-link>
-              </li>
-              <li class="nav-item">
-                <router-link class="nav-link btn-custom" to="/misReservas">Mis Reservas</router-link>
-              </li>
-            </template>
-          </ul>
-
-          <!-- Botón de Sesión - Separado a la derecha -->
-          <div class="nav-item">
-            <div v-if="usuarioAutenticado" class="d-flex flex-column flex-lg-row align-items-center">
-              <span class="me-lg-3 mb-2 mb-lg-0 text-center">
-                <label class="fw-bold">{{ usuarioAutenticado.nombre }}</label>,
-                <label class="text-gold fw-bold"> {{ usuarioAutenticado.rol }} </label>
-              </span>
-              <button @click="cerrarSesion" class="btn btn-danger">Cerrar Sesión</button>
-            </div>
-            <router-link v-else to="/login" class="nav-link btn-login">Iniciar Sesión</router-link>
+            </ul>
           </div>
+          
+          <!-- Si no hay usuario autenticado -->
+          <router-link v-else to="/login" class="nav-link btn-login">
+            <i class="bi bi-person-fill d-inline d-lg-none me-1"></i>
+            Iniciar Sesión
+          </router-link>
         </div>
       </div>
     </nav>
@@ -86,9 +113,11 @@ function cerrarSesion() {
 </template>
 
 <style scoped>
+/* Asegúrate de incluir Bootstrap Icons en tu proyecto */
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css");
 
 .bg-primary-dark {
-  background-color: #1a1a2e; /* Azul oscuro elegante */
+  background-color: #1a1a2e;
 }
 
 .text-light {
@@ -96,49 +125,55 @@ function cerrarSesion() {
 }
 
 .text-gold {
-  color: #f4a261 !important; /* Dorado elegante */
+  color: #f4a261 !important;
 }
 
 .text-shadow {
-  text-shadow: 1px 1px 2px black;
-}
-
-/* Ajuste del tamaño del header */
-.navbar {
-  height: 70px; /* Reduce la altura */
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 
 /* Logo */
 .logo {
-  width: 50px;
-  height: 50px; /* Altura fija para mejor alineación */
-  object-fit: contain; /* Mantiene la proporción de la imagen */
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
 }
 
-router-link {
-  text-decoration: none !important;
+/* Contenedor principal de navegación */
+.nav-container {
+  display: flex;
+  align-items: center;
 }
 
-/* Estilos de los botones de navegación */
-.btn-custom {
+/* Estilos para botones de navegación */
+.btn-nav-icon {
   color: #f4a261;
   font-weight: 600;
-  font-size: 1.2rem; /* Aumentado el tamaño de fuente */
   transition: all 0.3s ease;
+  text-align: center;
+  padding: 0.4rem 0.7rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.btn-custom:hover {
+.btn-nav-icon:hover {
   color: #ffffff;
   background-color: rgba(244, 162, 97, 0.2);
-  border-radius: 5px;
+}
+
+.btn-nav-icon i {
+  font-size: 1.3rem;
 }
 
 /* Estilo del botón de login */
 .btn-login {
   color: #f4a261;
-  font-size: 1.3em; /* Aumentado el tamaño */
   font-weight: bold;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
 }
 
 .btn-login:hover {
@@ -151,37 +186,56 @@ router-link {
   border: none;
   font-weight: bold;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-danger:hover {
   background-color: #d62828;
 }
 
-/* Update navbar styles */
-.navbar-nav {
-  gap: 2rem;
-  display: flex;
-  align-items: center;
+/* Botón cerrar sesión más pequeño en móviles */
+.logout-btn {
+  min-height: 38px;
 }
 
+.logout-btn i {
+  font-size: 1.3rem;
+}
+
+/* Media queries para mejor adaptación */
 @media (max-width: 991.98px) {
   .navbar-nav {
-    text-align: center;
-    margin: 1rem 0;
+    gap: 0.5rem;
   }
   
-  .nav-item {
-    margin: 0.5rem 0;
-  }
-  
-  .navbar-collapse {
-    padding: 1rem 0;
-    text-align: center;
-  }
-
-  .invisible {
-    display: none;
+  .logo {
+    width: 36px;
+    height: 36px;
   }
 }
 
+@media (max-width: 767.98px) {
+  .navbar-nav {
+    background: none;
+    padding: 0;
+  }
+  
+  .nav-item.mx-1 {
+    margin-left: 0.1rem !important;
+    margin-right: 0.1rem !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .logo {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .text-gold.fs-4 {
+    font-size: 1.1rem !important;
+  }
+}
 </style>
