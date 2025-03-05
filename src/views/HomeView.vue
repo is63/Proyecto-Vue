@@ -220,20 +220,20 @@ onMounted(async () => {
       </form>
     </div>
 
-    <!-- Carrusel -->
+    <!-- Carrusel con altura responsiva -->
     <div id="carouselExample" class="carousel slide border mb-4 bg-white rounded mt-5">
       <div class="carousel-inner">
         <div class="carousel-item active" data-bs-interval="false" data-bs-pause="hover">
-          <img src="/img/Almagro.webp" class="d-block w-100" style="height: 450px; object-fit: cover"
-            alt="Imagen carrusel 1" />
+          <img src="/img/Almagro.webp" class="d-block w-100 carousel-img" 
+               alt="Imagen carrusel 1" />
         </div>
         <div class="carousel-item" data-bs-interval="false" data-bs-pause="hover">
-          <img src="/img/EmbajadaBerlin.webp" class="d-block w-100" style="height: 450px; object-fit: cover"
-            alt="Imagen carrusel 2" />
+          <img src="/img/EmbajadaBerlin.webp" class="d-block w-100 carousel-img" 
+               alt="Imagen carrusel 2" />
         </div>
         <div class="carousel-item" data-bs-interval="false" data-bs-pause="hover">
-          <img src="/img/MezquitaCordoba.webp" class="d-block w-100" style="height: 450px; object-fit: cover"
-            alt="Imagen carrusel 3" />
+          <img src="/img/MezquitaCordoba.webp" class="d-block w-100 carousel-img" 
+               alt="Imagen carrusel 3" />
         </div>
       </div>
       <!-- Controles del carrusel -->
@@ -465,5 +465,23 @@ video {
 
 .video-container {
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Añadir estilo para la imagen del carrusel */
+.carousel-img {
+  height: 450px;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .carousel-img {
+    height: 300px;
+  }
+}
+
+@media (max-width: 576px) {
+  .carousel-img {
+    height: 200px;
+  }
 }
 </style>
