@@ -224,16 +224,13 @@ onMounted(async () => {
     <div id="carouselExample" class="carousel slide border mb-4 bg-white rounded mt-5">
       <div class="carousel-inner">
         <div class="carousel-item active" data-bs-interval="false" data-bs-pause="hover">
-          <img src="/img/Almagro.webp" class="d-block w-100 carousel-img" 
-               alt="Imagen carrusel 1" />
+          <img src="/img/Almagro.webp" class="d-block w-100 carousel-img" alt="Imagen carrusel 1" />
         </div>
         <div class="carousel-item" data-bs-interval="false" data-bs-pause="hover">
-          <img src="/img/EmbajadaBerlin.webp" class="d-block w-100 carousel-img" 
-               alt="Imagen carrusel 2" />
+          <img src="/img/EmbajadaBerlin.webp" class="d-block w-100 carousel-img" alt="Imagen carrusel 2" />
         </div>
         <div class="carousel-item" data-bs-interval="false" data-bs-pause="hover">
-          <img src="/img/MezquitaCordoba.webp" class="d-block w-100 carousel-img" 
-               alt="Imagen carrusel 3" />
+          <img src="/img/MezquitaCordoba.webp" class="d-block w-100 carousel-img" alt="Imagen carrusel 3" />
         </div>
       </div>
       <!-- Controles del carrusel -->
@@ -255,11 +252,8 @@ onMounted(async () => {
             <div class="row g-0">
               <!-- Imagen de la API -->
               <div class="col-md-5 p-3">
-                <img :src="ruta.foto" 
-                     class="img-fluid rounded-start w-100"
-                     style="height: 250px; object-fit: cover" 
-                     :alt="ruta.titulo"
-                     @error="manejarErrorImagen">
+                <img :src="ruta.foto" class="img-fluid rounded-start w-100" style="height: 250px; object-fit: cover"
+                  :alt="ruta.titulo" @error="manejarErrorImagen">
               </div>
               <!-- Contenido de la tarjeta -->
               <div class="col-md-7">
@@ -308,10 +302,8 @@ onMounted(async () => {
                 &laquo;
               </a>
             </li>
-            <li v-for="pagina in totalPaginas" 
-                :key="pagina" 
-                class="page-item"
-                :class="{ active: paginaActual === pagina }">
+            <li v-for="pagina in totalPaginas" :key="pagina" class="page-item"
+              :class="{ active: paginaActual === pagina }">
               <a class="page-link" href="#" @click.prevent="cambiarPagina(pagina)">
                 {{ pagina }}
               </a>
@@ -340,7 +332,7 @@ onMounted(async () => {
         <div class="video-controls mt-4">
           <!-- Contenedor flexible que cambia dirección en móvil -->
           <div class="d-flex flex-column flex-md-row justify-content-center gap-md-3">
-            
+
             <!-- Grupo 1: Controles principales de reproducción -->
             <div class="d-flex justify-content-center gap-2 mb-3 mb-md-0">
               <button class="btn btn-outline-primary control-btn" @click="reiniciar" title="Reiniciar">
@@ -359,7 +351,7 @@ onMounted(async () => {
                 <img src="/img/sin-sonido.png" alt="Silenciar">
               </button>
             </div>
-            
+
             <!-- Grupo 2: Controles de volumen -->
             <div class="d-flex justify-content-center align-items-center gap-2">
               <span class="text-dark volume-label">Volumen</span>
@@ -370,16 +362,15 @@ onMounted(async () => {
                 <img src="/img/altavoz-alto.png" alt="Subir volumen">
               </button>
             </div>
-            
+
           </div>
         </div>
       </div>
-    </div>  
+    </div>
   </div>
 </template>
 
 <style scoped>
-
 .buscador-container {
   max-width: 800px;
   margin: 0 auto;
@@ -499,7 +490,7 @@ video {
 
 /* Estilo para los controles de video */
 .video-player {
-  height: 450px; 
+  height: 450px;
   background-color: black;
   object-fit: contain;
 }
@@ -529,7 +520,7 @@ video {
   .video-player {
     height: 350px;
   }
-  
+
   .control-btn {
     min-width: 46px;
     height: 46px;
@@ -540,7 +531,7 @@ video {
   .video-player {
     height: 250px;
   }
-  
+
   .video-container {
     padding: 15px !important;
   }

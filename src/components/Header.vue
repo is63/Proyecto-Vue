@@ -53,7 +53,7 @@ function cerrarSesion() {
                   </router-link>
                 </li>
               </template>
-              
+
               <!-- Menú para guías -->
               <template v-else-if="usuarioAutenticado.rol === 'guia'">
                 <li class="nav-item mx-1">
@@ -69,7 +69,7 @@ function cerrarSesion() {
                   </router-link>
                 </li>
               </template>
-              
+
               <!-- Menú para clientes -->
               <template v-else-if="usuarioAutenticado.rol === 'cliente'">
                 <li class="nav-item mx-1">
@@ -97,14 +97,14 @@ function cerrarSesion() {
               <span class="fw-bold">{{ usuarioAutenticado.nombre }}</span>
               <span class="text-gold fw-bold">, {{ usuarioAutenticado.rol }}</span>
             </span>
-            
+
             <!-- Botón de cerrar sesión -->
             <button @click="cerrarSesion" class="btn btn-danger btn-sm py-1 logout-btn" title="Cerrar Sesión">
               <i class="bi bi-box-arrow-right d-block d-lg-none"></i>
               <span class="d-none d-lg-block">Cerrar Sesión</span>
             </button>
           </div>
-          
+
           <!-- Si no hay usuario autenticado -->
           <router-link v-else to="/login" class="nav-link btn-login">
             <i class="bi bi-person-fill d-inline d-lg-none me-1"></i>
@@ -133,7 +133,7 @@ function cerrarSesion() {
 }
 
 .text-shadow {
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* Logo */
@@ -213,7 +213,7 @@ function cerrarSesion() {
   .navbar-nav {
     gap: 0.5rem;
   }
-  
+
   .logo {
     width: 36px;
     height: 36px;
@@ -225,7 +225,7 @@ function cerrarSesion() {
     background: none;
     padding: 0;
   }
-  
+
   .nav-item.mx-1 {
     margin-left: 0.1rem !important;
     margin-right: 0.1rem !important;
@@ -237,7 +237,7 @@ function cerrarSesion() {
     width: 32px;
     height: 32px;
   }
-  
+
   .text-gold.fs-4 {
     font-size: 1.1rem !important;
   }
@@ -266,8 +266,10 @@ function cerrarSesion() {
   justify-content: space-between;
 }
 
-.navbar-brand-container, .user-container {
-  min-width: 200px; /* Ancho mínimo para asegurar espacio igual */
+.navbar-brand-container,
+.user-container {
+  min-width: 200px;
+  /* Ancho mínimo para asegurar espacio igual */
 }
 
 .navigation-container {
@@ -288,20 +290,25 @@ function cerrarSesion() {
 }
 
 @media (max-width: 991.98px) {
-  .navbar-brand-container, .user-container {
+
+  .navbar-brand-container,
+  .user-container {
     min-width: 150px;
   }
 }
 
 @media (max-width: 767.98px) {
-  .navbar-brand-container, .user-container {
+
+  .navbar-brand-container,
+  .user-container {
     min-width: 100px;
   }
 }
 
 /* Nuevo estilo para el contenedor de usuario */
 .user-container {
-  min-width: 280px; /* Aumentado de 200px a 280px */
+  min-width: 280px;
+  /* Aumentado de 200px a 280px */
   display: flex;
   justify-content: flex-end;
 }
@@ -318,8 +325,10 @@ function cerrarSesion() {
   .navbar-brand-container {
     min-width: 150px;
   }
+
   .user-container {
-    min-width: 220px; /* Ajustado para pantallas medianas */
+    min-width: 220px;
+    /* Ajustado para pantallas medianas */
   }
 }
 
@@ -327,10 +336,12 @@ function cerrarSesion() {
   .navbar-brand-container {
     min-width: 100px;
   }
+
   .user-container {
-    min-width: 120px; /* Ajustado para móviles */
+    min-width: 120px;
+    /* Ajustado para móviles */
   }
-  
+
   /* En móvil, el botón ocupa todo el espacio */
   .logout-btn i {
     margin: 0 auto;

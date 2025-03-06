@@ -72,7 +72,7 @@ const PaginasTotales = computed(() => Math.ceil(TotalUsuarios.value / LimiteUsua
 
 const datosPaginacion = computed(() => {
   const inicio = (PaginaActual.value - 1) * LimiteUsuarios.value;
-  const final  = inicio + LimiteUsuarios.value;
+  const final = inicio + LimiteUsuarios.value;
   return datos.value.slice(inicio, final);
 });
 

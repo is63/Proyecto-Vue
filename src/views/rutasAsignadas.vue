@@ -45,9 +45,9 @@ async function obtenerRutasAsignadas() {
       throw new Error("Error al cargar las asignaciones");
     }
     const asignaciones = await respuestaAsignaciones.json();
-    
+
     // Filtrar las asignaciones del guía actual
-    const asignacionesGuia = asignaciones.filter(asig => 
+    const asignacionesGuia = asignaciones.filter(asig =>
       Number(asig.guia_id) === Number(props.usuarioAutenticado.id)
     );
 
@@ -57,8 +57,8 @@ async function obtenerRutasAsignadas() {
         throw new Error("Error al cargar las rutas");
       }
       const todasRutas = await respuestaRutas.json();
-      
-      rutas.value = todasRutas.filter(ruta => 
+
+      rutas.value = todasRutas.filter(ruta =>
         asignacionesGuia.some(asig => Number(asig.ruta_id) === Number(ruta.id))
       );
     } else {
@@ -129,10 +129,8 @@ onMounted(() => {
                 &laquo;
               </a>
             </li>
-            <li v-for="pagina in totalPaginas" 
-                :key="pagina" 
-                class="page-item"
-                :class="{ active: paginaActual === pagina }">
+            <li v-for="pagina in totalPaginas" :key="pagina" class="page-item"
+              :class="{ active: paginaActual === pagina }">
               <a class="page-link" href="#" @click.prevent="cambiarPagina(pagina)">
                 {{ pagina }}
               </a>

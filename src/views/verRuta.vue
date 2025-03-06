@@ -126,7 +126,7 @@ const valoraciones = ref([]);
 // Añadir esta función para formatear fechas
 function formatearFecha(fechaStr) {
   if (!fechaStr) return '';
-  
+
   const fecha = new Date(fechaStr);
   return fecha.toLocaleDateString('es-ES', {
     year: 'numeric',
@@ -194,15 +194,15 @@ async function cargarDatos() {
     if (ruta.value.latitud && ruta.value.longitud) {
       inicializarMapa(ruta.value.latitud, ruta.value.longitud);
     }
-    
+
     // 6. Cargar las valoraciones de la ruta
     await cargarValoraciones();
-    
+
     // Verificar si el usuario ya ha valorado esta ruta
     if (props.usuarioAutenticado) {
       await verificarSiYaValoro();
     }
-    
+
   } catch (err) {
     console.error("Error:", err);
     error.value = `No se pudieron cargar los datos de la ruta. ${err.message}`;
@@ -875,18 +875,18 @@ const yaHaValorado = ref(false);
 // Comprueba si la ruta ya pasó (para habilitar valoraciones)
 const rutaYaPaso = computed(() => {
   if (!ruta.value?.fecha) return false;
-  
+
   const fechaRuta = new Date(ruta.value.fecha);
   const hoy = new Date();
-  
+
   // Comparar considerando año, mes y día
   if (fechaRuta.getFullYear() < hoy.getFullYear()) return true;
-  if (fechaRuta.getFullYear() === hoy.getFullYear() && 
-      fechaRuta.getMonth() < hoy.getMonth()) return true;
-  if (fechaRuta.getFullYear() === hoy.getFullYear() && 
-      fechaRuta.getMonth() === hoy.getMonth() && 
-      fechaRuta.getDate() < hoy.getDate()) return true;
-  
+  if (fechaRuta.getFullYear() === hoy.getFullYear() &&
+    fechaRuta.getMonth() < hoy.getMonth()) return true;
+  if (fechaRuta.getFullYear() === hoy.getFullYear() &&
+    fechaRuta.getMonth() === hoy.getMonth() &&
+    fechaRuta.getDate() < hoy.getDate()) return true;
+
   return false;
 });
 
@@ -898,7 +898,7 @@ const puedeValorar = computed(() => {
 // Función para verificar si el usuario ya ha valorado esta ruta
 async function verificarSiYaValoro() {
   if (!props.usuarioAutenticado) return;
-  
+
   try {
     const response = await fetch(`http://localhost/freetours/api.php/valoraciones?ruta_id=${props.id}&user_id=${props.usuarioAutenticado.id}`);
     if (!response.ok) {
@@ -916,16 +916,16 @@ async function enviarValoracion() {
   try {
     enviandoValoracion.value = true;
     errorValoracion.value = '';
-    
+
     // Validar datos
     if (nuevaValoracion.value.puntuacion < 1 || nuevaValoracion.value.puntuacion > 5) {
       throw new Error('La puntuación debe estar entre 1 y 5 estrellas');
     }
-    
+
     if (!nuevaValoracion.value.comentario.trim()) {
       throw new Error('El comentario no puede estar vacío');
     }
-    
+
     // Preparar datos para enviar
     const datosValoracion = {
       user_id: props.usuarioAutenticado.id,
@@ -933,7 +933,7 @@ async function enviarValoracion() {
       puntuacion: nuevaValoracion.value.puntuacion,
       comentario: nuevaValoracion.value.comentario
     };
-    
+
     // Enviar la valoración
     const response = await fetch('http://localhost/freetours/api.php/valoraciones', {
       method: 'POST',
@@ -942,15 +942,15 @@ async function enviarValoracion() {
       },
       body: JSON.stringify(datosValoracion)
     });
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Error al enviar valoración: ${response.status} - ${errorText}`);
     }
-    
+
     // Cerrar formulario y actualizar valoraciones
     mostrarFormularioValoracion.value = false;
-    
+
     // Mostrar mensaje de éxito
     Swal.fire({
       title: '¡Gracias por tu valoración!',
@@ -958,17 +958,17 @@ async function enviarValoracion() {
       icon: 'success',
       confirmButtonColor: '#28a745'
     });
-    
+
     // Actualizar las valoraciones
     await cargarValoraciones();
-    
+
     // Actualizar estado de valoración del usuario
     yaHaValorado.value = true;
-    
+
   } catch (error) {
     console.error("Error al enviar valoración:", error);
     errorValoracion.value = error.message;
-    
+
     Swal.fire({
       title: 'Error',
       text: errorValoracion.value,
@@ -1124,12 +1124,9 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
           ========================================== -->
           <div v-else-if="props.usuarioAutenticado && props.usuarioAutenticado.rol === 'cliente'"
             class="btn-group mb-3 w-100" role="group">
-            <button type="button" class="btn w-100" 
-              :class="[
-                yaHaReservado ? (rutaYaPaso ? 'btn-success' : 'btn-primary') : 'btn-primary'
-              ]"
-              @click="abrirModalReserva" 
-              :disabled="yaHaReservado"
+            <button type="button" class="btn w-100" :class="[
+              yaHaReservado ? (rutaYaPaso ? 'btn-success' : 'btn-primary') : 'btn-primary'
+            ]" @click="abrirModalReserva" :disabled="yaHaReservado"
               :title="yaHaReservado ? (rutaYaPaso ? 'Has completado esta ruta' : 'Ya tienes una reserva para esta ruta') : 'Reservar plaza para esta ruta'">
               {{ yaHaReservado ? (rutaYaPaso ? 'Completada' : 'Ya reservada') : 'Reservar' }}
             </button>
@@ -1149,17 +1146,15 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
 
     <!-- Nueva sección de valoraciones en tarjetas -->
     <div class="container mt-5 mb-5">
-    <hr>
+      <hr>
       <h2 class="text-center mb-4">Valoraciones</h2>
-      
+
       <!-- Botón de añadir valoración -->
       <div class="text-center mb-4" v-if="props.usuarioAutenticado && puedeValorar">
-        <button v-if="!mostrarFormularioValoracion" 
-                @click="mostrarFormularioValoracion = true" 
-                class="btn btn-primary">
+        <button v-if="!mostrarFormularioValoracion" @click="mostrarFormularioValoracion = true" class="btn btn-primary">
           <i class="bi bi-star-fill me-2"></i>Añadir mi valoración
         </button>
-        
+
         <!-- Formulario de valoración -->
         <div v-if="mostrarFormularioValoracion" class="card shadow-sm mx-auto" style="max-width: 600px;">
           <div class="card-header d-flex justify-content-between align-items-center bg-light">
@@ -1172,32 +1167,31 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
               <label class="form-label">Puntuación</label>
               <div class="star-rating d-flex justify-content-center">
                 <template v-for="star in 5" :key="`star-${star}`">
-                  <button type="button" 
-                          class="btn btn-link p-0 me-2"
-                          @click="nuevaValoracion.puntuacion = star">
-                    <i class="bi" 
-                       :class="star <= nuevaValoracion.puntuacion ? 'bi-star-fill text-warning' : 'bi-star text-muted'"
-                       style="font-size: 2rem;"></i>
+                  <button type="button" class="btn btn-link p-0 me-2" @click="nuevaValoracion.puntuacion = star">
+                    <i class="bi"
+                      :class="star <= nuevaValoracion.puntuacion ? 'bi-star-fill text-warning' : 'bi-star text-muted'"
+                      style="font-size: 2rem;"></i>
                   </button>
                 </template>
               </div>
             </div>
-            
+
             <!-- Comentario -->
             <div class="mb-3">
               <label for="comentario" class="form-label">Tu comentario</label>
-              <textarea class="form-control" id="comentario" v-model="nuevaValoracion.comentario" rows="3" 
-                        placeholder="Cuéntanos tu experiencia en esta ruta..."></textarea>
+              <textarea class="form-control" id="comentario" v-model="nuevaValoracion.comentario" rows="3"
+                placeholder="Cuéntanos tu experiencia en esta ruta..."></textarea>
             </div>
-            
+
             <!-- Error -->
             <div v-if="errorValoracion" class="alert alert-danger">
               {{ errorValoracion }}
             </div>
-            
+
             <!-- Botones de acción -->
             <div class="text-center mt-4">
-              <button type="button" class="btn btn-secondary me-2" @click="mostrarFormularioValoracion = false">Cancelar</button>
+              <button type="button" class="btn btn-secondary me-2"
+                @click="mostrarFormularioValoracion = false">Cancelar</button>
               <button type="button" class="btn btn-success" @click="enviarValoracion" :disabled="enviandoValoracion">
                 <span v-if="enviandoValoracion" class="spinner-border spinner-border-sm me-2" role="status"></span>
                 Enviar valoración
@@ -1206,7 +1200,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
           </div>
         </div>
       </div>
-      
+
       <!-- Mensaje cuando ya valoró -->
       <div class="text-center mb-4" v-else-if="props.usuarioAutenticado && yaHaReservado && rutaYaPaso && yaHaValorado">
         <div class="alert alert-success">
@@ -1214,7 +1208,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
           Ya has valorado esta ruta. ¡Gracias por tu opinión!
         </div>
       </div>
-      
+
       <div class="row" v-if="valoraciones && valoraciones.length > 0">
         <!-- Máximo 3 tarjetas por fila usando col-md-4 -->
         <div class="col-12 col-md-6 col-lg-4 mb-4" v-for="(valoracion, index) in valoraciones" :key="index">
@@ -1237,7 +1231,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
           </div>
         </div>
       </div>
-      
+
       <!-- Mensaje cuando no hay valoraciones -->
       <div class="text-center p-4" v-else>
         <div class="empty-rating-container p-5 rounded">
@@ -1537,6 +1531,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
 h1 {
   font-size: 3rem;
 }
+
 .selector-personas .btn {
   min-width: 40px;
   border-radius: 0;
@@ -1565,12 +1560,12 @@ h1 {
 /* Estilos para la sección de valoraciones */
 .valoracion-card {
   transition: all 0.3s ease;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .valoracion-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
 }
 
 .rating-badge {
@@ -1602,7 +1597,7 @@ h1 {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .valoracion-card .card-header .rating-badge {
     margin-bottom: 0.5rem;
   }

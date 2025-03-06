@@ -56,8 +56,8 @@ async function obtenerGuias() {
       if (!rutaNueva.value.fecha) return true;
 
       // Contar cuántas rutas tiene el guía en la fecha seleccionada
-      const rutasDelGuia = rutas.filter(ruta => 
-        ruta.guia_id === guia.id && 
+      const rutasDelGuia = rutas.filter(ruta =>
+        ruta.guia_id === guia.id &&
         ruta.fecha === formatearFecha(rutaNueva.value.fecha)
       );
 
@@ -106,7 +106,7 @@ async function crearRuta() {
       timer: 2500,
       timerProgressBar: true,
       color: "red",
-      
+
     });
     return;
   }
@@ -156,7 +156,7 @@ async function crearRuta() {
       confirmButtonColor: '#232342',
       timer: 2500,
       timerProgressBar: true,
-      color: "green", 
+      color: "green",
     }).then(() => {
       router.push('/');
     });
@@ -178,7 +178,7 @@ function inicializarMapa() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
 
-  map.on('click', function(e) {
+  map.on('click', function (e) {
     if (marker) {
       map.removeLayer(marker);
     }
@@ -271,14 +271,15 @@ onMounted(() => {
         <input type="text" class="form-control" id="direccion" @change="buscarDireccion($event.target.value)">
       </div>
       <div id="map" class="estilo-mapa mb-3"></div>
-      <button :class="['btn', 'w-100', esFormularioValido ? 'btn-success' : 'btn-danger']" type="submit" :disabled="botonDeshabilitado">Crear Ruta</button>
+      <button :class="['btn', 'w-100', esFormularioValido ? 'btn-success' : 'btn-danger']" type="submit"
+        :disabled="botonDeshabilitado">Crear Ruta</button>
     </form>
 
     <!-- Modal -->
     <div class="modal fade" id="resultadoModal" tabindex="-1" aria-labelledby="resultadoModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header" :class="{'bg-success': modalExito, 'bg-danger': !modalExito}">
+          <div class="modal-header" :class="{ 'bg-success': modalExito, 'bg-danger': !modalExito }">
             <h5 class="modal-title" id="resultadoModalLabel">{{ modalExito ? 'Éxito' : 'Error' }}</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -296,7 +297,8 @@ onMounted(() => {
 
 <style scoped>
 .container {
-  max-width: 800px; /* Aumenta el ancho del contenedor */
+  max-width: 800px;
+  /* Aumenta el ancho del contenedor */
 }
 
 h1 {
@@ -306,7 +308,8 @@ h1 {
 
 .form-label {
   font-weight: bold;
-  color: #232342; /* Color acorde al proyecto */
+  color: #232342;
+  /* Color acorde al proyecto */
 }
 
 .form-control {
@@ -314,14 +317,16 @@ h1 {
 }
 
 .btn-primary {
-  background-color: #1a1a2e; /* Azul oscuro elegante */
+  background-color: #1a1a2e;
+  /* Azul oscuro elegante */
   border: none;
   font-weight: bold;
   transition: all 0.3s ease;
 }
 
 .btn-primary:hover {
-  background-color: #232342; /* Color acorde al proyecto */
+  background-color: #232342;
+  /* Color acorde al proyecto */
 }
 
 .estilo-mapa {
