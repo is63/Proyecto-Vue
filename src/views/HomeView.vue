@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import { useRouter } from "vue-router"; 
+import { useRouter } from "vue-router";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
@@ -82,7 +82,7 @@ function cambiarPagina(pagina) {
     setTimeout(() => {
       window.scrollTo({
         top: 0,
-        behavior: 'smooth' 
+        behavior: 'smooth'
       });
     }, 100);
   }
@@ -317,9 +317,12 @@ onMounted(async () => {
           </ul>
         </nav>
       </div>
-      <p v-else class="text-center text-muted">
-        No se encontraron rutas.
+      <p v-else class="text-center text-muted mt-5 ms-5">
+        <span class="h1 text-danger">No se encontraron rutas.</span>
       </p>
+      <span class="d-flex justify-content-center align-content-center">
+        <img src="https://img.freepik.com/vector-premium/persona-confundida-mirando-mapa-desinformacion-lleno-burbujas-desinformaciocion-muertos_216520-73455.jpg"  width="50%">
+      </span>
     </div>
 
     <!-- Video -->
