@@ -153,7 +153,7 @@ async function cargarValoraciones() {
 // Carga todos los datos necesarios para mostrar la ruta
 async function cargarDatos() {
   try {
-    // 1. Carga datos de la ruta actual
+    // Carga datos de la ruta actual
     const respuestaRuta = await fetch(`http://localhost/freetours/api.php/rutas?id=${props.id}`);
     if (!respuestaRuta.ok) {
       throw new Error(`Error al cargar la ruta: ${respuestaRuta.status} ${respuestaRuta.statusText}`);
@@ -165,14 +165,14 @@ async function cargarDatos() {
       router.push("/"); // Si la ruta no existe, redirigir al inicio
     }
 
-    // 2. Carga datos de las asignaciones de guías
+    // Carga datos de las asignaciones de guías
     const respuestaAsignaciones = await fetch("http://localhost/freetours/api.php/asignaciones");
     if (!respuestaAsignaciones.ok) {
       throw new Error(`Error al cargar las asignaciones: ${respuestaAsignaciones.status}`);
     }
     const asignaciones = await respuestaAsignaciones.json();
 
-    // 3. Carga la lista de todos los guías 
+    // Carga la lista de todos los guías 
     const respuestaGuias = await fetch("http://localhost/freetours/api.php/usuarios");
     if (!respuestaGuias.ok) {
       throw new Error(`Error al cargar los guías: ${respuestaGuias.status} ${respuestaGuias.statusText}`);
@@ -180,7 +180,7 @@ async function cargarDatos() {
     const datosGuias = await respuestaGuias.json();
     guias.value = datosGuias.filter(usuario => usuario.rol === "guia");
 
-    // 4. Identifica el guía asignado a esta ruta
+    // Identifica el guía asignado a esta ruta
     const asignacionActual = asignaciones.find(asig => asig.ruta_id == props.id);
     if (asignacionActual) {
       // Buscar el nombre del guía en la lista de guías
@@ -190,12 +190,12 @@ async function cargarDatos() {
       asignacionGuia.value = null;
     }
 
-    // 5. Inicializar el mapa si la ruta tiene coordenadas
+    // Inicializar el mapa si la ruta tiene coordenadas
     if (ruta.value.latitud && ruta.value.longitud) {
       inicializarMapa(ruta.value.latitud, ruta.value.longitud);
     }
 
-    // 6. Cargar las valoraciones de la ruta
+    // Cargar las valoraciones de la ruta
     await cargarValoraciones();
 
     // Verificar si el usuario ya ha valorado esta ruta
@@ -286,9 +286,6 @@ async function cargarGuiasParaDuplicar() {
   }
 }
 
-// ==========================================
-// FUNCIONES PARA EL MAPA
-// ==========================================
 
 // Inicializa el mapa Leaflet con la ubicación de la ruta
 function inicializarMapa(latitud, longitud) {
@@ -344,21 +341,21 @@ async function realizarReserva() {
     cargandoReserva.value = true;
     errorReserva.value = "";
 
-    // 1. Verificar autenticación del usuario
+    // Verificar autenticación del usuario
     if (!props.usuarioAutenticado) {
       throw new Error('Debe iniciar sesión para realizar una reserva');
     }
 
     console.log("Datos del usuario autenticado:", props.usuarioAutenticado);
 
-    // 2. Obtener el email del usuario autenticado
+    // Obtener el email del usuario autenticado
     const email = props.usuarioAutenticado.email;
 
     if (!email) {
       throw new Error('No se pudo obtener el email del usuario');
     }
 
-    // 3. Verificar que no exista ya una reserva para este cliente
+    // Verificar que no exista ya una reserva para este cliente
     const clienteId = props.usuarioAutenticado.id;
 
     const yaReservada = reservas.value.some(reserva =>
@@ -371,7 +368,7 @@ async function realizarReserva() {
       throw new Error('Ya tienes una reserva para esta ruta. No puedes reservar dos veces.');
     }
 
-    // 4. Preparar datos de la reserva para enviar a la API
+    // Preparar datos de la reserva para enviar a la API
     const datosReserva = {
       email: email,
       ruta_id: parseInt(props.id),
@@ -380,7 +377,7 @@ async function realizarReserva() {
 
     console.log("Datos a enviar para la reserva:", datosReserva);
 
-    // 5. Realizar la petición a la API
+    // Realizar la petición a la API
     const response = await fetch('http://localhost/freetours/api.php/reservas', {
       method: 'POST',
       headers: {
@@ -1044,9 +1041,6 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
 
 <template>
   <div class="container-fluid mb-4 px-0">
-    <!-- ==========================================
-    SECCIÓN COMÚN - VISIBLE PARA TODOS LOS USUARIOS
-    ========================================== -->
     <!-- Imagen principal -->
     <div class="w-100">
       <img :src="urlImagen" :alt="ruta.titulo" class="img-fluid w-100 rounded" style="height: 400px; object-fit: cover"
@@ -1058,7 +1052,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
 
     <div class="container">
       <div class="row justify-content-between">
-        <!-- Parte izquierda: Descripción y Mapa (común para todos) -->
+        <!-- Parte izquierda: Descripción y Mapa -->
         <div class="col-md-7 pe-md-5">
           <div class="mb-4 descripcion-container">
             <p class="descripcion">{{ ruta.descripcion }}</p>
@@ -1088,15 +1082,13 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
             <p class="detalle">{{ ruta.hora }}</p>
           </div>
 
-          <!-- Asistentes - Visible para todos -->
+          <!-- Asistentes -->
           <div class="mb-3">
             <p class="h4 fw-bold text-decoration-underline text-secondary">Asistentes</p>
             <p class="detalle">{{ ruta.asistentes || 2 }}</p>
           </div>
 
-          <!-- ==========================================
-          SECCIÓN DE ADMINISTRADOR
-          ========================================== -->
+          <!-- SECCIÓN DE ADMINISTRADOR -->
           <div v-if="props.usuarioAutenticado && props.usuarioAutenticado.rol === 'admin'" class="btn-group mb-3 w-100"
             role="group">
             <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#duplicarModal">
@@ -1111,18 +1103,14 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
             </button>
           </div>
 
-          <!-- ==========================================
-          SECCIÓN DE GUÍA
-          ========================================== -->
+          <!-- SECCIÓN DE GUÍA -->
           <div v-else-if="esGuiaAsignado" class="btn-group mb-3 w-100" role="group">
             <button type="button" class="btn btn-info text-white w-100" @click="verAsistentes">
               Ver Asistentes
             </button>
           </div>
 
-          <!-- ==========================================
-          SECCIÓN DE CLIENTE
-          ========================================== -->
+          <!-- SECCIÓN DE CLIENTE -->
           <div v-else-if="props.usuarioAutenticado && props.usuarioAutenticado.rol === 'cliente'"
             class="btn-group mb-3 w-100" role="group">
             <button type="button" class="btn w-100" :class="[
@@ -1133,9 +1121,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
             </button>
           </div>
 
-          <!-- ==========================================
-          SECCIÓN DE USUARIO NO AUTENTICADO
-          ========================================== -->
+          <!-- SECCIÓN DE USUARIO NO AUTENTICADO -->
           <div v-else class="btn-group mb-3 w-100" role="group">
             <button type="button" class="btn btn-outline-primary w-100" @click="mostrarModalLogin">
               Reservar

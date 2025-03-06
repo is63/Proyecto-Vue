@@ -31,6 +31,11 @@ function cambiarPagina(pagina) {
   }
 }
 
+function manejarErrorImagen(e) {
+  //Mostrar una imagen de reemplazo si la imagen no se puede cargar
+  e.target.src = 'https://placehold.co/600x400?text=Imagen+no+disponible';
+}
+
 // Función para obtener las rutas asignadas al guía
 async function obtenerRutasAsignadas() {
   try {
@@ -99,8 +104,8 @@ onMounted(() => {
             <div class="row g-0">
               <!-- Imagen de la ruta -->
               <div class="col-md-5 p-3">
-                <img :src="'/img/' + ruta.foto" class="img-fluid rounded-start w-100"
-                  style="height: 250px; object-fit: cover" alt="Imagen de la ruta" />
+                <img :src="ruta.foto" class="img-fluid rounded-start w-100"
+                  style="height: 250px; object-fit: cover" alt="Imagen de la ruta" @error="manejarErrorImagen"/>
               </div>
               <!-- Contenido de la tarjeta -->
               <div class="col-md-7">

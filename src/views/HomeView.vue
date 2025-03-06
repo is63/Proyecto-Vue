@@ -248,7 +248,7 @@ onMounted(async () => {
     <!-- Mensaje de error y no hay rutas -->
     <div v-if="error" class="alert alert-danger text-center mt-5">{{ error }}</div>
     <div v-else>
-      <!-- Tarjetas de rutas obtenidas desde la API -->
+      <!-- Tarjetas de rutas  -->
       <div v-if="filtrarRutas().length > 0" class="row g-4 mb-4 mt-5">
         <div v-for="(ruta, index) in rutasPaginadas" :key="index" class="col-12">
           <div class="card h-100 shadow-sm mb-4">
