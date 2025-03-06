@@ -255,8 +255,8 @@ onMounted(() => {
             </div>
             
             <div class="d-grid gap-2">
-              <button class="btn btn-primary btn-sm" @click="verRuta(reserva.ruta_id)">
-                Ver Detalles
+              <button class="btn btn-success btn-sm" @click="verRuta(reserva.ruta_id)">
+                Valorar
               </button>
               
               <!-- Solo mostrar para reservas futuras -->
