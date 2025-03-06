@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import { useRouter } from "vue-router"; // Importamos useRouter para redirigir
+import { useRouter } from "vue-router"; 
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
@@ -78,16 +78,23 @@ const totalPaginas = computed(() => Math.ceil(filtrarRutas().length / rutasPorPa
 function cambiarPagina(pagina) {
   if (pagina >= 1 && pagina <= totalPaginas.value) {
     paginaActual.value = pagina;
+    //Time Out para que cargue la paginacion antes 
+    setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth' 
+      });
+    }, 100);
   }
 }
 
 
 function manejarErrorImagen(e) {
-  //Mostras una imagen de reemplazo si la imagen no se puede cargar
+  //Mostrar una imagen de reemplazo si la imagen no se puede cargar
   e.target.src = 'https://placehold.co/600x400?text=Imagen+no+disponible';
 }
 
-// Update the obtenerRutas function to use URLs directly
+// Función para obtener las rutas desde la API
 async function obtenerRutas() {
   try {
     const respuesta = await fetch(`${URL_BASE_API}/rutas`);
@@ -101,7 +108,7 @@ async function obtenerRutas() {
         titulo: ruta.titulo,
         localidad: ruta.localidad,
         descripcion: ruta.descripcion,
-        foto: ruta.foto, // Using the URL directly from the API
+        foto: ruta.foto,
         fecha: ruta.fecha,
         valoraciones: [],
       }));
@@ -122,11 +129,11 @@ async function obtenerValoraciones() {
 
     const data = await response.json();
 
-    // Verificamos que los datos sean un array
+    // Verificar que los datos sean un array
     if (Array.isArray(data)) {
       valoraciones.value = data;
 
-      // Asignamos las valoraciones a las rutas correspondientes
+      // Asignar las valoraciones a las rutas correspondientes
       rutas.value.forEach((ruta) => {
         ruta.valoraciones = valoraciones.value.filter(
           (valoracion) => valoracion.ruta_id == ruta.id
@@ -139,11 +146,6 @@ async function obtenerValoraciones() {
     console.error("Error:", err);
     error.value = "No se pudieron cargar las valoraciones. Inténtalo más tarde.";
   }
-}
-
-// Función para redirigir a la página de ver ruta
-function verRuta(id) {
-  enrutador.push(`/ruta/${id}`); // Redirigimos a la ruta dinámica
 }
 
 // Función modificada para filtrar rutas según la búsqueda
@@ -258,10 +260,9 @@ onMounted(async () => {
               <!-- Contenido de la tarjeta -->
               <div class="col-md-7">
                 <div class="card-body">
-                  <!-- Titulo como enlace -->
-                  <a href="#" @click.prevent="verRuta(ruta.id)" class="text-decoration-none">
+                  <router-link :to="`/ruta/${ruta.id}`" class="text-decoration-none">
                     <h3 class="card-title text-primary">{{ ruta.titulo }}</h3>
-                  </a>
+                  </router-link>
                   <p class="card-text">{{ ruta.descripcion }}</p>
                   <p class="card-text">
                     <small class="text-muted">{{ ruta.localidad }}</small>
@@ -328,12 +329,12 @@ onMounted(async () => {
           <source src="/video/crush.mp4" type="video/mp4">
         </video>
 
-        <!-- Controles de video reorganizados -->
+        <!-- Controles de video -->
         <div class="video-controls mt-4">
-          <!-- Contenedor flexible que cambia dirección en móvil -->
+
           <div class="d-flex flex-column flex-md-row justify-content-center gap-md-3">
 
-            <!-- Grupo 1: Controles principales de reproducción -->
+            <!-- Controles principales -->
             <div class="d-flex justify-content-center gap-2 mb-3 mb-md-0">
               <button class="btn btn-outline-primary control-btn" @click="reiniciar" title="Reiniciar">
                 <img src="/img/atrasdoble.png" alt="Reiniciar">
@@ -352,7 +353,7 @@ onMounted(async () => {
               </button>
             </div>
 
-            <!-- Grupo 2: Controles de volumen -->
+            <!-- Controles de volumen -->
             <div class="d-flex justify-content-center align-items-center gap-2">
               <span class="text-dark volume-label">Volumen</span>
               <button class="btn btn-outline-primary control-btn" @click="bajarVolumen" title="Bajar volumen">
@@ -396,7 +397,6 @@ input[type="date"] {
   font-family: inherit;
 }
 
-/* Estilo para el botón cuando está en modo fecha */
 .btn-outline-primary.active {
   background-color: #0d6efd;
   color: white;
@@ -404,7 +404,6 @@ input[type="date"] {
 
 .btn-toggle {
   width: 160px;
-  /* Ancho fijo */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -412,10 +411,8 @@ input[type="date"] {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  /* Espacio entre el icono y el texto */
 }
 
-/* Añadir estilo para el input de fecha */
 .input-busqueda {
   background-color: white;
 }
@@ -438,7 +435,6 @@ video {
   min-width: 40px;
 }
 
-/* Add to the existing <style> section */
 .pagination {
   margin-bottom: 2rem;
 }
@@ -460,7 +456,6 @@ video {
   border-color: #dee2e6;
 }
 
-/* Add to the existing <style> section */
 .video-section {
   max-width: 1000px;
   margin: 0 auto;
@@ -515,7 +510,7 @@ video {
   font-weight: 500;
 }
 
-/* Estilo para el menu de video ahora responsive */
+/* Menu de video 2, Ahora es responsive */
 @media (max-width: 768px) {
   .video-player {
     height: 350px;

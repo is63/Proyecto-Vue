@@ -981,6 +981,7 @@ async function enviarValoracion() {
 }
 
 onMounted(() => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   cargarDatos().then(() => {
     cargarGuias(); // Cargar guías después de tener los datos de la ruta
     cargarReservas();
