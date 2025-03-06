@@ -19,17 +19,13 @@ const props = defineProps({
   }
 });
 
-// ==========================================
-// VARIABLES DE ESTADO PRINCIPALES
-// ==========================================
+
 const ruta = ref({ asistentes: 0 });  // Datos de la ruta actual
 const error = ref("");                // Mensajes de error
 let mapa = null;                      // Instancia del mapa Leaflet
 const asignacionGuia = ref(null);     // Nombre del guía asignado a la ruta
 
-// ==========================================
-// GESTIÓN DE RESERVAS
-// ==========================================
+
 const reservas = ref([]);             // Lista de reservas para la ruta
 const numPersonas = ref(1);           // Número de personas para nueva reserva
 const errorReserva = ref("");         // Errores específicos de reserva
@@ -124,9 +120,35 @@ const yaHaReservado = computed(() => {
   );
 });
 
-// ==========================================
-// FUNCIONES DE CARGA DE DATOS
-// ==========================================
+// Añadir esta nueva variable para las valoraciones
+const valoraciones = ref([]);
+
+// Añadir esta función para formatear fechas
+function formatearFecha(fechaStr) {
+  if (!fechaStr) return '';
+  
+  const fecha = new Date(fechaStr);
+  return fecha.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+// Añadir esta función para cargar valoraciones
+async function cargarValoraciones() {
+  try {
+    const respuesta = await fetch(`http://localhost/freetours/api.php/valoraciones?ruta_id=${props.id}`);
+    if (!respuesta.ok) {
+      throw new Error(`Error al cargar las valoraciones: ${respuesta.status}`);
+    }
+    valoraciones.value = await respuesta.json();
+    console.log("Valoraciones cargadas:", valoraciones.value);
+  } catch (error) {
+    console.error("Error al cargar las valoraciones:", error);
+    valoraciones.value = [];
+  }
+}
 
 // Carga todos los datos necesarios para mostrar la ruta
 async function cargarDatos() {
@@ -172,6 +194,10 @@ async function cargarDatos() {
     if (ruta.value.latitud && ruta.value.longitud) {
       inicializarMapa(ruta.value.latitud, ruta.value.longitud);
     }
+    
+    // 6. Cargar las valoraciones de la ruta
+    await cargarValoraciones();
+    
   } catch (err) {
     console.error("Error:", err);
     error.value = `No se pudieron cargar los datos de la ruta. ${err.message}`;
@@ -993,6 +1019,43 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
       </div>
     </div>
 
+    <!-- Nueva sección de valoraciones en tarjetas -->
+    <div class="container mt-5 mb-5">
+      <h2 class="text-center mb-4">Valoraciones de los usuarios</h2>
+      
+      <div class="row" v-if="valoraciones && valoraciones.length > 0">
+        <!-- Máximo 3 tarjetas por fila usando col-md-4 -->
+        <div class="col-12 col-md-6 col-lg-4 mb-4" v-for="(valoracion, index) in valoraciones" :key="index">
+          <div class="card h-100 shadow-sm valoracion-card">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center">
+                <div class="rating-badge me-2">
+                  {{ valoracion.puntuacion }}
+                  <i class="bi bi-star-fill text-warning"></i>
+                </div>
+                <h6 class="mb-0">{{ valoracion.usuario_nombre || 'Usuario anónimo' }}</h6>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="card-text">{{ valoracion.comentario }}</p>
+            </div>
+            <div class="card-footer bg-white text-muted">
+              <small>{{ formatearFecha(valoracion.fecha_valoracion) }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Mensaje cuando no hay valoraciones -->
+      <div class="text-center p-4" v-else>
+        <div class="empty-rating-container p-5 rounded">
+          <i class="bi bi-chat-square-text fs-1 text-muted mb-3"></i>
+          <h5>No hay valoraciones para esta ruta</h5>
+          <p class="text-muted">¡Sé el primero en valorar esta experiencia!</p>
+        </div>
+      </div>
+    </div>
+
     <!-- ==========================================
     MODALES PARA ADMINISTRADOR
     ========================================== -->
@@ -1271,6 +1334,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
       </div>
     </div>
   </div>
+
 </template>
 
 <style scoped>
@@ -1280,40 +1344,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
 
 h1 {
   font-size: 3rem;
-  font-weight: bold;
-  margin-top: 1rem;
-  margin-bottom: 2rem;
 }
-
-.descripcion {
-  font-size: 1.25rem;
-  line-height: 1.6;
-}
-
-.map-styled {
-  width: 100%;
-  height: 350px;
-  border-radius: 10px;
-}
-
-.detalles-col {
-  border-left: 1px solid #e3e3e3;
-  padding-left: 30px;
-}
-
-.btn-group .btn {
-  width: 33.33%;
-}
-
-.text-white {
-  color: white !important;
-}
-
-.text-center {
-  text-align: center !important;
-}
-
-/* Nuevos estilos para el selector de personas */
 .selector-personas .btn {
   min-width: 40px;
   border-radius: 0;
@@ -1337,5 +1368,51 @@ h1 {
 
 .selector-personas .btn-primary {
   z-index: 2;
+}
+
+/* Estilos para la sección de valoraciones */
+.valoracion-card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.valoracion-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+.rating-badge {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.empty-rating-container {
+  background-color: #f8f9fa;
+  border: 1px dashed #dee2e6;
+}
+
+/* Responsividad para valoraciones */
+@media (max-width: 767.98px) {
+  .valoracion-card {
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .valoracion-card .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .valoracion-card .card-header .rating-badge {
+    margin-bottom: 0.5rem;
+  }
 }
 </style>
