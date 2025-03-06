@@ -198,6 +198,11 @@ async function cargarDatos() {
     // 6. Cargar las valoraciones de la ruta
     await cargarValoraciones();
     
+    // Verificar si el usuario ya ha valorado esta ruta
+    if (props.usuarioAutenticado) {
+      await verificarSiYaValoro();
+    }
+    
   } catch (err) {
     console.error("Error:", err);
     error.value = `No se pudieron cargar los datos de la ruta. ${err.message}`;
@@ -857,6 +862,124 @@ function irALogin() {
   router.push('/login');
 }
 
+// Añade estas variables a las existentes
+const mostrarFormularioValoracion = ref(false);
+const nuevaValoracion = ref({
+  puntuacion: 5,
+  comentario: ''
+});
+const enviandoValoracion = ref(false);
+const errorValoracion = ref('');
+const yaHaValorado = ref(false);
+
+// Comprueba si la ruta ya pasó (para habilitar valoraciones)
+const rutaYaPaso = computed(() => {
+  if (!ruta.value?.fecha) return false;
+  
+  const fechaRuta = new Date(ruta.value.fecha);
+  const hoy = new Date();
+  
+  // Comparar considerando año, mes y día
+  if (fechaRuta.getFullYear() < hoy.getFullYear()) return true;
+  if (fechaRuta.getFullYear() === hoy.getFullYear() && 
+      fechaRuta.getMonth() < hoy.getMonth()) return true;
+  if (fechaRuta.getFullYear() === hoy.getFullYear() && 
+      fechaRuta.getMonth() === hoy.getMonth() && 
+      fechaRuta.getDate() < hoy.getDate()) return true;
+  
+  return false;
+});
+
+// Comprueba si puede valorar (ha reservado, la ruta ya pasó y no ha valorado antes)
+const puedeValorar = computed(() => {
+  return yaHaReservado.value && rutaYaPaso.value && !yaHaValorado.value;
+});
+
+// Función para verificar si el usuario ya ha valorado esta ruta
+async function verificarSiYaValoro() {
+  if (!props.usuarioAutenticado) return;
+  
+  try {
+    const response = await fetch(`http://localhost/freetours/api.php/valoraciones?ruta_id=${props.id}&user_id=${props.usuarioAutenticado.id}`);
+    if (!response.ok) {
+      throw new Error(`Error al verificar valoraciones: ${response.status}`);
+    }
+    const valoracionesUsuario = await response.json();
+    yaHaValorado.value = valoracionesUsuario.length > 0;
+  } catch (error) {
+    console.error("Error al verificar valoraciones:", error);
+  }
+}
+
+// Función para enviar una nueva valoración
+async function enviarValoracion() {
+  try {
+    enviandoValoracion.value = true;
+    errorValoracion.value = '';
+    
+    // Validar datos
+    if (nuevaValoracion.value.puntuacion < 1 || nuevaValoracion.value.puntuacion > 5) {
+      throw new Error('La puntuación debe estar entre 1 y 5 estrellas');
+    }
+    
+    if (!nuevaValoracion.value.comentario.trim()) {
+      throw new Error('El comentario no puede estar vacío');
+    }
+    
+    // Preparar datos para enviar
+    const datosValoracion = {
+      user_id: props.usuarioAutenticado.id,
+      ruta_id: parseInt(props.id),
+      puntuacion: nuevaValoracion.value.puntuacion,
+      comentario: nuevaValoracion.value.comentario
+    };
+    
+    // Enviar la valoración
+    const response = await fetch('http://localhost/freetours/api.php/valoraciones', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(datosValoracion)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error al enviar valoración: ${response.status} - ${errorText}`);
+    }
+    
+    // Cerrar formulario y actualizar valoraciones
+    mostrarFormularioValoracion.value = false;
+    
+    // Mostrar mensaje de éxito
+    Swal.fire({
+      title: '¡Gracias por tu valoración!',
+      text: 'Tu opinión ayuda a otros usuarios a elegir las mejores rutas',
+      icon: 'success',
+      confirmButtonColor: '#28a745'
+    });
+    
+    // Actualizar las valoraciones
+    await cargarValoraciones();
+    
+    // Actualizar estado de valoración del usuario
+    yaHaValorado.value = true;
+    
+  } catch (error) {
+    console.error("Error al enviar valoración:", error);
+    errorValoracion.value = error.message;
+    
+    Swal.fire({
+      title: 'Error',
+      text: errorValoracion.value,
+      icon: 'error',
+      confirmButtonColor: '#dc3545'
+    });
+  } finally {
+    enviandoValoracion.value = false;
+  }
+}
+
 onMounted(() => {
   cargarDatos().then(() => {
     cargarGuias(); // Cargar guías después de tener los datos de la ruta
@@ -1001,9 +1124,14 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
           ========================================== -->
           <div v-else-if="props.usuarioAutenticado && props.usuarioAutenticado.rol === 'cliente'"
             class="btn-group mb-3 w-100" role="group">
-            <button type="button" class="btn btn-primary w-100" @click="abrirModalReserva" :disabled="yaHaReservado"
-              :title="yaHaReservado ? 'Ya tienes una reserva para esta ruta' : 'Reservar plaza para esta ruta'">
-              {{ yaHaReservado ? 'Ya reservada' : 'Reservar' }}
+            <button type="button" class="btn w-100" 
+              :class="[
+                yaHaReservado ? (rutaYaPaso ? 'btn-success' : 'btn-primary') : 'btn-primary'
+              ]"
+              @click="abrirModalReserva" 
+              :disabled="yaHaReservado"
+              :title="yaHaReservado ? (rutaYaPaso ? 'Has completado esta ruta' : 'Ya tienes una reserva para esta ruta') : 'Reservar plaza para esta ruta'">
+              {{ yaHaReservado ? (rutaYaPaso ? 'Completada' : 'Ya reservada') : 'Reservar' }}
             </button>
           </div>
 
@@ -1021,7 +1149,71 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
 
     <!-- Nueva sección de valoraciones en tarjetas -->
     <div class="container mt-5 mb-5">
-      <h2 class="text-center mb-4">Valoraciones de los usuarios</h2>
+    <hr>
+      <h2 class="text-center mb-4">Valoraciones</h2>
+      
+      <!-- Botón de añadir valoración -->
+      <div class="text-center mb-4" v-if="props.usuarioAutenticado && puedeValorar">
+        <button v-if="!mostrarFormularioValoracion" 
+                @click="mostrarFormularioValoracion = true" 
+                class="btn btn-primary">
+          <i class="bi bi-star-fill me-2"></i>Añadir mi valoración
+        </button>
+        
+        <!-- Formulario de valoración -->
+        <div v-if="mostrarFormularioValoracion" class="card shadow-sm mx-auto" style="max-width: 600px;">
+          <div class="card-header d-flex justify-content-between align-items-center bg-light">
+            <h5 class="mb-0">Tu valoración para esta ruta</h5>
+            <button type="button" class="btn-close" @click="mostrarFormularioValoracion = false"></button>
+          </div>
+          <div class="card-body">
+            <!-- Puntuación con estrellas -->
+            <div class="mb-4">
+              <label class="form-label">Puntuación</label>
+              <div class="star-rating d-flex justify-content-center">
+                <template v-for="star in 5" :key="`star-${star}`">
+                  <button type="button" 
+                          class="btn btn-link p-0 me-2"
+                          @click="nuevaValoracion.puntuacion = star">
+                    <i class="bi" 
+                       :class="star <= nuevaValoracion.puntuacion ? 'bi-star-fill text-warning' : 'bi-star text-muted'"
+                       style="font-size: 2rem;"></i>
+                  </button>
+                </template>
+              </div>
+            </div>
+            
+            <!-- Comentario -->
+            <div class="mb-3">
+              <label for="comentario" class="form-label">Tu comentario</label>
+              <textarea class="form-control" id="comentario" v-model="nuevaValoracion.comentario" rows="3" 
+                        placeholder="Cuéntanos tu experiencia en esta ruta..."></textarea>
+            </div>
+            
+            <!-- Error -->
+            <div v-if="errorValoracion" class="alert alert-danger">
+              {{ errorValoracion }}
+            </div>
+            
+            <!-- Botones de acción -->
+            <div class="text-center mt-4">
+              <button type="button" class="btn btn-secondary me-2" @click="mostrarFormularioValoracion = false">Cancelar</button>
+              <button type="button" class="btn btn-success" @click="enviarValoracion" :disabled="enviandoValoracion">
+                <span v-if="enviandoValoracion" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                Enviar valoración
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Mensaje cuando ya valoró -->
+      <div class="text-center mb-4" v-else-if="props.usuarioAutenticado && yaHaReservado && rutaYaPaso && yaHaValorado">
+        <div class="alert alert-success">
+          <i class="bi bi-check-circle-fill me-2"></i>
+          Ya has valorado esta ruta. ¡Gracias por tu opinión!
+        </div>
+      </div>
       
       <div class="row" v-if="valoraciones && valoraciones.length > 0">
         <!-- Máximo 3 tarjetas por fila usando col-md-4 -->
@@ -1414,5 +1606,20 @@ h1 {
   .valoracion-card .card-header .rating-badge {
     margin-bottom: 0.5rem;
   }
+}
+
+/* Estilo para las estrellas interactivas */
+.star-rating .btn-link {
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.star-rating .btn-link:hover {
+  transform: scale(1.2);
+}
+
+.star-rating .btn-link:focus {
+  box-shadow: none;
 }
 </style>
