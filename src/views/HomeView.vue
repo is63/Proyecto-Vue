@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import { useRouter } from "vue-router";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
@@ -8,17 +7,17 @@ const URL_BASE_API = "http://localhost/freetours/api.php"; // URL base de la API
 const rutas = ref([]); // Estado reactivo para almacenar las rutas
 const valoraciones = ref([]); // Estado reactivo para almacenar las valoraciones
 const error = ref(""); // Estado para manejar errores
-const enrutador = useRouter(); // Instancia de Vue Router
 const busqueda = ref(""); // Estado para almacenar el texto de búsqueda
 const tipoBusqueda = ref('texto'); // Nuevo estado para controlar el tipo de búsqueda (texto/fecha)
 
 // Variable para almacenar la instancia de flatpickr
 const instanciaCalendario = ref(null);
 
-// Modificar las refs del video
+// Modificar las variables del video
 const medio = ref(null);
 const botonReproducir = ref('/img/jugar.png'); // ▶️ (esto cambia entre play y pause)
 
+// Funciones para controlar el video
 function reproducirPausar() {
   if (!medio.value.paused && !medio.value.ended) {
     medio.value.pause();
@@ -61,10 +60,10 @@ function bajarVolumen() {
   }
 }
 
+// Variables y funciones para la paginación
 
 const paginaActual = ref(1);
 const rutasPorPagina = ref(5);
-
 
 const rutasPaginadas = computed(() => {
   const inicio = (paginaActual.value - 1) * rutasPorPagina.value;
@@ -88,6 +87,7 @@ function cambiarPagina(pagina) {
   }
 }
 
+// Función para manejar errores en las imágenes)
 
 function manejarErrorImagen(e) {
   //Mostrar una imagen de reemplazo si la imagen no se puede cargar
@@ -102,6 +102,7 @@ async function obtenerRutas() {
 
     const datos = await respuesta.json();
 
+    // Verificar que los datos que han devuelto sean un array
     if (Array.isArray(datos)) {
       rutas.value = datos.map((ruta) => ({
         id: ruta.id,
@@ -148,7 +149,7 @@ async function obtenerValoraciones() {
   }
 }
 
-// Función modificada para filtrar rutas según la búsqueda
+// Función para filtrar rutas según la búsqueda
 function filtrarRutas() {
   if (tipoBusqueda.value === 'fecha') {
     // Si la fecha está vacía, mostrar todas las rutas
@@ -161,7 +162,7 @@ function filtrarRutas() {
       ruta.fecha === fechaFormateada
     );
   } else {
-    // Busqueda por texto (titulo o localidad)
+    // Busqueda por texto (título o localidad)
     if (!busqueda.value) {
       return rutas.value;
     }
@@ -317,6 +318,7 @@ onMounted(async () => {
           </ul>
         </nav>
       </div>
+      <!-- Mensaje al no encontrar ruta-->
       <p v-else class="text-center text-muted mt-5 ms-5">
         <span class="h1 text-danger">No se encontraron rutas.</span>
       </p>
