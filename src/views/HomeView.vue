@@ -320,11 +320,14 @@ onMounted(async () => {
       </div>
       <!-- Mensaje al no encontrar ruta-->
       <p v-else class="text-center text-muted mt-5 ms-5">
-        <span class="h1 text-danger">No se encontraron rutas.</span>
+        <span class="h1 text-danger">No se encontraron rutas.</span><br>
+        <span class="d-flex justify-content-center align-content-center">
+          <img class="mt-5"
+            src="https://img.freepik.com/vector-premium/persona-confundida-mirando-mapa-desinformacion-lleno-burbujas-desinformaciocion-muertos_216520-73455.jpg"
+            width="50%">
+        </span>
       </p>
-      <span class="d-flex justify-content-center align-content-center">
-        <img src="https://img.freepik.com/vector-premium/persona-confundida-mirando-mapa-desinformacion-lleno-burbujas-desinformaciocion-muertos_216520-73455.jpg"  width="50%">
-      </span>
+
     </div>
 
     <!-- Video -->
