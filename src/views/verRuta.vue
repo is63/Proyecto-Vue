@@ -1058,7 +1058,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
             <p class="descripcion">{{ ruta.descripcion }}</p>
           </div>
           <div class="mb-4 map-container">
-            <div id="mapa" class="map-styled"></div>
+            <div id="mapa" class="map"></div>
           </div>
         </div>
 
@@ -1603,5 +1603,24 @@ h1 {
 
 .star-rating .btn-link:focus {
   box-shadow: none;
+}
+
+#mapa {
+  height: 400px; 
+  width: 100%;
+  border-radius: 8px;
+  z-index: 0;
+}
+
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 400px; 
+  margin-bottom: 2rem;
+}
+
+.map {
+  border: 1px solid #dee2e6; 
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 </style>
