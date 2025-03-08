@@ -27,19 +27,29 @@ function cerrarSesion() {
           </router-link>
         </div>
 
-        <!-- Menú de navegación (centro) -->
-        <div class="navigation-container flex-grow-1 d-flex justify-content-center">
+        <!-- Menú de navegación (centro) - Reimplementación para mejor centrado -->
+        <div class="navigation-container">
           <div v-if="usuarioAutenticado" class="nav-menu-container">
             <!-- Menú Principal - Adaptativo -->
-            <ul class="navbar-nav flex-row">
-              <!-- Menú para administradores -->
+            <ul class="navbar-nav">
+              <!-- Elementos comunes para todos los usuarios -->
+              <li class="nav-item mx-1">
+                <router-link class="nav-link btn-nav-icon" to="/" title="Home">
+                  <i class="bi bi-house-door-fill d-block d-lg-none"></i>
+                  <span class="d-none d-lg-block">Home</span>
+                </router-link>
+              </li>
+              
+              <!-- Mis Reservas - para todos los usuarios -->
+              <li class="nav-item mx-1">
+                <router-link class="nav-link btn-nav-icon" to="/misReservas" title="Mis Reservas">
+                  <i class="bi bi-bookmark-fill d-block d-lg-none"></i>
+                  <span class="d-none d-lg-block">Mis Reservas</span>
+                </router-link>
+              </li>
+
+              <!-- Menú específico para administradores -->
               <template v-if="usuarioAutenticado.rol === 'admin'">
-                <li class="nav-item mx-1">
-                  <router-link class="nav-link btn-nav-icon" to="/" title="Home">
-                    <i class="bi bi-house-door-fill d-block d-lg-none"></i>
-                    <span class="d-none d-lg-block">Home</span>
-                  </router-link>
-                </li>
                 <li class="nav-item mx-1">
                   <router-link class="nav-link btn-nav-icon" to="/gestionusuarios" title="Gestionar Usuarios">
                     <i class="bi bi-people-fill d-block d-lg-none"></i>
@@ -54,34 +64,12 @@ function cerrarSesion() {
                 </li>
               </template>
 
-              <!-- Menú para guías -->
-              <template v-else-if="usuarioAutenticado.rol === 'guia'">
-                <li class="nav-item mx-1">
-                  <router-link class="nav-link btn-nav-icon" to="/" title="Home">
-                    <i class="bi bi-house-door-fill d-block d-lg-none"></i>
-                    <span class="d-none d-lg-block">Home</span>
-                  </router-link>
-                </li>
+              <!-- Menú específico para guías -->
+              <template v-if="usuarioAutenticado.rol === 'guia'">
                 <li class="nav-item mx-1">
                   <router-link class="nav-link btn-nav-icon" to="/rutasAsignadas" title="Rutas Asignadas">
                     <i class="bi bi-map-fill d-block d-lg-none"></i>
                     <span class="d-none d-lg-block">Rutas Asignadas</span>
-                  </router-link>
-                </li>
-              </template>
-
-              <!-- Menú para clientes -->
-              <template v-else-if="usuarioAutenticado.rol === 'cliente'">
-                <li class="nav-item mx-1">
-                  <router-link class="nav-link btn-nav-icon" to="/" title="Home">
-                    <i class="bi bi-house-door-fill d-block d-lg-none"></i>
-                    <span class="d-none d-lg-block">Home</span>
-                  </router-link>
-                </li>
-                <li class="nav-item mx-1">
-                  <router-link class="nav-link btn-nav-icon" to="/misReservas" title="Mis Reservas">
-                    <i class="bi bi-bookmark-fill d-block d-lg-none"></i>
-                    <span class="d-none d-lg-block">Mis Reservas</span>
                   </router-link>
                 </li>
               </template>
@@ -261,9 +249,10 @@ function cerrarSesion() {
 
 /* Ajustes para centrar el menú de navegación */
 .container-fluid {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  width: 100%;
   align-items: center;
-  justify-content: space-between;
 }
 
 .navbar-brand-container,
@@ -273,19 +262,24 @@ function cerrarSesion() {
 }
 
 .navigation-container {
-  display: flex;
-  justify-content: center !important;
-  width: 100%;
+  grid-column: 2;
+  justify-self: center;
+  width: auto;
+  position: relative;
 }
 
 .nav-menu-container {
   display: flex;
   justify-content: center;
-  width: 100%;
+  width: auto;
 }
 
 .navbar-nav {
   display: flex;
+  flex-direction: row;
+  padding: 0;
+  margin: 0;
+  gap: 0.5rem;
   justify-content: center;
 }
 
@@ -307,10 +301,10 @@ function cerrarSesion() {
 
 /* Nuevo estilo para el contenedor de usuario */
 .user-container {
-  min-width: 280px;
-  /* Aumentado de 200px a 280px */
-  display: flex;
-  justify-content: flex-end;
+  grid-column: 3;
+  justify-self: end;
+  min-width: auto;
+  max-width: 280px;
 }
 
 .user-info {
@@ -322,29 +316,40 @@ function cerrarSesion() {
 
 /* Media queries actualizados */
 @media (max-width: 991.98px) {
-  .navbar-brand-container {
-    min-width: 150px;
+  .navbar-nav {
+    gap: 0.25rem;
   }
 
-  .user-container {
-    min-width: 220px;
-    /* Ajustado para pantallas medianas */
+  .btn-nav-icon {
+    padding: 0.3rem 0.5rem;
   }
 }
 
 @media (max-width: 767.98px) {
-  .navbar-brand-container {
-    min-width: 100px;
+  .container-fluid {
+    grid-template-columns: auto auto auto;
+    gap: 0.5rem;
   }
 
-  .user-container {
-    min-width: 120px;
-    /* Ajustado para móviles */
+  .navbar-brand-container, .user-container {
+    min-width: auto;
+    max-width: none;
   }
 
-  /* En móvil, el botón ocupa todo el espacio */
-  .logout-btn i {
-    margin: 0 auto;
+  .nav-item.mx-1 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  .btn-nav-icon {
+    padding: 0.3rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .container-fluid {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 }
 </style>
