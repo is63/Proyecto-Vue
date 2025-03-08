@@ -49,6 +49,7 @@ const rolesPermitidos = ['guia', 'cliente'];
 
 // URL de la API
 const API_URL = 'http://localhost/freetours/api.php/usuarios';
+const API_ASIGNACIONES = 'http://localhost/freetours/api.php/asignaciones';
 
 // Mensajes dentro del modal de crear/editar
 const mensaje = ref('');
@@ -75,6 +76,11 @@ const datosPaginacion = computed(() => {
   const final = inicio + LimiteUsuarios.value;
   return datos.value.slice(inicio, final);
 });
+
+const asignaciones = ref([]);
+const comprobandoAsignaciones = ref(false);
+const errorGuiaAsignado = ref(false);
+const mensajeGuiaAsignado = ref('');
 
 function cambiarPagina(page) {
   if (page >= 1 && page <= PaginasTotales.value) {
@@ -112,6 +118,9 @@ onMounted(() => {
 
   // Se obtienen los datos de la API al cargar el componente
   fetchData();
+
+  // Añadir carga de asignaciones
+  cargarAsignaciones();
 });
 
 // Función para mostrar un mensaje y cerrar el modal automáticamente
@@ -145,7 +154,28 @@ function mostrarError(mensaje) {
 }
 
 // Función para abrir el modal en modo edición
-function abrirModalEditar(usuario) {
+async function abrirModalEditar(usuario) {
+  // Verificar si es un guía y tiene rutas asignadas
+  if (usuario.rol === 'guia') {
+    comprobandoAsignaciones.value = true;
+    
+    // Cargar asignaciones si aún no se han cargado
+    if (asignaciones.value.length === 0) {
+      await cargarAsignaciones();
+    }
+    
+    if (guiaTieneRutasAsignadas(usuario.id)) {
+      errorGuiaAsignado.value = true;
+      mensajeGuiaAsignado.value = `No se puede editar el rol del guía "${usuario.nombre}" porque tiene rutas asignadas.`;
+      modalErrorInstance.show();
+      comprobandoAsignaciones.value = false;
+      return;
+    }
+    
+    comprobandoAsignaciones.value = false;
+  }
+  
+  // Continuar con la apertura normal del modal
   usuarioSeleccionado.value = { ...usuario };
   modoEdicion.value = true;
   reiniciarModal();
@@ -234,7 +264,30 @@ async function actualizarRol() {
 }
 
 // Función para abrir el modal de confirmación de eliminación
-function abrirModalConfirmacion(id) {
+async function abrirModalConfirmacion(id) {
+  // Buscar el usuario para verificar si es un guía
+  const usuario = datos.value.find(u => u.id === id);
+  
+  if (usuario && usuario.rol === 'guia') {
+    comprobandoAsignaciones.value = true;
+    
+    // Cargar asignaciones si aún no se han cargado
+    if (asignaciones.value.length === 0) {
+      await cargarAsignaciones();
+    }
+    
+    if (guiaTieneRutasAsignadas(id)) {
+      errorGuiaAsignado.value = true;
+      mensajeGuiaAsignado.value = `No se puede eliminar al guía "${usuario.nombre}" porque tiene rutas asignadas.`;
+      modalErrorInstance.show();
+      comprobandoAsignaciones.value = false;
+      return;
+    }
+    
+    comprobandoAsignaciones.value = false;
+  }
+
+  // Continuar con la confirmación normal de eliminación
   usuarioAEliminar.value = id;
   eliminacionExitosa.value = false;
   mensajeEliminacion.value = '';
@@ -271,6 +324,23 @@ async function eliminarUsuario() {
     eliminacionExitosa.value = false;
     mensajeEliminacion.value = 'Hubo un problema al eliminar el usuario.';
   }
+}
+
+// Cargar las asignaciones de guías a rutas
+async function cargarAsignaciones() {
+  try {
+    const response = await fetch(API_ASIGNACIONES);
+    if (!response.ok) throw new Error('No se pudieron cargar las asignaciones');
+    asignaciones.value = await response.json();
+    console.log('Asignaciones cargadas:', asignaciones.value);
+  } catch (error) {
+    console.error('Error al cargar asignaciones:', error);
+  }
+}
+
+// Verificar si un guía tiene rutas asignadas
+function guiaTieneRutasAsignadas(guiaId) {
+  return asignaciones.value.some(asignacion => Number(asignacion.guia_id) === Number(guiaId));
 }
 </script>
 
@@ -423,7 +493,14 @@ async function eliminarUsuario() {
         </div>
         <div class="modal-body">
           <!-- Mensaje de error -->
-          <div class="alert alert-danger">
+          <div v-if="errorGuiaAsignado" class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ mensajeGuiaAsignado }}
+            <p class="mt-2 mb-0 small">
+              <strong>Nota:</strong> Para editar o eliminar este guía, primero debe eliminar sus asignaciones de rutas.
+            </p>
+          </div>
+          <div v-else class="alert alert-danger">
             {{ mensajeError }}
           </div>
         </div>
@@ -432,6 +509,13 @@ async function eliminarUsuario() {
           <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Añadir un indicador de carga cuando se está comprobando asignaciones -->
+  <div v-if="comprobandoAsignaciones" class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-dark bg-opacity-50" style="z-index: 2000;">
+    <div class="spinner-border text-light" role="status">
+      <span class="visually-hidden">Comprobando asignaciones...</span>
     </div>
   </div>
 </template>
