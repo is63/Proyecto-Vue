@@ -6,13 +6,17 @@ let mostrarForm = ref(true);
 
 function cambiarForm() {
   mostrarForm.value = !mostrarForm.value;
+  // Limpiar errores y mensajes al cambiar de formulario
+  error.value = '';
+  mensajeExito.value = '';
 }
 
 const API_URL = 'http://localhost/freetours/api.php/usuarios';
 
 const emits = defineEmits(["sesionIniciada"]);
 const form = ref({ email: '', password: '' });
-const formRegistro = ref({ nombre: '', email: '', contraseña: '' });
+// Añadido campo confirmarContraseña al formulario de registro
+const formRegistro = ref({ nombre: '', email: '', contraseña: '', confirmarContraseña: '' });
 const error = ref('');
 const mensajeExito = ref('');
 
@@ -55,11 +59,15 @@ async function iniciarSesion() {
 
 async function registrarUsuario() {
   try {
+    // Reiniciar mensaje de error
+    error.value = '';
+    
     // Validar que todos los campos estén completos
     if (
       formRegistro.value.nombre.trim() == "" ||
       formRegistro.value.email.trim() == "" ||
-      formRegistro.value.contraseña.trim() == ""
+      formRegistro.value.contraseña.trim() == "" ||
+      formRegistro.value.confirmarContraseña.trim() == ""
     ) {
       error.value = 'Todos los campos son obligatorios';
       setTimeout(() => {
@@ -79,6 +87,24 @@ async function registrarUsuario() {
       }, 3000);
       return;
     }
+    
+    // Validar que las contraseñas coincidan
+    if (formRegistro.value.contraseña !== formRegistro.value.confirmarContraseña) {
+      error.value = 'Las contraseñas no coinciden';
+      setTimeout(() => {
+        error.value = '';
+      }, 3000);
+      return;
+    }
+    
+    // Validar longitud mínima de la contraseña
+    if (formRegistro.value.contraseña.length < 6) {
+      error.value = 'La contraseña debe tener al menos 6 caracteres';
+      setTimeout(() => {
+        error.value = '';
+      }, 3000);
+      return;
+    }
 
     // Crear el objeto de usuario para enviar a la API
     const nuevoUsuario = {
@@ -86,6 +112,7 @@ async function registrarUsuario() {
       email: formRegistro.value.email,
       contraseña: formRegistro.value.contraseña,
     };
+    // No enviamos confirmarContraseña al servidor, solo es para validación
 
     // Enviar la solicitud POST a la API para registrar el usuario
     const response = await fetch(API_URL, {
@@ -100,8 +127,8 @@ async function registrarUsuario() {
       throw new Error('Error al registrar el usuario');
     }
 
-    // Limpiar el formulario de registro
-    formRegistro.value = { nombre: '', email: '', contraseña: '' };
+    // Limpiar el formulario de registro - ahora con el nuevo campo
+    formRegistro.value = { nombre: '', email: '', contraseña: '', confirmarContraseña: '' };
 
     // Cambiar al formulario de inicio de sesión
     mostrarForm.value = true;
@@ -157,7 +184,7 @@ async function registrarUsuario() {
       </div>
     </div>
 
-    <!-- Formulario de Registro -->
+    <!-- Formulario de Registro - Modificado con campo de confirmación -->
     <div v-if="!mostrarForm">
       <div id="formRegistrar" class="row justify-content-center mt-5">
         <div class="col-12 col-md-6 col-lg-4">
@@ -177,6 +204,13 @@ async function registrarUsuario() {
               <label for="contrasenaRegistrar" class="form-label">Contraseña</label>
               <input v-model="formRegistro.contraseña" type="password" id="contrasenaRegistrar" class="form-control"
                 placeholder="Crea una contraseña">
+              <div class="form-text">La contraseña debe tener al menos 6 caracteres.</div>
+            </div>
+            <!-- Nuevo campo de confirmación de contraseña -->
+            <div class="mb-3">
+              <label for="confirmarContrasena" class="form-label">Confirmar Contraseña</label>
+              <input v-model="formRegistro.confirmarContraseña" type="password" id="confirmarContrasena" class="form-control"
+                placeholder="Confirma tu contraseña">
             </div>
             <div v-if="error" class="alert alert-danger">{{ error }}</div>
             <div class="mb-3">
@@ -193,4 +227,28 @@ async function registrarUsuario() {
   </main>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* Puedes añadir estilos adicionales aquí si lo necesitas */
+.alert {
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Estilo opcional para indicar visualmente si las contraseñas coinciden */
+input.is-invalid {
+  border-color: #dc3545;
+  padding-right: calc(1.5em + 0.75rem);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+input.is-valid {
+  border-color: #198754;
+  padding-right: calc(1.5em + 0.75rem);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+</style>
