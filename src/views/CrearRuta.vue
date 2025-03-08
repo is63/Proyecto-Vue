@@ -6,6 +6,8 @@ import 'leaflet/dist/leaflet.css';
 import { OpenStreetMapProvider } from 'leaflet-geosearch';
 import Swal from 'sweetalert2';
 import { Modal } from 'bootstrap';
+import flatpickr from "flatpickr"; // Añadir importación de flatpickr
+import "flatpickr/dist/flatpickr.min.css"; // Añadir estilos de flatpickr
 
 const router = useRouter();
 
@@ -31,6 +33,9 @@ let map = null;
 let marker = null;
 
 const botonDeshabilitado = ref(false); // Variable para controlar el estado del botón
+
+let fechaPicker = null;
+let horaPicker = null;
 
 // Reemplazar la función obtenerGuias actual
 async function obtenerGuias() {
@@ -204,10 +209,49 @@ async function buscarDireccion(direccion) {
   }
 }
 
+function inicializarDatepickers() {
+  // Configurar selector de fecha
+  fechaPicker = flatpickr("#fecha", {
+    dateFormat: "Y-m-d",
+    minDate: "today",
+    onChange: (selectedDates, dateStr) => {
+      rutaNueva.value.fecha = dateStr;
+      obtenerGuias();
+    },
+    disableMobile: false,
+    position: "auto",
+    static: true,
+    altInput: false, // Cambiar a false para evitar la creación de un input alternativo
+    allowInput: false,
+    clickOpens: true,
+  });
+  
+  // Configurar selector de hora
+  horaPicker = flatpickr("#hora", {
+    enableTime: true,
+    noCalendar: true,
+    dateFormat: "H:i:S",
+    time_24hr: true,
+    onChange: (selectedDates, horaStr) => {
+      rutaNueva.value.hora = horaStr;
+    },
+    disableMobile: false,
+    position: "auto",
+    static: true,
+    allowInput: false,
+    clickOpens: true,
+    defaultHour: 12,
+    defaultMinute: 0
+  });
+
+}
 onMounted(() => {
   inicializarMapa();
   obtenerGuias(); // Obtener los guías al montar el componente
   modalInstance = new Modal(document.getElementById('resultadoModal'));
+  
+  // Inicializar los selectores de fecha y hora
+  inicializarDatepickers();
 });
 </script>
 
@@ -237,11 +281,11 @@ onMounted(() => {
           </div>
           <div class="mb-3">
             <label for="fecha" class="form-label">Fecha</label>
-            <input type="date" class="form-control" id="fecha" v-model="rutaNueva.fecha">
+            <input type="text" class="form-control date-input" id="fecha" placeholder="Seleccionar fecha" readonly>
           </div>
           <div class="mb-3">
             <label for="hora" class="form-label">Hora</label>
-            <input type="time" class="form-control" id="hora" v-model="rutaNueva.hora">
+            <input type="text" class="form-control time-input" id="hora" placeholder="Seleccionar hora" readonly>
           </div>
         </div>
       </div>
@@ -296,9 +340,9 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Estilos base y organización */
 .container {
   max-width: 800px;
-  /* Aumenta el ancho del contenedor */
 }
 
 h1 {
@@ -306,19 +350,27 @@ h1 {
   font-weight: bold;
 }
 
+.estilo-mapa {
+  height: 400px;
+  margin-bottom: 20px;
+}
+
+/* Estilos de formulario */
 .form-label {
   font-weight: bold;
   color: #232342;
-  /* Color acorde al proyecto */
+  display: block;
+  margin-bottom: 0.5rem;
 }
 
 .form-control {
   border-radius: 5px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .btn-primary {
   background-color: #1a1a2e;
-  /* Azul oscuro elegante */
   border: none;
   font-weight: bold;
   transition: all 0.3s ease;
@@ -326,11 +378,83 @@ h1 {
 
 .btn-primary:hover {
   background-color: #232342;
-  /* Color acorde al proyecto */
 }
 
-.estilo-mapa {
-  height: 400px;
-  margin-bottom: 20px;
+/* ESTILOS ESPECÍFICOS PARA FLATPICKR - SIMPLIFICADOS */
+/* Regla principal para ambos inputs: fecha y hora */
+#fecha, 
+#hora {
+  background-color: #fff !important;
+  border: 1px solid #ced4da !important;
+  color: #212529 !important;
+  cursor: pointer;
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  padding: 0.375rem 0.75rem !important;
+}
+
+/* Agregar los iconos específicos sin sobreescribir el fondo */
+.date-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-calendar3' viewBox='0 0 16 16'%3E%3Cpath d='M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z'/%3E%3Cpath d='M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 16px;
+  background-color: #fff !important; /* Reforzar fondo blanco */
+}
+
+.time-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-clock' viewBox='0 0 16 16'%3E%3Cpath d='M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z'/%3E%3Cpath d='M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 16px;
+  background-color: #fff !important; /* Reforzar fondo blanco */
+}
+
+/* Estilos para elementos generados por flatpickr */
+:deep(.flatpickr-wrapper) {
+  width: 100% !important;
+  display: block !important;
+}
+
+:deep(.flatpickr-input) {
+  background-color: #fff !important;
+  border: 1px solid #ced4da !important;
+  border-radius: 0.25rem !important;
+  width: 100% !important;
+  display: block !important;
+}
+
+/* Input alternativo generado por flatpickr (cuando se usa altInput) */
+:deep(.flatpickr-input.flatpickr-mobile) {
+  background-color: #fff !important;
+}
+
+:deep(.flatpickr-calendar) {
+  width: 307.875px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 8px !important;
+  border: none !important;
+  background-color: #fff !important;
+  z-index: 1060 !important;
+}
+
+:deep(.flatpickr-day.selected) {
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+}
+
+:deep(.flatpickr-day.today) {
+  border-color: #198754 !important;
+}
+
+:deep(.flatpickr-day:hover) {
+  background-color: #e9ecef !important;
+}
+
+/* Fix para todos los elementos que puedan ser añadidos por flatpickr */
+:deep([class^="flatpickr"]) {
+  font-size: inherit !important;
+  line-height: inherit !important;
 }
 </style>
