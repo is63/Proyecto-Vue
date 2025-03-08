@@ -3,6 +3,17 @@ import { ref, onMounted, computed } from "vue";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
+// Añadir prop para recibir el usuario autenticado
+const props = defineProps({
+  usuarioAutenticado: {
+    type: Object,
+    default: null
+  }
+});
+
+// Estado para el modo de visualización (disponibles/todas)
+const modoVisualizacion = ref('disponibles');
+
 const URL_BASE_API = "http://localhost/freetours/api.php"; // URL base de la API
 const rutas = ref([]); // Estado reactivo para almacenar las rutas
 const valoraciones = ref([]); // Estado reactivo para almacenar las valoraciones
@@ -149,24 +160,41 @@ async function obtenerValoraciones() {
   }
 }
 
-// Función para filtrar rutas según la búsqueda
+// Función para comprobar si una ruta está disponible (fecha en el futuro)
+function esRutaDisponible(ruta) {
+  if (!ruta.fecha) return false;
+  
+  const fechaRuta = new Date(ruta.fecha);
+  const hoy = new Date();
+  
+  // Eliminar horas, minutos y segundos para comparar solo las fechas
+  fechaRuta.setHours(0, 0, 0, 0);
+  hoy.setHours(0, 0, 0, 0);
+  
+  return fechaRuta >= hoy;
+}
+
+// Modificar la función filtrarRutas para tener en cuenta el modo de visualización
 function filtrarRutas() {
+  // Primero aplicamos el filtro de disponibilidad según el modo
+  let rutasFiltradas = rutas.value;
+  
+  if (modoVisualizacion.value === 'disponibles') {
+    rutasFiltradas = rutasFiltradas.filter(ruta => esRutaDisponible(ruta));
+  }
+  
+  // Luego aplicamos los filtros de búsqueda
   if (tipoBusqueda.value === 'fecha') {
-    // Si la fecha está vacía, mostrar todas las rutas
     if (!busqueda.value) {
-      return rutas.value;
+      return rutasFiltradas;
     }
-    // Formatear la fecha de búsqueda a YYYY-MM-DD
     const fechaFormateada = new Date(busqueda.value).toISOString().split('T')[0];
-    return rutas.value.filter((ruta) =>
-      ruta.fecha === fechaFormateada
-    );
+    return rutasFiltradas.filter(ruta => ruta.fecha === fechaFormateada);
   } else {
-    // Busqueda por texto (título o localidad)
     if (!busqueda.value) {
-      return rutas.value;
+      return rutasFiltradas;
     }
-    return rutas.value.filter((ruta) =>
+    return rutasFiltradas.filter(ruta =>
       ruta.titulo.toLowerCase().includes(busqueda.value.toLowerCase()) ||
       ruta.localidad.toLowerCase().includes(busqueda.value.toLowerCase())
     );
@@ -197,6 +225,17 @@ function cambiarTipoBusqueda() {
   }
 }
 
+// Función para cambiar el modo de visualización
+function cambiarModoVisualizacion(modo) {
+  modoVisualizacion.value = modo;
+  paginaActual.value = 1; // Resetear a la primera página
+}
+
+// Comprobar si el usuario es admin
+const esAdmin = computed(() => {
+  return props.usuarioAutenticado && props.usuarioAutenticado.rol === 'admin';
+});
+
 onMounted(async () => {
   await obtenerRutas();
   await obtenerValoraciones();
@@ -205,6 +244,24 @@ onMounted(async () => {
 
 <template>
   <div class="container">
+    <!-- Selector de modo para administradores -->
+    <div v-if="esAdmin" class="nav-tabs-container mb-4 mt-4">
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link" :class="{ active: modoVisualizacion === 'disponibles' }" 
+             href="#" @click.prevent="cambiarModoVisualizacion('disponibles')">
+            Rutas Disponibles
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" :class="{ active: modoVisualizacion === 'todas' }" 
+             href="#" @click.prevent="cambiarModoVisualizacion('todas')">
+            Todas las Rutas
+          </a>
+        </li>
+      </ul>
+    </div>
+
     <!-- Barra de busqueda  -->
     <div class="mb-4 mt-4">
       <form @submit.prevent="filtrarRutas" class="buscador-container">
@@ -248,6 +305,14 @@ onMounted(async () => {
     <!-- Mensaje de error y no hay rutas -->
     <div v-if="error" class="alert alert-danger text-center mt-5">{{ error }}</div>
     <div v-else>
+      <!-- Título informativo del modo actual -->
+      <div class="d-flex justify-content-center align-items-center mb-3 mt-5">
+        <h2 class="h2 mb-0 text-primary">
+          {{ modoVisualizacion === 'disponibles' ? 'Rutas Disponibles' : 'Todas las Rutas' }}
+        </h2>
+      </div>
+      <hr>
+      
       <!-- Tarjetas de rutas  -->
       <div v-if="filtrarRutas().length > 0" class="row g-4 mb-4 mt-5">
         <div v-for="(ruta, index) in rutasPaginadas" :key="index" class="col-12">
@@ -538,5 +603,42 @@ video {
   .video-container {
     padding: 15px !important;
   }
+}
+
+/* Estilos para las pestañas de administrador */
+.nav-tabs-container {
+  position: relative;
+}
+
+.nav-tabs {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.nav-link {
+  color: #495057;
+  background-color: #fff;
+  border: 1px solid transparent;
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  margin-right: 0.25rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+  border-color: #e9ecef #e9ecef #dee2e6;
+}
+
+.nav-link.active {
+  color: #495057;
+  background-color: #fff;
+  border-color: #dee2e6 #dee2e6 #fff;
+  font-weight: 500;
+}
+
+/* Estilo para el badge contador */
+.badge.bg-info {
+  font-weight: 400;
+  padding: 0.4em 0.8em;
 }
 </style>
