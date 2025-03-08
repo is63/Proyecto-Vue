@@ -977,6 +977,160 @@ async function enviarValoracion() {
   }
 }
 
+// Añadir estas funciones al script existente
+
+// Función para redirigir a mis reservas
+function irAMisReservas() {
+  router.push('/misReservas');
+}
+
+// Función para modificar asistentes
+function modificarAsistentes() {
+  // Primero necesitamos obtener la reserva actual del usuario
+  const reservaUsuario = reservas.value.find(reserva => {
+    const clienteId = props.usuarioAutenticado.id;
+    const email = props.usuarioAutenticado.email?.toLowerCase();
+    
+    return (Number(reserva.cliente_id) === Number(clienteId) || 
+            String(reserva.usuario_email).toLowerCase() === email) &&
+           Number(reserva.ruta_id) === Number(props.id);
+  });
+
+  if (reservaUsuario) {
+    // Establecer el número de personas inicial en el modal
+    numPersonas.value = reservaUsuario.num_personas;
+    
+    // Crear un modal personalizado para modificar reserva
+    const modalModificar = new Modal(document.getElementById('modificarReservaModal'));
+    modalModificar.show();
+  } else {
+    Swal.fire({
+      title: 'Error',
+      text: 'No se encontró tu reserva para esta ruta',
+      icon: 'error',
+      confirmButtonColor: '#dc3545'
+    });
+  }
+}
+
+// Función para actualizar la reserva con el nuevo número de asistentes
+async function actualizarReserva() {
+  try {
+    cargandoReserva.value = true;
+    errorReserva.value = "";
+
+    // Obtenemos la reserva actual del usuario
+    const reservaUsuario = reservas.value.find(reserva => {
+      const clienteId = props.usuarioAutenticado.id;
+      const email = props.usuarioAutenticado.email?.toLowerCase();
+      
+      return (Number(reserva.cliente_id) === Number(clienteId) || 
+              String(reserva.usuario_email).toLowerCase() === email) &&
+             Number(reserva.ruta_id) === Number(props.id);
+    });
+
+    if (!reservaUsuario) {
+      throw new Error('No se encontró tu reserva para esta ruta');
+    }
+
+    // Guardar el número de personas actual para calcular la diferencia después
+    const numPersonasAnterior = reservaUsuario.num_personas;
+    
+    // Paso 1: Eliminar la reserva existente
+    const responseDelete = await fetch(`http://localhost/freetours/api.php/reservas?id=${reservaUsuario.reserva_id}`, {
+      method: 'DELETE'
+    });
+
+    if (!responseDelete.ok) {
+      const errorDelete = await responseDelete.text();
+      throw new Error(`Error al eliminar la reserva existente: ${responseDelete.status} - ${errorDelete}`);
+    }
+    
+    // Paso 2: Crear una nueva reserva con el número actualizado de personas
+    const datosNuevaReserva = {
+      email: reservaUsuario.usuario_email,
+      ruta_id: parseInt(props.id),
+      num_personas: numPersonas.value
+    };
+
+    const responseCreate = await fetch('http://localhost/freetours/api.php/reservas', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(datosNuevaReserva)
+    });
+
+    // Verificar respuesta de la creación
+    if (!responseCreate.ok) {
+      const errorCreate = await responseCreate.text();
+      throw new Error(`Error al crear la nueva reserva: ${responseCreate.status} - ${errorCreate}`);
+    }
+
+    // Cerrar el modal
+    const modalModificarEl = document.getElementById('modificarReservaModal');
+    if (modalModificarEl) {
+      const modalInstance = Modal.getInstance(modalModificarEl);
+      if (modalInstance) {
+        modalInstance.hide();
+      }
+    }
+
+    // Limpiar elementos del modal
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) {
+      backdrop.remove();
+    }
+
+    // Mostrar confirmación con timer de 3 segundos y barra de progreso
+    await Swal.fire({
+      title: '¡Reserva actualizada!',
+      text: `Has modificado tu reserva a ${numPersonas.value} ${numPersonas.value == 1 ? 'persona' : 'personas'}`,
+      icon: 'success',
+      confirmButtonColor: '#28a745',
+      confirmButtonText: 'Ver mis reservas',
+      showCancelButton: true,
+      cancelButtonText: 'Continuar aquí',
+      backdrop: false,
+      timer: 3000,  // 3 segundos = 3000ms
+      timerProgressBar: true,  // Muestra la barra de progreso
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Redirigir a la página de misReservas
+        router.push('/misReservas');
+      }
+      // Si el timer expira y no se ha interactuado con los botones, se queda en la página actual
+    });
+
+    // Actualizar los datos en la vista
+    await cargarReservas();
+    
+    // Actualizar contador de asistentes
+    if (ruta.value) {
+      ruta.value.asistentes = numPersonas.value;
+    }
+
+  } catch (error) {
+    console.error("Error al actualizar la reserva:", error);
+    errorReserva.value = error.message || "No se pudo actualizar la reserva";
+
+    // Mostrar el error en el modal y con SweetAlert
+    Swal.fire({
+      title: 'Error',
+      text: errorReserva.value,
+      icon: 'error',
+      confirmButtonColor: '#dc3545',
+      backdrop: false
+    });
+  } finally {
+    cargandoReserva.value = false;
+  }
+}
+
 onMounted(() => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   cargarDatos().then(() => {
@@ -1024,7 +1178,10 @@ onMounted(() => {
   modalPasarLista.value = new Modal(document.getElementById('pasarListaModal'));
   modalReserva.value = new Modal(document.getElementById('reservaModal'));
   modalLoginRequerido.value = new Modal(document.getElementById('loginRequeridoModal'));
+  // Inicializar también el modal de modificar reserva
+  new Modal(document.getElementById('modificarReservaModal'));
 });
+
 
 // Añadir un watch para actualizar la lista de guías cuando cambia la fecha
 watch(() => nuevaFecha.value, (nuevaFecha) => {
@@ -1085,8 +1242,56 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
           <!-- Asistentes -->
           <div class="mb-3">
             <p class="h4 fw-bold text-decoration-underline text-secondary">Asistentes</p>
-            <p class="detalle">{{ ruta.asistentes || 2 }}</p>
+            <p class="detalle">{{ ruta.asistentes || 0 }}</p>
           </div>
+          
+          <!-- SECCIÓN DE RESERVA - Disponible para todos los usuarios autenticados -->
+          <div v-if="props.usuarioAutenticado" class="w-100 mb-3">
+            <!-- Botón según el estado de la reserva -->
+            <div class="d-grid gap-2">
+              <!-- Si ya ha reservado y la ruta aún no ha pasado: botones de gestión -->
+              <button v-if="yaHaReservado && !rutaYaPaso" 
+                      type="button" 
+                      class="btn btn-info text-white w-100" 
+                      @click="modificarAsistentes">
+                <i class="bi bi-pencil-square me-2"></i>Modificar asistentes
+              </button>
+              
+              <!-- Si ya ha reservado y la ruta ya pasó: botón de completada -->
+              <button v-else-if="yaHaReservado && rutaYaPaso" 
+                      type="button" 
+                      class="btn btn-success w-100" 
+                      disabled>
+                <i class="bi bi-check-circle me-2"></i>Completada
+              </button>
+              
+              <!-- Si no ha reservado aún: botón de reservar -->
+              <button v-else 
+                      type="button" 
+                      class="btn btn-primary w-100" 
+                      @click="abrirModalReserva">
+                <i class="bi bi-calendar-plus me-2"></i>Reservar
+              </button>
+              
+              <!-- Botón adicional para ir a Mis Reservas cuando ya tiene una reserva -->
+              <button v-if="yaHaReservado && !rutaYaPaso" 
+                      type="button" 
+                      class="btn btn-outline-primary w-100" 
+                      @click="irAMisReservas">
+                <i class="bi bi-eye me-2"></i>Ver en Mis Reservas
+              </button>
+            </div>
+          </div>
+          
+          <!-- SECCIÓN DE USUARIO NO AUTENTICADO - Login requerido -->
+          <div v-else class="w-100 mb-3">
+            <button type="button" class="btn btn-outline-primary w-100" @click="mostrarModalLogin">
+              Iniciar sesión para reservar
+            </button>
+          </div>
+          
+          <!-- Separador visual -->
+          <hr class="mb-3">
 
           <!-- SECCIÓN DE ADMINISTRADOR -->
           <div v-if="props.usuarioAutenticado && props.usuarioAutenticado.rol === 'admin'" class="btn-group mb-3 w-100"
@@ -1107,24 +1312,6 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
           <div v-else-if="esGuiaAsignado" class="btn-group mb-3 w-100" role="group">
             <button type="button" class="btn btn-info text-white w-100" @click="verAsistentes">
               Ver Asistentes
-            </button>
-          </div>
-
-          <!-- SECCIÓN DE CLIENTE -->
-          <div v-else-if="props.usuarioAutenticado && props.usuarioAutenticado.rol === 'cliente'"
-            class="btn-group mb-3 w-100" role="group">
-            <button type="button" class="btn w-100" :class="[
-              yaHaReservado ? (rutaYaPaso ? 'btn-success' : 'btn-primary') : 'btn-primary'
-            ]" @click="abrirModalReserva" :disabled="yaHaReservado"
-              :title="yaHaReservado ? (rutaYaPaso ? 'Has completado esta ruta' : 'Ya tienes una reserva para esta ruta') : 'Reservar plaza para esta ruta'">
-              {{ yaHaReservado ? (rutaYaPaso ? 'Completada' : 'Ya reservada') : 'Reservar' }}
-            </button>
-          </div>
-
-          <!-- SECCIÓN DE USUARIO NO AUTENTICADO -->
-          <div v-else class="btn-group mb-3 w-100" role="group">
-            <button type="button" class="btn btn-outline-primary w-100" @click="mostrarModalLogin">
-              Reservar
             </button>
           </div>
         </div>
@@ -1472,6 +1659,50 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
               <span v-if="cargandoReserva" class="spinner-border spinner-border-sm me-2" role="status"
                 aria-hidden="true"></span>
               Confirmar Reserva
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para modificar reserva -->
+    <div class="modal fade" id="modificarReservaModal" tabindex="-1" aria-labelledby="modificarReservaModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modificarReservaModalLabel">Modificar asistentes para: {{ ruta.titulo }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-info" role="alert">
+              <i class="bi bi-info-circle-fill me-2"></i>
+              Puedes modificar el número de asistentes para esta reserva.
+            </div>
+
+            <div class="mb-3">
+              <label for="numPersonas" class="form-label">Número de personas</label>
+              <div class="d-flex justify-content-center align-items-center mb-3">
+                <div class="btn-group selector-personas">
+                  <button v-for="num in 8" :key="num" type="button"
+                    :class="['btn', numPersonas === num ? 'btn-primary' : 'btn-outline-primary']"
+                    @click="numPersonas = num">
+                    {{ num }}
+                  </button>
+                </div>
+              </div>
+              <small class="form-text text-muted d-block text-center">Máximo 8 personas por reserva</small>
+            </div>
+
+            <div class="alert alert-warning" v-if="errorReserva">
+              {{ errorReserva }}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-success" @click="actualizarReserva" :disabled="cargandoReserva">
+              <span v-if="cargandoReserva" class="spinner-border spinner-border-sm me-2" role="status"
+                aria-hidden="true"></span>
+              Actualizar Reserva
             </button>
           </div>
         </div>

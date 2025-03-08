@@ -254,13 +254,18 @@ onMounted(() => {
             </div>
 
             <div class="d-grid gap-2">
-              <button class="btn btn-success btn-sm" @click="verRuta(reserva.ruta_id)">
-                Valorar
+              <!-- Cambiar el texto del botón según la fecha de la ruta -->
+              <button class="btn btn-sm" 
+                  :class="new Date(reserva.ruta_fecha) > new Date() ? 'btn-primary' : 'btn-success'"
+                  @click="verRuta(reserva.ruta_id)">
+                <i class="bi" :class="new Date(reserva.ruta_fecha) > new Date() ? 'bi-info-circle' : 'bi-star-fill'"></i>
+                {{ new Date(reserva.ruta_fecha) > new Date() ? 'Ver detalles' : 'Valorar' }}
               </button>
 
               <!-- Solo mostrar para reservas futuras -->
               <button v-if="new Date(reserva.ruta_fecha) > new Date()" class="btn btn-danger btn-sm"
                 @click="cancelarReserva(reserva.reserva_id)">
+                <i class="bi bi-x-circle"></i>
                 Cancelar Reserva
               </button>
             </div>
