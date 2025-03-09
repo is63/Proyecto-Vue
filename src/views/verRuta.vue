@@ -529,7 +529,7 @@ async function guardarAsistencias() {
 
 // FUNCIONES ADMIN
 
-// Crear una copia de la ruta actual 
+// Crear una copia de la ruta actual
 async function duplicarRuta() {
   const datosRuta = {
     titulo: ruta.value.titulo,
@@ -539,7 +539,7 @@ async function duplicarRuta() {
     fecha: nuevaFecha.value,
     hora: nuevaHora.value,
     latitud: ruta.value.latitud,
-    longitud: ruta.value.long,
+    longitud: ruta.value.longitud, 
     guia_id: nuevoGuia.value || null,
   };
 
