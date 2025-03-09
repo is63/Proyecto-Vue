@@ -2,11 +2,11 @@
 import { ref, onMounted, watch, computed } from 'vue';
 import router from '@/router';
 import "leaflet/dist/leaflet.css";
-import L from "leaflet"; // Para el mapa interactivo
-import flatpickr from "flatpickr"; // Selector de fecha y hora
+import L from "leaflet";
+import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
-import Swal from 'sweetalert2'; // Alertas y confirmaciones elegantes
-import { Modal } from 'bootstrap'; // Modales de Bootstrap
+import Swal from 'sweetalert2';
+import { Modal } from 'bootstrap';
 
 const props = defineProps({
   id: {
@@ -20,110 +20,120 @@ const props = defineProps({
 });
 
 
-const ruta = ref({ asistentes: 0 });  // Datos de la ruta actual
-const error = ref("");                // Mensajes de error
-let mapa = null;                      // Instancia del mapa Leaflet
-const asignacionGuia = ref(null);     // Nombre del guía asignado a la ruta
+const ruta = ref({ asistentes: 0 });
+const error = ref("");
+let mapa = null;
+const asignacionGuia = ref(null);
 
 
-const reservas = ref([]);             // Lista de reservas para la ruta
-const numPersonas = ref(1);           // Número de personas para nueva reserva
-const errorReserva = ref("");         // Errores específicos de reserva
-const cargandoReserva = ref(false);   // Estado de carga durante reserva
-const modalReserva = ref(null);       // Referencia al modal de reserva
+// Datos de reservas
+const reservas = ref([]);
+const numPersonas = ref(1);
+const errorReserva = ref("");
+const cargandoReserva = ref(false);
+const modalReserva = ref(null);
 
-// ==========================================
-// GESTIÓN DE GUÍAS
-// ==========================================
-const guias = ref([]);                // Lista de guías disponibles
-const guiaSeleccionado = ref('');     // Guía seleccionado para asignar
-const instanciaModalAsignarGuia = ref(null); // Referencia al modal de asignación
 
-// ==========================================
-// DUPLICACIÓN DE RUTAS
-// ==========================================
-const nuevaFecha = ref("");           // Fecha para la ruta duplicada
-const nuevaHora = ref("");            // Hora para la ruta duplicada
-const nuevoGuia = ref("");            // Guía para la ruta duplicada
-let instanciaModalDuplicar = null;    // Referencia al modal de duplicación
+// Datos para la gestion de los guias
+const guias = ref([]);
+const guiaSeleccionado = ref('');
+const modalAsignarGuia = ref(null);
 
-// ==========================================
-// ELIMINACIÓN DE RUTAS
-// ==========================================
-const mostrarConfirmacionEliminacion = ref(false);
-const mensajeConfirmacionEliminacion = ref("");
-const eliminacionExitosa = ref(false);
+// Datos para la duplicion de rutas
+const nuevaFecha = ref("");
+const nuevaHora = ref("");
+const nuevoGuia = ref("");
+let instanciaModalDuplicar = null;
+
+
+// Datos para la eliminación de rutas
 let eliminacionCompletada = ref(false);
 
-// ==========================================
-// GESTIÓN DE ASISTENTES Y CONTROL DE ASISTENCIA
-// ==========================================
-const modalAsistentes = ref(null);    // Modal para ver lista de asistentes
-const modalPasarLista = ref(null);    // Modal para control de asistencia
-const asistencias = ref({});          // Registro de asistencias (presente/ausente)
-const asistentesReales = ref({});     // Número real de asistentes por reserva
+// Datos para la gestion de Pasar Lista
+const modalAsistentes = ref(null);
+const modalPasarLista = ref(null);
+const asistencias = ref({});
+const asistentesReales = ref({});
 
-// ==========================================
-// CONFIRMACIONES Y FEEDBACK
-// ==========================================
-const mostrarConfirmacion = ref(false);
-const mensajeConfirmacion = ref("");
-const confirmacionExitosa = ref(false);
-
-// ==========================================
-// Añadir estas variables
+// Datos para saber si el usuario ha iniciado sesion
 const modalLoginRequerido = ref(null);
 
-// ==========================================
-// PROPIEDADES COMPUTADAS
-// ==========================================
+// Variable para almacenar el id del usuario
+const clienteIdUsuarioActual = ref(null);
 
-// URL de la imagen de la ruta, con fallback si no existe
+//Datos para las valoraciones
+const mostrarFormularioValoracion = ref(false);
+const nuevaValoracion = ref({
+  puntuacion: 5,
+  comentario: ''
+});
+const enviandoValoracion = ref(false);
+const errorValoracion = ref('');
+const yaHaValorado = ref(false);
+
+
+// Comprueba si la ruta ya pasó
+const rutaYaPaso = computed(() => {
+  if (!ruta.value?.fecha) return false;
+
+  const fechaRuta = new Date(ruta.value.fecha);
+  const hoy = new Date();
+
+  // Comparar año, mes y día
+  if (fechaRuta.getFullYear() < hoy.getFullYear()) return true;
+  if (fechaRuta.getFullYear() == hoy.getFullYear() &&
+    fechaRuta.getMonth() < hoy.getMonth()) return true;
+  if (fechaRuta.getFullYear() == hoy.getFullYear() &&
+    fechaRuta.getMonth() == hoy.getMonth() &&
+    fechaRuta.getDate() < hoy.getDate()) return true;
+
+  return false;
+});
+
+
+// URL de la imagen de la ruta
 const urlImagen = computed(() => {
   if (!ruta.value?.foto) return '';
   return ruta.value.foto;
 });
 
-// Determina si el usuario autenticado es el guía asignado a esta ruta
+// Comprobar si el usuario registrado es el guía asignado a esta ruta
 const esGuiaAsignado = computed(() => {
-  return props.usuarioAutenticado?.rol === 'guia' &&
-    asignacionGuia.value === props.usuarioAutenticado.nombre;
+  return props.usuarioAutenticado?.rol == 'guia' &&
+    asignacionGuia.value == props.usuarioAutenticado.nombre;
 });
 
-// Verifica si la ruta es el día actual para habilitar control de asistencia
+// Verifica si la fecha de la ruta es el día actual para activar el control de asistencia
 const esHoyLaRuta = computed(() => {
   if (!ruta.value?.fecha) return false;
 
   const fechaRuta = new Date(ruta.value.fecha);
   const hoy = new Date();
 
-  // Comparar año, mes y día para determinar si es hoy
-  return fechaRuta.getFullYear() === hoy.getFullYear() &&
-    fechaRuta.getMonth() === hoy.getMonth() &&
-    fechaRuta.getDate() === hoy.getDate();
+  return fechaRuta.getFullYear() == hoy.getFullYear() &&
+    fechaRuta.getMonth() == hoy.getMonth() &&
+    fechaRuta.getDate() == hoy.getDate();
 });
 
-// Comprueba si el cliente ya ha reservado esta ruta para evitar duplicados
+// Comprobar si el cliente ya ha reservado esta ruta para evitar duplicados - solo usando ID
 const yaHaReservado = computed(() => {
   if (!props.usuarioAutenticado || !reservas.value.length) {
     return false;
   }
 
   const clienteId = props.usuarioAutenticado.id;
-  const email = props.usuarioAutenticado.email?.toLowerCase();
 
-  // Verifica tanto por ID como por email para mayor seguridad
+
   return reservas.value.some(reserva =>
-    (Number(reserva.cliente_id) === Number(clienteId) ||
-      String(reserva.usuario_email).toLowerCase() === email) &&
-    Number(reserva.ruta_id) === Number(props.id)
+    reserva.cliente_id == clienteId &&
+    reserva.ruta_id == props.id
   );
 });
 
-// Añadir esta nueva variable para las valoraciones
+// Array para las valoraciones 
 const valoraciones = ref([]);
 
-// Añadir esta función para formatear fechas
+
 function formatearFecha(fechaStr) {
   if (!fechaStr) return '';
 
@@ -135,7 +145,7 @@ function formatearFecha(fechaStr) {
   });
 }
 
-// Añadir esta función para cargar valoraciones
+// Cargar valoraciones
 async function cargarValoraciones() {
   try {
     const respuesta = await fetch(`http://localhost/freetours/api.php/valoraciones?ruta_id=${props.id}`);
@@ -143,17 +153,16 @@ async function cargarValoraciones() {
       throw new Error(`Error al cargar las valoraciones: ${respuesta.status}`);
     }
     valoraciones.value = await respuesta.json();
-    console.log("Valoraciones cargadas:", valoraciones.value);
+    //console.log("Valoraciones cargadas:", valoraciones.value);
   } catch (error) {
     console.error("Error al cargar las valoraciones:", error);
     valoraciones.value = [];
   }
 }
 
-// Carga todos los datos necesarios para mostrar la ruta
+// Cargar los datos de la ruta
 async function cargarDatos() {
   try {
-    // Carga datos de la ruta actual
     const respuestaRuta = await fetch(`http://localhost/freetours/api.php/rutas?id=${props.id}`);
     if (!respuestaRuta.ok) {
       throw new Error(`Error al cargar la ruta: ${respuestaRuta.status} ${respuestaRuta.statusText}`);
@@ -165,22 +174,22 @@ async function cargarDatos() {
       router.push("/"); // Si la ruta no existe, redirigir al inicio
     }
 
-    // Carga datos de las asignaciones de guías
+    // Cargar las asignaciones de guías
     const respuestaAsignaciones = await fetch("http://localhost/freetours/api.php/asignaciones");
     if (!respuestaAsignaciones.ok) {
       throw new Error(`Error al cargar las asignaciones: ${respuestaAsignaciones.status}`);
     }
     const asignaciones = await respuestaAsignaciones.json();
 
-    // Carga la lista de todos los guías 
+    // Cargar la lista de todos los guías 
     const respuestaGuias = await fetch("http://localhost/freetours/api.php/usuarios");
     if (!respuestaGuias.ok) {
       throw new Error(`Error al cargar los guías: ${respuestaGuias.status} ${respuestaGuias.statusText}`);
     }
     const datosGuias = await respuestaGuias.json();
-    guias.value = datosGuias.filter(usuario => usuario.rol === "guia");
+    guias.value = datosGuias.filter(usuario => usuario.rol == "guia");
 
-    // Identifica el guía asignado a esta ruta
+    // Identificar el guía asignado a esta ruta
     const asignacionActual = asignaciones.find(asig => asig.ruta_id == props.id);
     if (asignacionActual) {
       // Buscar el nombre del guía en la lista de guías
@@ -190,7 +199,7 @@ async function cargarDatos() {
       asignacionGuia.value = null;
     }
 
-    // Inicializar el mapa si la ruta tiene coordenadas
+    // Iniciar el mapa si la ruta tiene coordenadas
     if (ruta.value.latitud && ruta.value.longitud) {
       inicializarMapa(ruta.value.latitud, ruta.value.longitud);
     }
@@ -201,6 +210,7 @@ async function cargarDatos() {
     // Verificar si el usuario ya ha valorado esta ruta
     if (props.usuarioAutenticado) {
       await verificarSiYaValoro();
+      //console.log("Verificación de valoración completada:", yaHaValorado.value);
     }
 
   } catch (err) {
@@ -209,7 +219,7 @@ async function cargarDatos() {
   }
 }
 
-// Carga las reservas asociadas a la ruta actual
+// Cargar las reservas asociadas a la ruta
 async function cargarReservas() {
   try {
     const response = await fetch(`http://localhost/freetours/api.php/reservas?ruta_id=${props.id}`);
@@ -217,34 +227,34 @@ async function cargarReservas() {
       throw new Error(`Error al cargar las reservas: ${response.status}`);
     }
     reservas.value = await response.json();
-    console.log("Reservas cargadas para ruta ID", props.id, ":", reservas.value);
+    //console.log("Reservas cargadas para ruta ID", props.id, ":", reservas.value);
   } catch (error) {
     console.error("Error al cargar reservas:", error);
   }
 }
 
-// Carga los guías disponibles para asignar a la ruta
+// Cargar los guías disponibles para asignar a la ruta
 async function cargarGuias() {
   try {
-    const fecha = ruta.value.fecha; // Usar la fecha de la ruta actual
+    const fecha = ruta.value.fecha;
 
-    // 1. Obtener disponibilidad de guías para la fecha
+    // Obtener la disponibilidad de guías
     const response = await fetch(`http://localhost/freetours/api.php/asignaciones?fecha=${fecha}`);
     if (!response.ok) {
       throw new Error(`Error al cargar los guías disponibles: ${response.status}`);
     }
     const guiasDisponibles = await response.json();
 
-    // 2. Obtener información completa de todos los guías
+    // Obtener la informacion de los guías
     const respuestaGuias = await fetch("http://localhost/freetours/api.php/usuarios");
     if (!respuestaGuias.ok) {
       throw new Error(`Error al cargar los guías: ${respuestaGuias.status}`);
     }
     const todosGuias = await respuestaGuias.json();
 
-    // 3. Filtrar solo los guías disponibles para esta fecha
+    // Filtrar solo los guías disponibles para la fecha
     guias.value = todosGuias.filter(guia =>
-      guia.rol === "guia" && guiasDisponibles.some(g => Number(g.id) === Number(guia.id))
+      guia.rol == "guia" && guiasDisponibles.some(g => g.id == guia.id)
     );
   } catch (error) {
     console.error("Error al cargar guías:", error);
@@ -252,7 +262,7 @@ async function cargarGuias() {
   }
 }
 
-// Carga guías disponibles para una nueva fecha (duplicación de ruta)
+// Cargar los guías disponibles para la nueva fecha 
 async function cargarGuiasParaDuplicar() {
   try {
     if (!nuevaFecha.value) {
@@ -260,26 +270,26 @@ async function cargarGuiasParaDuplicar() {
       return;
     }
 
-    // 1. Obtener guías disponibles para la nueva fecha
+    // Obtener guías disponibles para la nueva fecha
     const respuesta = await fetch(`http://localhost/freetours/api.php/asignaciones?fecha=${nuevaFecha.value}`);
     if (!respuesta.ok) {
       throw new Error(`Error al cargar los guías disponibles: ${respuesta.status}`);
     }
     const guiasDisponibles = await respuesta.json();
 
-    // 2. Obtener información completa de todos los guías
+    // Obtener la informacion de  los guías
     const respuestaGuias = await fetch("http://localhost/freetours/api.php/usuarios");
     if (!respuestaGuias.ok) {
       throw new Error(`Error al cargar los guías: ${respuestaGuias.status}`);
     }
     const todosGuias = await respuestaGuias.json();
 
-    // 3. Filtrar solo los guías disponibles para la nueva fecha
+    // Filtrar por los guías disponibles para la  fecha
     guias.value = todosGuias.filter(guia =>
-      guia.rol === "guia" && guiasDisponibles.some(g => Number(g.id) === Number(guia.id))
+      guia.rol == "guia" && guiasDisponibles.some(g => g.id == guia.id)
     );
 
-    console.log("Guías disponibles para duplicar:", guias.value);
+    //console.log("Guías disponibles para duplicar:", guias.value);
   } catch (error) {
     console.error("Error al cargar guías para duplicar:", error);
     guias.value = [];
@@ -287,55 +297,40 @@ async function cargarGuiasParaDuplicar() {
 }
 
 
-// Inicializa el mapa Leaflet con la ubicación de la ruta
+// Iniciar el mapa con la ubicación de la ruta
 function inicializarMapa(latitud, longitud) {
   if (mapa) {
-    mapa.remove(); // Si ya existe un mapa, se elimina primero
+    mapa.remove(); // Si ya existe un mapa, se elimina
   }
 
-  mapa = L.map("mapa").setView([latitud, longitud], 16); // Crear el mapa con zoom 16
+  mapa = L.map("mapa").setView([latitud, longitud], 16); // Crear el mapa 
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '', // Atribución del mapa
+    attribution: '',
   }).addTo(mapa);
 
-  L.marker([latitud, longitud]) // Crear un marcador en las coordenadas
+  L.marker([latitud, longitud]) // Crear un marcador 
     .addTo(mapa)
     .bindPopup("Punto de encuentro") // Texto del popup
     .openPopup(); // Mostrar popup inicialmente
 }
 
-// Maneja errores al cargar imágenes y muestra una imagen de placeholder
+// Manejar los errores al cargar imágenes
 function manejarErrorImagen(e) {
   console.error('Error al cargar la imagen:', e);
   e.target.src = 'https://placehold.co/600x400?text=Imagen+no+disponible';
 }
 
-// ==========================================
-// FUNCIONES PARA GESTIÓN DE RESERVAS
-// ==========================================
 
-// Abre el modal para realizar una nueva reserva
+// FUNCIONES PARA GESTIÓN DE RESERVAS
+
+// Abrir el modal para realizar una nueva reserva
 function abrirModalReserva() {
   const modalReserva = new Modal(document.getElementById('reservaModal'));
   modalReserva.show();
 }
 
-// Incrementa el número de personas para la reserva (máx. 8)
-function incrementarPersonas() {
-  if (numPersonas.value < 8) {
-    numPersonas.value++;
-  }
-}
-
-// Decrementa el número de personas para la reserva (mín. 1)
-function decrementarPersonas() {
-  if (numPersonas.value > 1) {
-    numPersonas.value--;
-  }
-}
-
-// Procesa la reserva enviándola al servidor
+// Crear la reserva
 async function realizarReserva() {
   try {
     cargandoReserva.value = true;
@@ -346,9 +341,9 @@ async function realizarReserva() {
       throw new Error('Debe iniciar sesión para realizar una reserva');
     }
 
-    console.log("Datos del usuario autenticado:", props.usuarioAutenticado);
+    //console.log("Datos del usuario autenticado:", props.usuarioAutenticado);
 
-    // Obtener el email del usuario autenticado
+    // Obtener el email del usuario 
     const email = props.usuarioAutenticado.email;
 
     if (!email) {
@@ -359,23 +354,23 @@ async function realizarReserva() {
     const clienteId = props.usuarioAutenticado.id;
 
     const yaReservada = reservas.value.some(reserva =>
-      (Number(reserva.cliente_id) === Number(clienteId) ||
-        reserva.usuario_email.toLowerCase() === email.toLowerCase()) &&
-      Number(reserva.ruta_id) === Number(props.id)
+      (reserva.cliente_id == clienteId ||
+        reserva.usuario_email.toLowerCase() == email.toLowerCase()) &&
+      reserva.ruta_id == props.id
     );
 
     if (yaReservada) {
       throw new Error('Ya tienes una reserva para esta ruta. No puedes reservar dos veces.');
     }
 
-    // Preparar datos de la reserva para enviar a la API
+    // Asignar los datos de la reserva
     const datosReserva = {
       email: email,
       ruta_id: parseInt(props.id),
       num_personas: numPersonas.value
     };
 
-    console.log("Datos a enviar para la reserva:", datosReserva);
+    //console.log("Datos a enviar para la reserva:", datosReserva);
 
     // Realizar la petición a la API
     const response = await fetch('http://localhost/freetours/api.php/reservas', {
@@ -386,23 +381,20 @@ async function realizarReserva() {
       body: JSON.stringify(datosReserva)
     });
 
-    // Para depuración
     const responseText = await response.text();
-    console.log("Respuesta de la API:", responseText);
+    //console.log("Respuesta de la API:", responseText);
 
-    // 6. Verificar respuesta del servidor
+    // Verificar respuesta del servidor
     if (!response.ok) {
       try {
-        // Intentar analizar la respuesta como JSON
         const errorData = JSON.parse(responseText);
         throw new Error(errorData.message || `Error del servidor: ${response.status}`);
       } catch (parseError) {
-        // Si no se puede analizar como JSON, usar el texto directamente
         throw new Error(`Error al realizar la reserva: ${response.status} - ${responseText}`);
       }
     }
 
-    // 7. Cerrar el modal y limpiar
+    // Cerrar el modal 
     const modalReservaEl = document.getElementById('reservaModal');
     if (modalReservaEl) {
       const modalInstance = Modal.getInstance(modalReservaEl);
@@ -411,17 +403,18 @@ async function realizarReserva() {
       }
     }
 
-    // Limpiar elementos del modal
+    // Limpiar el modal
     document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
     document.body.style.paddingRight = '';
 
+    //Eliminar el fondo negro del modal
     const backdrop = document.querySelector('.modal-backdrop');
     if (backdrop) {
       backdrop.remove();
     }
 
-    // 8. Mostrar confirmación y redirigir a misReservas al cerrar
+    // Mostrar confirmación y redirigir 
     await Swal.fire({
       title: '¡Reserva realizada!',
       text: `Has reservado para ${numPersonas.value} ${numPersonas.value === 1 ? 'persona' : 'personas'}`,
@@ -436,19 +429,19 @@ async function realizarReserva() {
       }
     });
 
-    // 9. Actualizar contador de asistentes en la vista
+    // Actualizar contador de asistentes en la vista
     if (ruta.value) {
       ruta.value.asistentes = (parseInt(ruta.value.asistentes || 0) + parseInt(numPersonas.value));
     }
 
-    // 10. Recargar las reservas
+    // Recargar las reservas
     await cargarReservas();
 
   } catch (error) {
     console.error("Error al realizar la reserva:", error);
     errorReserva.value = error.message || "No se pudo completar la reserva";
 
-    // Mostrar el error en el modal y con SweetAlert
+    // Mostrar el error 
     Swal.fire({
       title: 'Error',
       text: errorReserva.value,
@@ -461,112 +454,55 @@ async function realizarReserva() {
   }
 }
 
-// Permite cancelar una reserva existente
-async function cancelarReserva(reservaId) {
-  try {
-    // 1. Mostrar confirmación antes de cancelar
-    const confirmar = await Swal.fire({
-      title: '¿Estás seguro?',
-      text: "No podrás revertir esta acción",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, cancelar reserva',
-      cancelButtonText: 'No, mantener reserva'
-    });
 
-    if (!confirmar.isConfirmed) {
-      return;
-    }
-
-    // 2. Enviar solicitud de cancelación a la API
-    const response = await fetch(`http://localhost/freetours/api.php/reservas?id=${reservaId}`, {
-      method: 'DELETE'
-    });
-
-    const responseText = await response.text();
-    console.log("Respuesta al cancelar reserva:", responseText);
-
-    if (!response.ok) {
-      throw new Error(`Error al cancelar la reserva: ${response.status}`);
-    }
-
-    // 3. Mostrar mensaje de éxito
-    await Swal.fire({
-      title: '¡Cancelada!',
-      text: 'Tu reserva ha sido cancelada correctamente',
-      icon: 'success',
-      confirmButtonColor: '#28a745'
-    });
-
-    // 4. Recargar las reservas para actualizar la vista
-    cargarReservas();
-
-  } catch (err) {
-    console.error("Error:", err);
-    await Swal.fire({
-      title: 'Error',
-      text: 'No se pudo cancelar la reserva. Inténtalo más tarde.',
-      icon: 'error',
-      confirmButtonColor: '#dc3545'
-    });
-  }
-}
-
-// ==========================================
 // FUNCIONES PARA GESTIÓN DE ASISTENTES
-// ==========================================
 
-// Abre el modal para ver los asistentes a la ruta
+// Abrir el modal para ver los asistentes a la ruta
 function verAsistentes() {
   modalAsistentes.value.show();
 }
 
-// Abre el modal para registrar asistencia (solo disponible el día de la ruta)
+// Abrir el modal para registrar asistencia (solo activo para el día de la ruta)
 function abrirPasarLista() {
   // Cerrar el modal de asistentes
   modalAsistentes.value.hide();
 
-  // Inicializar el objeto de asistencias si es necesario
-  if (Object.keys(asistencias.value).length === 0) {
+  // Iniciar el objeto de asistencias
+  if (Object.keys(asistencias.value).length == 0) {
     reservas.value.forEach(reserva => {
-      asistencias.value[reserva.reserva_id] = null;  // null = sin marcar
+      asistencias.value[reserva.reserva_id] = null;
     });
   }
 
-  // Abrir el nuevo modal después de un breve retraso
+  // Abrir el nuevo modal
   setTimeout(() => {
     modalPasarLista.value.show();
   }, 500);
 }
 
-// Registra la asistencia de los participantes (presente/ausente)
+// Registrar la asistencia de los participantes (presente/ausente)
 function marcarAsistencia(reservaId, presente) {
   asistencias.value[reservaId] = presente;
 
-  // Si está presente, inicializar el contador de acompañantes
+  // Si está presente, mostrar el contador de acompañantes
   if (presente && !asistentesReales.value[reservaId]) {
-    // Inicializar con el número de personas reservadas
     const reserva = reservas.value.find(r => r.reserva_id == reservaId);
     asistentesReales.value[reservaId] = reserva ? reserva.num_personas : 0;
   }
 }
 
-// Guarda la información de asistencia en el servidor
+// Guardar la información de asistencia (no se guarda en la API)
 async function guardarAsistencias() {
   try {
-    // 1. Preparar los datos a enviar
+    // Asignar los datos de asistencia
     const datosAsistencia = {
       asistencias: asistencias.value,
       asistentesReales: asistentesReales.value
     };
 
-    console.log('Datos a guardar:', datosAsistencia);
+    //console.log('Datos a guardar:', datosAsistencia);
 
-    // Aquí iría el código para enviar al servidor
-
-    // 2. Mostrar confirmación
+    // Mostrar confirmación
     Swal.fire({
       title: '¡Lista pasada!',
       text: 'Se ha registrado la asistencia correctamente',
@@ -576,7 +512,7 @@ async function guardarAsistencias() {
       backdrop: false
     });
 
-    // 3. Cerrar el modal
+    // Cerrar el modal
     modalPasarLista.value.hide();
   } catch (error) {
     console.error('Error al guardar asistencias:', error);
@@ -591,11 +527,9 @@ async function guardarAsistencias() {
   }
 }
 
-// ==========================================
-// FUNCIONES ADMINISTRATIVAS (ADMIN)
-// ==========================================
+// FUNCIONES ADMIN
 
-// Crea una copia de la ruta actual con nueva fecha y hora
+// Crear una copia de la ruta actual 
 async function duplicarRuta() {
   const datosRuta = {
     titulo: ruta.value.titulo,
@@ -610,12 +544,12 @@ async function duplicarRuta() {
   };
 
   try {
-    // 1. Validar datos obligatorios
+    // Validar los datos
     if (datosRuta.hora == "" || datosRuta.fecha == "") {
       throw new Error("Los campos de la fecha u hora están vacíos");
     }
 
-    // 2. Enviar solicitud de creación de ruta
+    // Enviar solicitud para crear la ruta
     const response = await fetch("http://localhost/freetours/api.php/rutas", {
       method: "POST",
       headers: {
@@ -625,38 +559,37 @@ async function duplicarRuta() {
     });
 
     if (response.ok) {
-      // 3. Cerrar y limpiar el modal
+      // Cerrar el modal
       const modalDuplicar = document.getElementById('duplicarModal');
       const modal = Modal.getInstance(modalDuplicar);
       modal.hide();
 
-      // Limpiar elementos del modal
+      // Limpiar el modal
       document.body.classList.remove('modal-open');
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
 
-      // Eliminar el backdrop
+      // Eliminar el fonde negro
       const backdrop = document.querySelector('.modal-backdrop');
       if (backdrop) {
         backdrop.remove();
       }
 
-      // 4. Mostrar confirmación de éxito
+      // Mostrar confirmación
       await Swal.fire({
         title: '¡Duplicada!',
         text: 'La ruta ha sido duplicada correctamente',
         icon: 'success',
-        confirmButtonColor: '#ffc107', // Bootstrap warning color
+        confirmButtonColor: '#ffc107',
         timer: 2000,
         timerProgressBar: true,
         backdrop: false,
         allowOutsideClick: true,
         didClose: () => {
-          // Asegurarse de que el body esté limpio
+          //Limpiar los campos del modal
           document.body.classList.remove('modal-open');
           document.body.style.overflow = '';
           document.body.style.paddingRight = '';
-          // Limpiar los campos del modal
           nuevaFecha.value = "";
           nuevaHora.value = "";
           nuevoGuia.value = "";
@@ -667,7 +600,7 @@ async function duplicarRuta() {
       throw new Error("Error al duplicar la ruta");
     }
   } catch (error) {
-    // 5. Mostrar mensaje de error
+    // Mostrar mensaje de error
     Swal.fire({
       title: 'Error',
       text: error.message || 'Error al duplicar la ruta',
@@ -683,38 +616,38 @@ async function duplicarRuta() {
   }
 }
 
-// Elimina la ruta actual (solo admin)
+// Eliminar la ruta actual 
 async function confirmarEliminacion() {
   try {
-    // 1. Enviar solicitud de eliminación a la API
+
     const response = await fetch(`http://localhost/freetours/api.php/rutas?id=${ruta.value.id}`, {
       method: 'DELETE',
     });
 
     if (response.ok) {
-      // 2. Cerrar y limpiar el modal
+      // Cerrar  el modal
       const modalEliminar = document.getElementById('eliminarModal');
       const modal = Modal.getInstance(modalEliminar);
       modal.hide();
 
-      // Limpiar elementos del modal
+      // Limpiar el modal
       document.body.classList.remove('modal-open');
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
 
-      // Eliminar el backdrop
+      // Eliminar el fondo negro
       const backdrop = document.querySelector('.modal-backdrop');
       if (backdrop) {
         backdrop.remove();
       }
 
-      // 3. Mostrar confirmación de éxito
+      // Mostrar confirmación 
       await Swal.fire({
         title: 'Eliminada',
         html: '<strong>La ruta ha sido eliminada </strong>',
         icon: 'success',
         iconColor: 'red',
-        confirmButtonColor: '#dc3545', // Bootstrap danger color
+        confirmButtonColor: '#dc3545',
         timer: 2500,
         timerProgressBar: true,
         showConfirmButton: true,
@@ -728,10 +661,11 @@ async function confirmarEliminacion() {
           popup: 'animate__animated animate__fadeOutUp'
         },
         didClose: () => {
-          // 4. Redirigir al usuario a la página principal
+          // Limpiar el modal
           document.body.classList.remove('modal-open');
           document.body.style.overflow = '';
           document.body.style.paddingRight = '';
+          // Redirigir a la página principal
           router.push('/');
         }
       });
@@ -740,7 +674,7 @@ async function confirmarEliminacion() {
       throw new Error("Error al eliminar la ruta");
     }
   } catch (error) {
-    // 5. Mostrar mensaje de error
+    // Mostrar mensaje de error
     Swal.fire({
       title: 'Error',
       text: 'Error al eliminar la ruta',
@@ -756,16 +690,14 @@ async function confirmarEliminacion() {
   }
 }
 
-// Asigna un guía a la ruta actual (solo admin)
+// Asignar un guía a la ruta actual 
 async function asignarGuia() {
   try {
-    // 1. Preparar datos de asignación
     const datosAsignacion = {
       ruta_id: ruta.value.id,
       guia_id: guiaSeleccionado.value
     };
 
-    // 2. Enviar solicitud a la API
     const response = await fetch('http://localhost/freetours/api.php/asignaciones', {
       method: 'POST',
       headers: {
@@ -775,37 +707,38 @@ async function asignarGuia() {
     });
 
     if (response.ok) {
-      // 3. Cerrar y limpiar el modal
+      // 3. Cerrar el modal
       const modalAsignar = document.getElementById('asignarGuiaModal');
       const modal = Modal.getInstance(modalAsignar);
       modal.hide();
 
-      // Limpiar elementos del modal
+      // Limpiar el modal
       document.body.classList.remove('modal-open');
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
 
-      // Eliminar el backdrop
+      // Eliminar el fondo negro
       const backdrop = document.querySelector('.modal-backdrop');
       if (backdrop) {
         backdrop.remove();
       }
 
-      // 4. Mostrar confirmación de éxito
+      // Mostrar confirmación 
       await Swal.fire({
         title: '¡Asignado!',
         text: 'El guía ha sido asignado correctamente',
         icon: 'success',
-        confirmButtonColor: '#0dcaf0', // Bootstrap info color
+        confirmButtonColor: '#0dcaf0',
         timer: 2000,
         timerProgressBar: true,
         backdrop: false,
         allowOutsideClick: true,
         didClose: () => {
-          // 5. Recargar datos para actualizar la vista
+          //Limpiar el modal
           document.body.classList.remove('modal-open');
           document.body.style.overflow = '';
           document.body.style.paddingRight = '';
+          //Recargar los datos
           cargarDatos();
         }
       });
@@ -830,9 +763,8 @@ async function asignarGuia() {
   }
 }
 
-// Añadir estas funciones
+// comprobar que el usuario ha iniciado sesion
 function mostrarModalLogin() {
-  // Inicializar el modal si es la primera vez
   if (!modalLoginRequerido.value) {
     modalLoginRequerido.value = new Modal(document.getElementById('loginRequeridoModal'));
   }
@@ -844,11 +776,12 @@ function irALogin() {
   if (modalLoginRequerido.value) {
     modalLoginRequerido.value.hide();
 
-    // Limpiar elementos del modal
+    // Limpiar el modal
     document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
     document.body.style.paddingRight = '';
 
+    //Eliminar el fondo negro
     const backdrop = document.querySelector('.modal-backdrop');
     if (backdrop) {
       backdrop.remove();
@@ -859,56 +792,36 @@ function irALogin() {
   router.push('/login');
 }
 
-// Añade estas variables a las existentes
-const mostrarFormularioValoracion = ref(false);
-const nuevaValoracion = ref({
-  puntuacion: 5,
-  comentario: ''
-});
-const enviandoValoracion = ref(false);
-const errorValoracion = ref('');
-const yaHaValorado = ref(false);
 
-// Comprueba si la ruta ya pasó (para habilitar valoraciones)
-const rutaYaPaso = computed(() => {
-  if (!ruta.value?.fecha) return false;
-
-  const fechaRuta = new Date(ruta.value.fecha);
-  const hoy = new Date();
-
-  // Comparar considerando año, mes y día
-  if (fechaRuta.getFullYear() < hoy.getFullYear()) return true;
-  if (fechaRuta.getFullYear() === hoy.getFullYear() &&
-    fechaRuta.getMonth() < hoy.getMonth()) return true;
-  if (fechaRuta.getFullYear() === hoy.getFullYear() &&
-    fechaRuta.getMonth() === hoy.getMonth() &&
-    fechaRuta.getDate() < hoy.getDate()) return true;
-
-  return false;
-});
-
-// Comprueba si puede valorar (ha reservado, la ruta ya pasó y no ha valorado antes)
-const puedeValorar = computed(() => {
-  return yaHaReservado.value && rutaYaPaso.value && !yaHaValorado.value;
-});
 
 // Función para verificar si el usuario ya ha valorado esta ruta
 async function verificarSiYaValoro() {
   if (!props.usuarioAutenticado) return;
 
   try {
+    console.log("Verificando si el usuario ya valoró esta ruta...");
+
+    // Hacer una solicitud a la API para obtener valoraciones por usuario y ruta
     const response = await fetch(`http://localhost/freetours/api.php/valoraciones?ruta_id=${props.id}&user_id=${props.usuarioAutenticado.id}`);
+
     if (!response.ok) {
       throw new Error(`Error al verificar valoraciones: ${response.status}`);
     }
+
     const valoracionesUsuario = await response.json();
+    console.log("Valoraciones del usuario para esta ruta:", valoracionesUsuario);
+
+    // Si hay al menos una valoración del usuario para esta ruta, ya ha valorado
     yaHaValorado.value = valoracionesUsuario.length > 0;
+
+    console.log("¿Ya ha valorado?", yaHaValorado.value);
   } catch (error) {
     console.error("Error al verificar valoraciones:", error);
+    yaHaValorado.value = false; // En caso de error, asumimos que no ha valorado
   }
 }
 
-// Función para enviar una nueva valoración
+// Función para crear una valoracion
 async function enviarValoracion() {
   try {
     enviandoValoracion.value = true;
@@ -923,13 +836,14 @@ async function enviarValoracion() {
       throw new Error('El comentario no puede estar vacío');
     }
 
-    // Preparar datos para enviar
     const datosValoracion = {
       user_id: props.usuarioAutenticado.id,
       ruta_id: parseInt(props.id),
-      puntuacion: nuevaValoracion.value.puntuacion,
+      estrellas: nuevaValoracion.value.puntuacion,
       comentario: nuevaValoracion.value.comentario
     };
+
+    //console.log("Datos a enviar para valoración:", datosValoracion);
 
     // Enviar la valoración
     const response = await fetch('http://localhost/freetours/api.php/valoraciones', {
@@ -959,7 +873,7 @@ async function enviarValoracion() {
     // Actualizar las valoraciones
     await cargarValoraciones();
 
-    // Actualizar estado de valoración del usuario
+    // Actualizar el estado de valoración
     yaHaValorado.value = true;
 
   } catch (error) {
@@ -977,8 +891,6 @@ async function enviarValoracion() {
   }
 }
 
-// Añadir estas funciones al script existente
-
 // Función para redirigir a mis reservas
 function irAMisReservas() {
   router.push('/misReservas');
@@ -986,21 +898,20 @@ function irAMisReservas() {
 
 // Función para modificar asistentes
 function modificarAsistentes() {
-  // Primero necesitamos obtener la reserva actual del usuario
+
   const reservaUsuario = reservas.value.find(reserva => {
     const clienteId = props.usuarioAutenticado.id;
     const email = props.usuarioAutenticado.email?.toLowerCase();
-    
-    return (Number(reserva.cliente_id) === Number(clienteId) || 
-            String(reserva.usuario_email).toLowerCase() === email) &&
-           Number(reserva.ruta_id) === Number(props.id);
+
+    return (reserva.cliente_id == clienteId ||
+      reserva.usuario_email.toLowerCase() == email) &&
+      reserva.ruta_id == props.id;
   });
 
   if (reservaUsuario) {
-    // Establecer el número de personas inicial en el modal
     numPersonas.value = reservaUsuario.num_personas;
-    
-    // Crear un modal personalizado para modificar reserva
+
+    // Crear modal para modificar la reserva
     const modalModificar = new Modal(document.getElementById('modificarReservaModal'));
     modalModificar.show();
   } else {
@@ -1013,30 +924,27 @@ function modificarAsistentes() {
   }
 }
 
-// Función para actualizar la reserva con el nuevo número de asistentes
+// Actualizar la reserva
 async function actualizarReserva() {
   try {
     cargandoReserva.value = true;
     errorReserva.value = "";
 
-    // Obtenemos la reserva actual del usuario
+    // Obtenemos la reserva 
     const reservaUsuario = reservas.value.find(reserva => {
       const clienteId = props.usuarioAutenticado.id;
       const email = props.usuarioAutenticado.email?.toLowerCase();
-      
-      return (Number(reserva.cliente_id) === Number(clienteId) || 
-              String(reserva.usuario_email).toLowerCase() === email) &&
-             Number(reserva.ruta_id) === Number(props.id);
+
+      return (reserva.cliente_id == clienteId ||
+        reserva.usuario_email.toLowerCase() == email) &&
+        reserva.ruta_id == props.id;
     });
 
     if (!reservaUsuario) {
       throw new Error('No se encontró tu reserva para esta ruta');
     }
 
-    // Guardar el número de personas actual para calcular la diferencia después
-    const numPersonasAnterior = reservaUsuario.num_personas;
-    
-    // Paso 1: Eliminar la reserva existente
+    //  Eliminar la reserva existente
     const responseDelete = await fetch(`http://localhost/freetours/api.php/reservas?id=${reservaUsuario.reserva_id}`, {
       method: 'DELETE'
     });
@@ -1045,8 +953,8 @@ async function actualizarReserva() {
       const errorDelete = await responseDelete.text();
       throw new Error(`Error al eliminar la reserva existente: ${responseDelete.status} - ${errorDelete}`);
     }
-    
-    // Paso 2: Crear una nueva reserva con el número actualizado de personas
+
+    //  Crear una nueva reserva con el número nuevo de asistentes
     const datosNuevaReserva = {
       email: reservaUsuario.usuario_email,
       ruta_id: parseInt(props.id),
@@ -1061,7 +969,7 @@ async function actualizarReserva() {
       body: JSON.stringify(datosNuevaReserva)
     });
 
-    // Verificar respuesta de la creación
+    // Verificar respuesta 
     if (!responseCreate.ok) {
       const errorCreate = await responseCreate.text();
       throw new Error(`Error al crear la nueva reserva: ${responseCreate.status} - ${errorCreate}`);
@@ -1076,7 +984,7 @@ async function actualizarReserva() {
       }
     }
 
-    // Limpiar elementos del modal
+    // Limpiar el modal
     document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
     document.body.style.paddingRight = '';
@@ -1086,7 +994,7 @@ async function actualizarReserva() {
       backdrop.remove();
     }
 
-    // Mostrar confirmación con timer de 3 segundos y barra de progreso
+    // Mostrar confirmación 
     await Swal.fire({
       title: '¡Reserva actualizada!',
       text: `Has modificado tu reserva a ${numPersonas.value} ${numPersonas.value == 1 ? 'persona' : 'personas'}`,
@@ -1096,19 +1004,18 @@ async function actualizarReserva() {
       showCancelButton: true,
       cancelButtonText: 'Continuar aquí',
       backdrop: false,
-      timer: 3000,  // 3 segundos = 3000ms
-      timerProgressBar: true,  // Muestra la barra de progreso
+      timer: 3000, 
+      timerProgressBar: true, 
     }).then((result) => {
       if (result.isConfirmed) {
-        // Redirigir a la página de misReservas
+        // Redirigir a misReservas
         router.push('/misReservas');
       }
-      // Si el timer expira y no se ha interactuado con los botones, se queda en la página actual
     });
 
-    // Actualizar los datos en la vista
+    // Actualizar los datos 
     await cargarReservas();
-    
+
     // Actualizar contador de asistentes
     if (ruta.value) {
       ruta.value.asistentes = numPersonas.value;
@@ -1118,7 +1025,7 @@ async function actualizarReserva() {
     console.error("Error al actualizar la reserva:", error);
     errorReserva.value = error.message || "No se pudo actualizar la reserva";
 
-    // Mostrar el error en el modal y con SweetAlert
+    // Mostrar el error 
     Swal.fire({
       title: 'Error',
       text: errorReserva.value,
@@ -1131,10 +1038,185 @@ async function actualizarReserva() {
   }
 }
 
+// Verificar si el usuario ha creado una valoracion
+function esAutorValoracion(valoracion) {
+  if (!props.usuarioAutenticado || !valoracion) return false;
+
+  // obtener el id del usuario actual
+  const usuarioClienteId = obtenerusuarioActual();
+
+  // Comparar el cliente_id del usuario con el cliente_id de la valoración
+  return usuarioClienteId && Number(usuarioClienteId) === Number(valoracion.cliente_id);
+}
+
+// Obtener el id del usuario actual
+function obtenerusuarioActual() {
+  // Si ya esta almacenada se devuelve
+  if (clienteIdUsuarioActual.value) {
+    return clienteIdUsuarioActual.value;
+  }
+
+  if (!reservas.value.length) return null;
+
+  // Buscar la reserva del usuario actual
+  const reservaUsuario = reservas.value.find(reserva => {
+    const email = props.usuarioAutenticado.email?.toLowerCase();
+
+    return reserva.usuario_email.toLowerCase() == email;
+  });
+
+  // Guardar el id del ususario
+  if (reservaUsuario) {
+    clienteIdUsuarioActual.value = reservaUsuario.cliente_id;
+    return clienteIdUsuarioActual.value;
+  }
+
+  return null;
+}
+
+
+// eliminar Valoracion
+async function eliminarValoracion(valoracionId) {
+  try {
+    // Mostrar confirmación para eliminar
+    const resultado = await Swal.fire({
+      title: '¿Eliminar valoración?',
+      text: '¿Estás seguro de que quieres eliminar tu valoración? Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!resultado.isConfirmed) {
+      return; // El usuario canceló 
+    }
+
+    // Enviar solicitud para eliminar la valoración
+    const response = await fetch(`http://localhost/freetours/api.php/valoraciones?id=${valoracionId}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al eliminar la valoración: ${response.status}`);
+    }
+
+    // Mostrar mensaje de éxito
+    await Swal.fire({
+      title: 'Valoración eliminada',
+      text: 'Tu valoración ha sido eliminada correctamente',
+      icon: 'success',
+      confirmButtonColor: '#28a745',
+      timer: 3000,
+      timerProgressBar: true
+    });
+
+    // Actualizar a false
+    yaHaValorado.value = false;
+
+    // Recargar las valoraciones
+    await cargarValoraciones();
+
+    // Verificar de nuevo para asegurarse
+    setTimeout(() => {
+      verificarSiYaValoro();
+    }, 1000);
+
+  } catch (error) {
+    console.error("Error al eliminar valoración:", error);
+
+    // Mostrar mensaje de error
+    Swal.fire({
+      title: 'Error',
+      text: error.message || 'No se pudo eliminar la valoración',
+      icon: 'error',
+      confirmButtonColor: '#dc3545',
+      timer: 3000,
+      timerProgressBar: true
+    });
+  }
+}
+
+// Cancelar la reserva del usuario
+async function cancelarMiReserva() {
+  try {
+    // Obtener la reserva actual del usuario
+    const reservaUsuario = reservas.value.find(reserva => {
+      const clienteId = props.usuarioAutenticado.id;
+      const email = props.usuarioAutenticado.email?.toLowerCase();
+
+      return (reserva.cliente_id == clienteId ||
+        reserva.usuario_email.toLowerCase() == email) &&
+        reserva.ruta_id == props.id;
+    });
+
+    if (!reservaUsuario) {
+      throw new Error('No se encontró tu reserva para esta ruta');
+    }
+
+    // Mostrar confirmación antes de cancelar
+    const confirmar = await Swal.fire({
+      title: '¿Cancelar reserva?',
+      text: "Esta acción no se puede deshacer",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'No, mantener'
+    });
+
+    if (!confirmar.isConfirmed) {
+      return;
+    }
+
+    // Enviar solicitud de cancelación
+    const response = await fetch(`http://localhost/freetours/api.php/reservas?id=${reservaUsuario.reserva_id}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al cancelar la reserva: ${response.status}`);
+    }
+
+    // Mostrar mensaje de éxito
+    await Swal.fire({
+      title: 'Reserva cancelada',
+      text: 'Tu reserva ha sido cancelada correctamente',
+      icon: 'success',
+      confirmButtonColor: '#28a745',
+      timer: 3000,
+      timerProgressBar: true
+    });
+
+    // Actualizar el estado 
+    if (ruta.value) {
+      //Actualizar el numero de asistentes a 0
+      ruta.value.asistentes = 0;    
+    }
+
+    // Recargar las reservas
+    await cargarReservas();
+
+  } catch (error) {
+    console.error("Error al cancelar reserva:", error);
+
+    // Mostrar mensaje de error
+    Swal.fire({
+      title: 'Error',
+      text: error.message || 'No se pudo cancelar la reserva',
+      icon: 'error',
+      confirmButtonColor: '#dc3545'
+    });
+  }
+}
+
 onMounted(() => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   cargarDatos().then(() => {
-    cargarGuias(); // Cargar guías después de tener los datos de la ruta
+    cargarGuias(); 
     cargarReservas();
   });
 
@@ -1145,7 +1227,6 @@ onMounted(() => {
     minDate: "today",
     onChange: (fechasSeleccionadas, fechaStr) => {
       nuevaFecha.value = fechaStr;
-      // No necesitamos llamar a cargarGuiasParaDuplicar aquí porque el watch lo hará
     },
     static: false,
     position: "bottom",
@@ -1162,23 +1243,23 @@ onMounted(() => {
     },
   });
 
-  // Inicializar todos los modales
+  // Iniciar todos los modales
   instanciaModalDuplicar = new Modal(document.getElementById('duplicarModal'));
   new Modal(document.getElementById('eliminarModal'));
 
-  // Añadir event listener para cuando el modal de eliminación se oculta/cierra
+  // Añadir event listener para redireccionar al cerrar el modal de eliminación
   document.getElementById('eliminarModal').addEventListener('hidden.bs.modal', () => {
-    if (eliminacionCompletada.value) { //Si se ha eliminado correctamente hace la redireccion
+    if (eliminacionCompletada.value) { 
+      //Si se ha eliminado correctamente hace la redireccion
       router.push("/");
     }
   });
 
-  instanciaModalAsignarGuia.value = new Modal(document.getElementById('asignarGuiaModal'));
+  modalAsignarGuia.value = new Modal(document.getElementById('asignarGuiaModal'));
   modalAsistentes.value = new Modal(document.getElementById('asistentesModal'));
   modalPasarLista.value = new Modal(document.getElementById('pasarListaModal'));
   modalReserva.value = new Modal(document.getElementById('reservaModal'));
   modalLoginRequerido.value = new Modal(document.getElementById('loginRequeridoModal'));
-  // Inicializar también el modal de modificar reserva
   new Modal(document.getElementById('modificarReservaModal'));
 });
 
@@ -1219,9 +1300,9 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
           </div>
         </div>
 
-        <!-- Parte derecha: Detalles y Botones (específica por rol) -->
+        <!-- Parte derecha: Detalles y Botones -->
         <div class="col-md-4 detalles-col">
-          <!-- Información común - Visible para todos -->
+          <!-- Información común-->
           <div class="mb-3">
             <p class="h4 fw-bold text-decoration-underline text-secondary">Localidad</p>
             <p class="detalle">{{ ruta.localidad }}</p>
@@ -1244,53 +1325,49 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
             <p class="h4 fw-bold text-decoration-underline text-secondary">Asistentes</p>
             <p class="detalle">{{ ruta.asistentes || 0 }}</p>
           </div>
-          
-          <!-- SECCIÓN DE RESERVA - Disponible para todos los usuarios autenticados -->
+
+          <!-- SECCIÓN DE RESERVA -->
           <div v-if="props.usuarioAutenticado" class="w-100 mb-3">
-            <!-- Botón según el estado de la reserva -->
+
             <div class="d-grid gap-2">
-              <!-- Si ya ha reservado y la ruta aún no ha pasado: botones de gestión -->
-              <button v-if="yaHaReservado && !rutaYaPaso" 
-                      type="button" 
-                      class="btn btn-info text-white w-100" 
-                      @click="modificarAsistentes">
+              <!--  botones de gestión -->
+              <button v-if="yaHaReservado && !rutaYaPaso" type="button" class="btn btn-info text-white w-100"
+                @click="modificarAsistentes">
                 <i class="bi bi-pencil-square me-2"></i>Modificar asistentes
               </button>
-              
-              <!-- Si ya ha reservado y la ruta ya pasó: botón de completada -->
-              <button v-else-if="yaHaReservado && rutaYaPaso" 
-                      type="button" 
-                      class="btn btn-success w-100" 
-                      disabled>
+
+              <!--  botón de completada -->
+              <button v-else-if="yaHaReservado && rutaYaPaso" type="button" class="btn btn-success w-100" disabled>
                 <i class="bi bi-check-circle me-2"></i>Completada
               </button>
-              
-              <!-- Si no ha reservado aún: botón de reservar -->
-              <button v-else 
-                      type="button" 
-                      class="btn btn-primary w-100" 
-                      @click="abrirModalReserva">
+
+              <!-- botón de reservar -->
+              <button v-else type="button" class="btn btn-primary w-100" @click="abrirModalReserva">
                 <i class="bi bi-calendar-plus me-2"></i>Reservar
               </button>
-              
-              <!-- Botón adicional para ir a Mis Reservas cuando ya tiene una reserva -->
-              <button v-if="yaHaReservado && !rutaYaPaso" 
-                      type="button" 
-                      class="btn btn-outline-primary w-100" 
-                      @click="irAMisReservas">
+
+              <!-- Botón para ir a Mis Reservas -->
+              <button v-if="yaHaReservado && !rutaYaPaso" type="button" class="btn btn-outline-primary w-100 mb-2"
+                @click="irAMisReservas">
                 <i class="bi bi-eye me-2"></i>Ver en Mis Reservas
+              </button>
+
+              <!-- boton para cancelar reserva -->
+              <button v-if="yaHaReservado && !rutaYaPaso" type="button" class="btn btn-outline-danger w-100"
+                @click="cancelarMiReserva">
+                <i class="bi bi-x-circle me-2"></i>Cancelar reserva
               </button>
             </div>
           </div>
-          
-          <!-- SECCIÓN DE USUARIO NO AUTENTICADO - Login requerido -->
+
+          <!-- SECCIÓN DE USUARIO NO AUTENTICADO -->
           <div v-else class="w-100 mb-3">
             <button type="button" class="btn btn-outline-primary w-100" @click="mostrarModalLogin">
               Iniciar sesión para reservar
             </button>
           </div>
-          
-          <!-- Separador visual -->
+
+          <!-- Separador -->
           <hr class="mb-3">
 
           <!-- SECCIÓN DE ADMINISTRADOR -->
@@ -1318,19 +1395,27 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
       </div>
     </div>
 
-    <!-- Nueva sección de valoraciones en tarjetas -->
+    <!-- Valoraciones -->
     <div class="container mt-5 mb-5">
       <hr>
       <h2 class="text-center mb-4">Valoraciones</h2>
 
       <!-- Botón de añadir valoración -->
-      <div class="text-center mb-4" v-if="props.usuarioAutenticado && puedeValorar">
-        <button v-if="!mostrarFormularioValoracion" @click="mostrarFormularioValoracion = true" class="btn btn-primary">
+      <div class="text-center mb-4" v-if="props.usuarioAutenticado && yaHaReservado && rutaYaPaso">
+        <!-- Botón Añadir mi valoración -->
+        <button v-if="!yaHaValorado && !mostrarFormularioValoracion" @click="mostrarFormularioValoracion = true"
+          class="btn btn-primary">
           <i class="bi bi-star-fill me-2"></i>Añadir mi valoración
         </button>
 
+        <!-- Botón Ya has valorado esta ruta -->
+        <button v-if="yaHaValorado" class="btn btn-secondary" disabled>
+          <i class="bi bi-check-circle-fill me-2"></i>Ya has valorado esta ruta
+        </button>
+
         <!-- Formulario de valoración -->
-        <div v-if="mostrarFormularioValoracion" class="card shadow-sm mx-auto" style="max-width: 600px;">
+        <div v-if="!yaHaValorado && mostrarFormularioValoracion" class="card shadow-sm mx-auto"
+          style="max-width: 600px;">
           <div class="card-header d-flex justify-content-between align-items-center bg-light">
             <h5 class="mb-0">Tu valoración para esta ruta</h5>
             <button type="button" class="btn-close" @click="mostrarFormularioValoracion = false"></button>
@@ -1375,16 +1460,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
         </div>
       </div>
 
-      <!-- Mensaje cuando ya valoró -->
-      <div class="text-center mb-4" v-else-if="props.usuarioAutenticado && yaHaReservado && rutaYaPaso && yaHaValorado">
-        <div class="alert alert-success">
-          <i class="bi bi-check-circle-fill me-2"></i>
-          Ya has valorado esta ruta. ¡Gracias por tu opinión!
-        </div>
-      </div>
-
       <div class="row" v-if="valoraciones && valoraciones.length > 0">
-        <!-- Máximo 3 tarjetas por fila usando col-md-4 -->
         <div class="col-12 col-md-6 col-lg-4 mb-4" v-for="(valoracion, index) in valoraciones" :key="index">
           <div class="card h-100 shadow-sm valoracion-card">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -1393,8 +1469,15 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
                   {{ valoracion.puntuacion }}
                   <i class="bi bi-star-fill text-warning"></i>
                 </div>
-                <h6 class="mb-0">{{ valoracion.usuario_nombre || 'Usuario anónimo' }}</h6>
+                <div>
+                  <h6 class="mb-0">{{ valoracion.cliente_nombre }}</h6>
+                </div>
               </div>
+              <!-- Botón para eliminar valoración solo visible para el autor -->
+              <button v-if="esAutorValoracion(valoracion)" class="btn btn-sm btn-outline-danger"
+                @click="eliminarValoracion(valoracion.valoracion_id)" title="Eliminar mi valoración">
+                <i class="bi bi-trash"></i>
+              </button>
             </div>
             <div class="card-body">
               <p class="card-text">{{ valoracion.comentario }}</p>
@@ -1416,9 +1499,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
       </div>
     </div>
 
-    <!-- ==========================================
-    MODALES PARA ADMINISTRADOR
-    ========================================== -->
+    <!-- MODALES PARA ADMINISTRADOR -->
     <!-- Modal de Duplicar Ruta -->
     <div class="modal fade" id="duplicarModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
@@ -1516,9 +1597,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
       </div>
     </div>
 
-    <!-- ==========================================
-    MODALES PARA GUÍAS
-    ========================================== -->
+    <!-- MODALES PARA GUÍAS -->
     <!-- Modal de Asistentes -->
     <div class="modal fade" id="asistentesModal" tabindex="-1" aria-labelledby="asistentesModalLabel"
       aria-hidden="true">
@@ -1571,7 +1650,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
-            <!-- Lista de asistentes con botones de asistencia -->
+            <!-- Lista de asistentes -->
             <div v-if="reservas.length > 0" class="list-group">
               <div v-for="reserva in reservas" :key="reserva.reserva_id" class="list-group-item">
                 <div class="d-flex justify-content-between align-items-center">
@@ -1616,9 +1695,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
       </div>
     </div>
 
-    <!-- ==========================================
-    MODALES PARA CLIENTES
-    ========================================== -->
+    <!-- MODALES PARA CLIENTES -->
     <!-- Modal de Reserva -->
     <div class="modal fade" id="reservaModal" tabindex="-1" aria-labelledby="reservaModalLabel" aria-hidden="true">
       <div class="modal-dialog">
@@ -1666,7 +1743,8 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
     </div>
 
     <!-- Modal para modificar reserva -->
-    <div class="modal fade" id="modificarReservaModal" tabindex="-1" aria-labelledby="modificarReservaModalLabel" aria-hidden="true">
+    <div class="modal fade" id="modificarReservaModal" tabindex="-1" aria-labelledby="modificarReservaModalLabel"
+      aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -1709,9 +1787,7 @@ watch(() => nuevaFecha.value, (nuevaFecha) => {
       </div>
     </div>
 
-    <!-- ==========================================
-    MODALES PARA USUARIOS NO AUTENTICADOS
-    ========================================== -->
+    <!-- MODALES PARA USUARIOS NO AUTENTICADOS -->
     <!-- Modal de Login Requerido -->
     <div class="modal fade" id="loginRequeridoModal" tabindex="-1" aria-labelledby="loginRequeridoModalLabel"
       aria-hidden="true">
@@ -1765,7 +1841,7 @@ h1 {
   border-bottom-right-radius: 4px;
 }
 
-/* Efecto hover mejorado */
+
 .selector-personas .btn:hover {
   background-color: #e9ecef;
   z-index: 1;
@@ -1837,7 +1913,7 @@ h1 {
 }
 
 #mapa {
-  height: 400px; 
+  height: 400px;
   width: 100%;
   border-radius: 8px;
   z-index: 0;
@@ -1846,12 +1922,12 @@ h1 {
 .map-container {
   position: relative;
   width: 100%;
-  height: 400px; 
+  height: 400px;
   margin-bottom: 2rem;
 }
 
 .map {
-  border: 1px solid #dee2e6; 
+  border: 1px solid #dee2e6;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 </style>
