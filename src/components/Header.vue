@@ -1,6 +1,7 @@
 <script setup>
 import router from "../router";
 import { ref } from "vue";
+import Swal from 'sweetalert2';
 
 const emits = defineEmits(["sesionCerrada"]);
 
@@ -9,9 +10,38 @@ const props = defineProps({
   usuarioAutenticado: Object,
 });
 
-function cerrarSesion() {
-  emits("sesionCerrada", null);
-  router.push({ name: "home" });
+async function cerrarSesion() {
+  // Mostrar confirmación con SweetAlert2
+  const result = await Swal.fire({
+    title: '¿Cerrar sesión?',
+    text: '¿Estás seguro que deseas cerrar tu sesión?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Sí, cerrar sesión',
+    cancelButtonText: 'No, continuar',
+    focusCancel: true 
+  });
+  
+  // Si el usuario confirma, entonces cerramos la sesión
+  if (result.isConfirmed) {
+    // Mostrar mensaje de despedida breve con temporizador
+    Swal.fire({
+      title: '¡Sesion Cerrada!',
+      text: 'Se ha cerrado sesión correctamente',
+      icon: 'success',
+      timer: 1500,
+      timerProgressBar: true,
+      showConfirmButton: false
+    });
+    
+    // Pequeño retraso para que se muestre el mensaje antes de la redirección
+    setTimeout(() => {
+      emits("sesionCerrada", null);
+      router.push({ name: "home" });
+    }, 1600); // Ligeramente mayor que el timer para asegurar que se vea el mensaje
+  }
 }
 </script>
 
