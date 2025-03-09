@@ -24,7 +24,7 @@ const tipoBusqueda = ref('texto'); // Nuevo estado para controlar el tipo de bú
 // Variable para almacenar la instancia de flatpickr
 const instanciaCalendario = ref(null);
 
-// Modificar las variables del video
+
 const medio = ref(null);
 const botonReproducir = ref('/img/jugar.png'); // ▶️ (esto cambia entre play y pause)
 
@@ -99,7 +99,6 @@ function cambiarPagina(pagina) {
 }
 
 // Función para manejar errores en las imágenes)
-
 function manejarErrorImagen(e) {
   //Mostrar una imagen de reemplazo si la imagen no se puede cargar
   e.target.src = 'https://placehold.co/600x400?text=Imagen+no+disponible';
@@ -160,7 +159,7 @@ async function obtenerValoraciones() {
   }
 }
 
-// Función para comprobar si una ruta está disponible (fecha en el futuro)
+// Función para comprobar si una ruta está disponible
 function esRutaDisponible(ruta) {
   if (!ruta.fecha) return false;
   
@@ -174,22 +173,18 @@ function esRutaDisponible(ruta) {
   return fechaRuta >= hoy;
 }
 
-// Modificar la función filtrarRutas para tener en cuenta el modo de visualización
 function filtrarRutas() {
-  // Primero aplicamos el filtro de disponibilidad según el modo
   let rutasFiltradas = rutas.value;
   
-  if (modoVisualizacion.value === 'disponibles') {
+  if (modoVisualizacion.value == 'disponibles') {
     rutasFiltradas = rutasFiltradas.filter(ruta => esRutaDisponible(ruta));
   }
-  
-  // Luego aplicamos los filtros de búsqueda
-  if (tipoBusqueda.value === 'fecha') {
+    if (tipoBusqueda.value == 'fecha') {
     if (!busqueda.value) {
       return rutasFiltradas;
     }
     const fechaFormateada = new Date(busqueda.value).toISOString().split('T')[0];
-    return rutasFiltradas.filter(ruta => ruta.fecha === fechaFormateada);
+    return rutasFiltradas.filter(ruta => ruta.fecha == fechaFormateada);
   } else {
     if (!busqueda.value) {
       return rutasFiltradas;
@@ -201,19 +196,18 @@ function filtrarRutas() {
   }
 }
 
-// Nueva funcion para cambiar el tipo de búsqueda
 function cambiarTipoBusqueda() {
-  // Destruir la instancia anterior de flatpickr si existe
+  // Destruir la instancia de flatpickr si existe
   if (instanciaCalendario.value) {
     instanciaCalendario.value.destroy();
     instanciaCalendario.value = null;
   }
 
-  tipoBusqueda.value = tipoBusqueda.value === 'texto' ? 'fecha' : 'texto';
+  tipoBusqueda.value = tipoBusqueda.value == 'texto' ? 'fecha' : 'texto';
   busqueda.value = ''; // Limpiar el campo de busqueda al cambiar
 
   // Si cambiamos a fecha, inicializar flatpickr
-  if (tipoBusqueda.value === 'fecha') {
+  if (tipoBusqueda.value == 'fecha') {
     setTimeout(() => {
       instanciaCalendario.value = flatpickr("#fechaBusqueda", {
         dateFormat: "Y-m-d",
@@ -225,7 +219,6 @@ function cambiarTipoBusqueda() {
   }
 }
 
-// Función para cambiar el modo de visualización
 function cambiarModoVisualizacion(modo) {
   modoVisualizacion.value = modo;
   paginaActual.value = 1; // Resetear a la primera página
@@ -233,7 +226,7 @@ function cambiarModoVisualizacion(modo) {
 
 // Comprobar si el usuario es admin
 const esAdmin = computed(() => {
-  return props.usuarioAutenticado && props.usuarioAutenticado.rol === 'admin';
+  return props.usuarioAutenticado && props.usuarioAutenticado.rol == 'admin';
 });
 
 onMounted(async () => {
@@ -248,13 +241,13 @@ onMounted(async () => {
     <div v-if="esAdmin" class="nav-tabs-container mb-4 mt-4">
       <ul class="nav nav-tabs">
         <li class="nav-item">
-          <a class="nav-link" :class="{ active: modoVisualizacion === 'disponibles' }" 
+          <a class="nav-link" :class="{ active: modoVisualizacion == 'disponibles' }" 
              href="#" @click.prevent="cambiarModoVisualizacion('disponibles')">
             Rutas Disponibles
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" :class="{ active: modoVisualizacion === 'todas' }" 
+          <a class="nav-link" :class="{ active: modoVisualizacion == 'todas' }" 
              href="#" @click.prevent="cambiarModoVisualizacion('todas')">
             Todas las Rutas
           </a>
@@ -267,20 +260,20 @@ onMounted(async () => {
       <form @submit.prevent="filtrarRutas" class="buscador-container">
         <!-- Formulario de busqueda -->
         <div class="buscador ms-3">
-          <input v-model="busqueda" :type="tipoBusqueda === 'fecha' ? 'text' : 'text'"
-            class="form-control rounded-pill ps-5 input-busqueda" :class="{ 'texto': tipoBusqueda === 'texto' }"
-            :placeholder="tipoBusqueda === 'fecha' ? 'Buscar por fecha' : 'Buscar por título o localidad'"
-            :id="tipoBusqueda === 'fecha' ? 'fechaBusqueda' : ''" aria-label="Buscar" />
+          <input v-model="busqueda" :type="tipoBusqueda == 'fecha' ? 'text' : 'text'"
+            class="form-control rounded-pill ps-5 input-busqueda" :class="{ 'texto': tipoBusqueda == 'texto' }"
+            :placeholder="tipoBusqueda == 'fecha' ? 'Buscar por fecha' : 'Buscar por título o localidad'"
+            :id="tipoBusqueda == 'fecha' ? 'fechaBusqueda' : ''" aria-label="Buscar" />
           <i class="bi bi-search icono-busqueda"></i>
         </div>
         <button type="button" @click="cambiarTipoBusqueda" class="btn btn-outline-primary rounded-pill ms-3 btn-toggle">
-          <i class="bi" :class="tipoBusqueda === 'fecha' ? 'bi-calendar3' : 'bi-text-left'"></i>
-          {{ tipoBusqueda === 'fecha' ? 'Fecha' : 'Nombre/Localidad' }}
+          <i class="bi" :class="tipoBusqueda == 'fecha' ? 'bi-calendar3' : 'bi-text-left'"></i>
+          {{ tipoBusqueda == 'fecha' ? 'Fecha' : 'Nombre/Localidad' }}
         </button>
       </form>
     </div>
 
-    <!-- Carrusel con altura responsiva -->
+    <!-- Carrusel  -->
     <div id="carouselExample" class="carousel slide border mb-4 bg-white rounded mt-5">
       <div class="carousel-inner">
         <div class="carousel-item active" data-bs-interval="false" data-bs-pause="hover">
@@ -308,7 +301,7 @@ onMounted(async () => {
       <!-- Título informativo del modo actual -->
       <div class="d-flex justify-content-center align-items-center mb-3 mt-5">
         <h2 class="h2 mb-0 text-primary">
-          {{ modoVisualizacion === 'disponibles' ? 'Rutas Disponibles' : 'Todas las Rutas' }}
+          {{ modoVisualizacion == 'disponibles' ? 'Rutas Disponibles' : 'Todas las Rutas' }}
         </h2>
       </div>
       <hr>
@@ -364,18 +357,18 @@ onMounted(async () => {
         <!-- Paginación -->
         <nav aria-label="Navegación de páginas" class="mt-4">
           <ul class="pagination justify-content-center">
-            <li class="page-item" :class="{ disabled: paginaActual === 1 }">
+            <li class="page-item" :class="{ disabled: paginaActual == 1 }">
               <a class="page-link" href="#" @click.prevent="cambiarPagina(paginaActual - 1)">
                 &laquo;
               </a>
             </li>
             <li v-for="pagina in totalPaginas" :key="pagina" class="page-item"
-              :class="{ active: paginaActual === pagina }">
+              :class="{ active: paginaActual == pagina }">
               <a class="page-link" href="#" @click.prevent="cambiarPagina(pagina)">
                 {{ pagina }}
               </a>
             </li>
-            <li class="page-item" :class="{ disabled: paginaActual === totalPaginas }">
+            <li class="page-item" :class="{ disabled: paginaActual == totalPaginas }">
               <a class="page-link" href="#" @click.prevent="cambiarPagina(paginaActual + 1)">
                 &raquo;
               </a>
@@ -583,7 +576,7 @@ video {
   font-weight: 500;
 }
 
-/* Menu de video 2, Ahora es responsive */
+/* Menu de video responsive */
 @media (max-width: 768px) {
   .video-player {
     height: 350px;
@@ -636,7 +629,6 @@ video {
   font-weight: 500;
 }
 
-/* Estilo para el badge contador */
 .badge.bg-info {
   font-weight: 400;
   padding: 0.4em 0.8em;

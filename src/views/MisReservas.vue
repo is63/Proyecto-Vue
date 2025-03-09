@@ -13,7 +13,7 @@ const cargando = ref(true);
 const error = ref('');
 
 // Variable para filtrar por estado (futuras, pasadas, todas)
-const filtroEstado = ref('todas'); // 'todas', 'futuras', 'pasadas'
+const filtroEstado = ref('todas');
 
 // Función para cargar las reservas del cliente
 async function cargarReservas() {
@@ -25,8 +25,8 @@ async function cargarReservas() {
       throw new Error('Usuario no autenticado');
     }
 
-    // Verificar el ID correcto del usuario
-    const clienteId = Number(props.usuarioAutenticado.id); // Convertir a número
+    // Verificar el ID
+    const clienteId = Number(props.usuarioAutenticado.id);
     const clienteEmail = props.usuarioAutenticado.email;
 
     console.log("Usuario autenticado:", props.usuarioAutenticado);
@@ -46,7 +46,7 @@ async function cargarReservas() {
     let data = await response.json();
     console.log("Todas las reservas recibidas:", data);
 
-    // Filtrar solo las reservas del cliente actual, asegurando que las comparaciones sean del mismo tipo
+    // Filtrar solo las reservas del cliente actual
     if (Array.isArray(data)) {
       reservas.value = data.filter(reserva => {
         const reservaClienteId = Number(reserva.cliente_id);
@@ -58,7 +58,7 @@ async function cargarReservas() {
         return reservaClienteId === clienteId || reservaEmail === clientEmailLower;
       });
     } else if (data) {
-      // Si data es un objeto único
+
       const reservaClienteId = Number(data.cliente_id);
       const reservaEmail = String(data.usuario_email).toLowerCase();
       const clientEmailLower = String(clienteEmail).toLowerCase();
@@ -154,12 +154,11 @@ async function cancelarReserva(reservaId) {
   }
 }
 
-// Función para ver detalles de una ruta
 function verRuta(rutaId) {
   router.push(`/ruta/${rutaId}`);
 }
 
-// Formatear fecha en formato más legible
+// Formatear fecha
 function formatearFecha(fecha) {
   return new Date(fecha).toLocaleDateString('es-ES', {
     weekday: 'long',
@@ -226,7 +225,7 @@ onMounted(() => {
             style="height: 180px; object-fit: cover;"
             @error="$event.target.src = 'https://placehold.co/600x400?text=Imagen+no+disponible'">
 
-          <!-- Fecha de la reserva como badge con colores distintos según el estado -->
+          <!-- Fecha de la reserva con distintos colores según el estado -->
           <div class="position-absolute top-0 end-0 m-2">
             <span class="badge rounded-pill"
               :class="new Date(reserva.ruta_fecha) > new Date() ? 'bg-success' : 'bg-danger'">

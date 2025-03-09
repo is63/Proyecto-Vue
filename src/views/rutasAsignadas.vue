@@ -39,7 +39,7 @@ function manejarErrorImagen(e) {
 // Función para obtener las rutas asignadas al guía
 async function obtenerRutasAsignadas() {
   try {
-    console.log("Usuario autenticado:", props.usuarioAutenticado); // Debug
+    console.log("Usuario autenticado:", props.usuarioAutenticado);
 
     if (!props.usuarioAutenticado?.id) {
       throw new Error("No hay usuario autenticado");
@@ -51,7 +51,7 @@ async function obtenerRutasAsignadas() {
     }
     const asignaciones = await respuestaAsignaciones.json();
 
-    // Filtrar las asignaciones del guía actual
+    // Filtrar las asignaciones del guía
     const asignacionesGuia = asignaciones.filter(asig =>
       Number(asig.guia_id) === Number(props.usuarioAutenticado.id)
     );
@@ -75,7 +75,7 @@ async function obtenerRutasAsignadas() {
   }
 }
 
-// Función para ver detalles de una ruta
+
 function verRuta(id) {
   router.push(`/ruta/${id}`);
 }
@@ -107,7 +107,7 @@ onMounted(() => {
                 <img :src="ruta.foto" class="img-fluid rounded-start w-100"
                   style="height: 250px; object-fit: cover" alt="Imagen de la ruta" @error="manejarErrorImagen"/>
               </div>
-              <!-- Contenido de la tarjeta -->
+              <!-- Cuerpo de la tarjeta -->
               <div class="col-md-7">
                 <div class="card-body">
                   <a href="#" @click.prevent="verRuta(ruta.id)" class="text-decoration-none">

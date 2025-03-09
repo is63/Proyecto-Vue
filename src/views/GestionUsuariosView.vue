@@ -198,9 +198,9 @@ function validarUsuario(usuario) {
     usuario.email == "" ||
     usuario.contraseña == ""
   ) {
-    return false; // Retorna false si la validación falla
+    return false; // Dewvuelve false si la validación falla
   }
-  return true; // Retorna true si la validación es exitosa
+  return true; // Devuelve true si la validación es exitosa
 }
 
 // Función para crear un usuario nuevo
@@ -512,7 +512,7 @@ function guiaTieneRutasAsignadas(guiaId) {
     </div>
   </div>
 
-  <!-- Añadir un indicador de carga cuando se está comprobando asignaciones -->
+  <!-- Indicador de carga cuando se está comprobando las asignaciones -->
   <div v-if="comprobandoAsignaciones" class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-dark bg-opacity-50" style="z-index: 2000;">
     <div class="spinner-border text-light" role="status">
       <span class="visually-hidden">Comprobando asignaciones...</span>

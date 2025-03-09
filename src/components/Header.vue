@@ -11,7 +11,7 @@ const props = defineProps({
 });
 
 async function cerrarSesion() {
-  // Mostrar confirmación con SweetAlert2
+  // Mostrar confirmación 
   const result = await Swal.fire({
     title: '¿Cerrar sesión?',
     text: '¿Estás seguro que deseas cerrar tu sesión?',
@@ -24,9 +24,9 @@ async function cerrarSesion() {
     focusCancel: true 
   });
   
-  // Si el usuario confirma, entonces cerramos la sesión
+  // Si el usuario confirma, entonces se cierra la sesión
   if (result.isConfirmed) {
-    // Mostrar mensaje de despedida breve con temporizador
+    // Mostrar mensaje de exito
     Swal.fire({
       title: '¡Sesion Cerrada!',
       text: 'Se ha cerrado sesión correctamente',
@@ -36,11 +36,10 @@ async function cerrarSesion() {
       showConfirmButton: false
     });
     
-    // Pequeño retraso para que se muestre el mensaje antes de la redirección
     setTimeout(() => {
       emits("sesionCerrada", null);
       router.push({ name: "home" });
-    }, 1600); // Ligeramente mayor que el timer para asegurar que se vea el mensaje
+    }, 1600);
   }
 }
 </script>
@@ -57,12 +56,12 @@ async function cerrarSesion() {
           </router-link>
         </div>
 
-        <!-- Menú de navegación (centro) - Reimplementación para mejor centrado -->
+        <!-- Menú de navegación (centro)  -->
         <div class="navigation-container">
           <div v-if="usuarioAutenticado" class="nav-menu-container">
-            <!-- Menú Principal - Adaptativo -->
+            <!-- Menú Principal -->
             <ul class="navbar-nav">
-              <!-- Elementos comunes para todos los usuarios -->
+              <!-- Elementos comunes  -->
               <li class="nav-item mx-1">
                 <router-link class="nav-link btn-nav-icon" to="/" title="Home">
                   <i class="bi bi-house-door-fill d-block d-lg-none"></i>
@@ -70,7 +69,7 @@ async function cerrarSesion() {
                 </router-link>
               </li>
               
-              <!-- Mis Reservas - para todos los usuarios -->
+              <!-- Mis Reservas -->
               <li class="nav-item mx-1">
                 <router-link class="nav-link btn-nav-icon" to="/misReservas" title="Mis Reservas">
                   <i class="bi bi-bookmark-fill d-block d-lg-none"></i>
@@ -78,7 +77,7 @@ async function cerrarSesion() {
                 </router-link>
               </li>
 
-              <!-- Menú específico para administradores -->
+              <!-- Menú Admin -->
               <template v-if="usuarioAutenticado.rol === 'admin'">
                 <li class="nav-item mx-1">
                   <router-link class="nav-link btn-nav-icon" to="/gestionusuarios" title="Gestionar Usuarios">
@@ -94,7 +93,7 @@ async function cerrarSesion() {
                 </li>
               </template>
 
-              <!-- Menú específico para guías -->
+              <!-- Menú Guías -->
               <template v-if="usuarioAutenticado.rol === 'guia'">
                 <li class="nav-item mx-1">
                   <router-link class="nav-link btn-nav-icon" to="/rutasAsignadas" title="Rutas Asignadas">
@@ -107,10 +106,10 @@ async function cerrarSesion() {
           </div>
         </div>
 
-        <!-- Parte derecha: usuario y cerrar sesión o login -->
+        <!-- Parte derecha -->
         <div class="user-container">
           <div v-if="usuarioAutenticado" class="d-flex align-items-center">
-            <!-- Nombre de usuario - visible solo en pantallas medianas y grandes -->
+            <!-- Nombre de usuario -->
             <span class="me-3 d-none d-md-inline">
               <span class="fw-bold">{{ usuarioAutenticado.nombre }}</span>
               <span class="text-gold fw-bold">, {{ usuarioAutenticado.rol }}</span>
@@ -123,7 +122,7 @@ async function cerrarSesion() {
             </button>
           </div>
 
-          <!-- Si no hay usuario autenticado -->
+          <!-- Mostrar Iniciar Sesión -->
           <router-link v-else to="/login" class="nav-link btn-login">
             <i class="bi bi-person-fill d-inline d-lg-none me-1"></i>
             Iniciar Sesión
@@ -217,7 +216,7 @@ async function cerrarSesion() {
   background-color: #d62828;
 }
 
-/* Botón cerrar sesión más pequeño en móviles */
+
 .logout-btn {
   min-height: 38px;
 }
@@ -226,7 +225,7 @@ async function cerrarSesion() {
   font-size: 1.3rem;
 }
 
-/* Media queries para mejor adaptación */
+
 @media (max-width: 991.98px) {
   .navbar-nav {
     gap: 0.5rem;
@@ -277,7 +276,7 @@ async function cerrarSesion() {
   }
 }
 
-/* Ajustes para centrar el menú de navegación */
+/* centrar menú de navegación */
 .container-fluid {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -288,7 +287,6 @@ async function cerrarSesion() {
 .navbar-brand-container,
 .user-container {
   min-width: 200px;
-  /* Ancho mínimo para asegurar espacio igual */
 }
 
 .navigation-container {
@@ -329,7 +327,6 @@ async function cerrarSesion() {
   }
 }
 
-/* Nuevo estilo para el contenedor de usuario */
 .user-container {
   grid-column: 3;
   justify-self: end;
@@ -344,7 +341,6 @@ async function cerrarSesion() {
   text-overflow: ellipsis;
 }
 
-/* Media queries actualizados */
 @media (max-width: 991.98px) {
   .navbar-nav {
     gap: 0.25rem;

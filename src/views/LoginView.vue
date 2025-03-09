@@ -15,7 +15,6 @@ const API_URL = 'http://localhost/freetours/api.php/usuarios';
 
 const emits = defineEmits(["sesionIniciada"]);
 const form = ref({ email: '', password: '' });
-// Añadido campo confirmarContraseña al formulario de registro
 const formRegistro = ref({ nombre: '', email: '', contraseña: '', confirmarContraseña: '' });
 const error = ref('');
 const mensajeExito = ref('');
@@ -31,15 +30,15 @@ async function iniciarSesion() {
 
     // Buscar el usuario en la lista
     const usuarioEncontrado = usuarios.find(
-      (u) => u.email === form.value.email && u.contraseña === form.value.password
+      (u) => u.email == form.value.email && u.contraseña == form.value.password
     );
     if (usuarioEncontrado) {
 
-      // Emitir el evento con los datos del usuario autenticado
+      // Emitir el evento con los datos del usuario 
       emits("sesionIniciada", {
         id: usuarioEncontrado.id,
         nombre: usuarioEncontrado.nombre,
-        email: usuarioEncontrado.email, // Nuevo campo añadido
+        email: usuarioEncontrado.email, 
         rol: usuarioEncontrado.rol
       });
 
@@ -112,9 +111,8 @@ async function registrarUsuario() {
       email: formRegistro.value.email,
       contraseña: formRegistro.value.contraseña,
     };
-    // No enviamos confirmarContraseña al servidor, solo es para validación
 
-    // Enviar la solicitud POST a la API para registrar el usuario
+    // Registrar el usuario
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
@@ -127,7 +125,7 @@ async function registrarUsuario() {
       throw new Error('Error al registrar el usuario');
     }
 
-    // Limpiar el formulario de registro - ahora con el nuevo campo
+    // Limpiar el formulario de registro
     formRegistro.value = { nombre: '', email: '', contraseña: '', confirmarContraseña: '' };
 
     // Cambiar al formulario de inicio de sesión
@@ -184,7 +182,7 @@ async function registrarUsuario() {
       </div>
     </div>
 
-    <!-- Formulario de Registro - Modificado con campo de confirmación -->
+    <!-- Formulario de Registro -->
     <div v-if="!mostrarForm">
       <div id="formRegistrar" class="row justify-content-center mt-5">
         <div class="col-12 col-md-6 col-lg-4">
@@ -206,7 +204,6 @@ async function registrarUsuario() {
                 placeholder="Crea una contraseña">
               <div class="form-text">La contraseña debe tener al menos 6 caracteres.</div>
             </div>
-            <!-- Nuevo campo de confirmación de contraseña -->
             <div class="mb-3">
               <label for="confirmarContrasena" class="form-label">Confirmar Contraseña</label>
               <input v-model="formRegistro.confirmarContraseña" type="password" id="confirmarContrasena" class="form-control"
@@ -228,12 +225,12 @@ async function registrarUsuario() {
 </template>
 
 <style scoped>
-/* Puedes añadir estilos adicionales aquí si lo necesitas */
+
 .alert {
   transition: opacity 0.3s ease-in-out;
 }
 
-/* Estilo opcional para indicar visualmente si las contraseñas coinciden */
+/* Estilo para indicar si las contraseñas no coinciden */
 input.is-invalid {
   border-color: #dc3545;
   padding-right: calc(1.5em + 0.75rem);

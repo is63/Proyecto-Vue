@@ -6,30 +6,28 @@ import { ref } from "vue";
 const sesion = ref(JSON.parse(localStorage.getItem("sesion")));
 
 function actualizaDatosSesion(usuario) {
-  console.log("Actualizando sesión:", usuario); // Debug para ver qué recibimos
-
-  // Asegurarnos de que todos los campos necesarios estén presentes
+  console.log("Actualizando sesión:", usuario); 
   if (usuario) {
-    // Verificar que tengamos el email y todos los campos necesarios
+
     if (!usuario.email) {
       console.error("Error: El objeto usuario no contiene un email", usuario);
     }
 
-    // Crear una copia del objeto para asegurarnos de que tiene todos los campos
+
     sesion.value = {
       id: usuario.id,
       nombre: usuario.nombre,
-      email: usuario.email, // Asegurarse de que el email se guarda
+      email: usuario.email,
       rol: usuario.rol
     };
 
     // Guardar en localStorage
     localStorage.setItem("sesion", JSON.stringify(sesion.value));
-    console.log("Sesión guardada:", sesion.value); // Debug para verificar
+    console.log("Sesión guardada:", sesion.value); 
   } else {
     sesion.value = null;
     localStorage.removeItem("sesion");
-    console.log("Sesión cerrada"); // Debug
+    console.log("Sesión cerrada"); 
   }
 }
 </script>

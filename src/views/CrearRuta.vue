@@ -6,8 +6,8 @@ import 'leaflet/dist/leaflet.css';
 import { OpenStreetMapProvider } from 'leaflet-geosearch';
 import Swal from 'sweetalert2';
 import { Modal } from 'bootstrap';
-import flatpickr from "flatpickr"; // Añadir importación de flatpickr
-import "flatpickr/dist/flatpickr.min.css"; // Añadir estilos de flatpickr
+import flatpickr from "flatpickr"; 
+import "flatpickr/dist/flatpickr.min.css"; 
 
 const router = useRouter();
 
@@ -37,7 +37,7 @@ const botonDeshabilitado = ref(false); // Variable para controlar el estado del 
 let fechaPicker = null;
 let horaPicker = null;
 
-// Reemplazar la función obtenerGuias actual
+// Obtener los guías 
 async function obtenerGuias() {
   try {
     // Obtener los guías
@@ -177,7 +177,7 @@ async function crearRuta() {
 }
 
 function inicializarMapa() {
-  map = L.map('map').setView([40.4168, -3.7038], 13); // Coordenadas de Madrid, España
+  map = L.map('map').setView([40.4168, -3.7038], 13);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -221,7 +221,7 @@ function inicializarDatepickers() {
     disableMobile: false,
     position: "auto",
     static: true,
-    altInput: false, // Cambiar a false para evitar la creación de un input alternativo
+    altInput: false, 
     allowInput: false,
     clickOpens: true,
   });
@@ -247,10 +247,9 @@ function inicializarDatepickers() {
 }
 onMounted(() => {
   inicializarMapa();
-  obtenerGuias(); // Obtener los guías al montar el componente
+  obtenerGuias();
   modalInstance = new Modal(document.getElementById('resultadoModal'));
   
-  // Inicializar los selectores de fecha y hora
   inicializarDatepickers();
 });
 </script>
@@ -340,7 +339,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Estilos base y organización */
+
 .container {
   max-width: 800px;
 }
@@ -380,8 +379,6 @@ h1 {
   background-color: #232342;
 }
 
-/* ESTILOS ESPECÍFICOS PARA FLATPICKR - SIMPLIFICADOS */
-/* Regla principal para ambos inputs: fecha y hora */
 #fecha, 
 #hora {
   background-color: #fff !important;
@@ -394,13 +391,12 @@ h1 {
   padding: 0.375rem 0.75rem !important;
 }
 
-/* Agregar los iconos específicos sin sobreescribir el fondo */
 .date-input {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-calendar3' viewBox='0 0 16 16'%3E%3Cpath d='M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z'/%3E%3Cpath d='M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 16px 16px;
-  background-color: #fff !important; /* Reforzar fondo blanco */
+  background-color: #fff !important; 
 }
 
 .time-input {
@@ -408,10 +404,9 @@ h1 {
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 16px 16px;
-  background-color: #fff !important; /* Reforzar fondo blanco */
+  background-color: #fff !important;
 }
 
-/* Estilos para elementos generados por flatpickr */
 :deep(.flatpickr-wrapper) {
   width: 100% !important;
   display: block !important;
@@ -425,7 +420,6 @@ h1 {
   display: block !important;
 }
 
-/* Input alternativo generado por flatpickr (cuando se usa altInput) */
 :deep(.flatpickr-input.flatpickr-mobile) {
   background-color: #fff !important;
 }
@@ -452,7 +446,6 @@ h1 {
   background-color: #e9ecef !important;
 }
 
-/* Fix para todos los elementos que puedan ser añadidos por flatpickr */
 :deep([class^="flatpickr"]) {
   font-size: inherit !important;
   line-height: inherit !important;
